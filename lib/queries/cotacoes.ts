@@ -196,6 +196,7 @@ export function useAddEmpresaComPdf(cotacaoId: string) {
       situacaoCadastral?: string
       endereco?: string
       precos: { cotacaoItemId: string; valorUnitario: number }[]
+      novosItens: { descricao: string; valorUnitario: number }[]
     }) => {
       const supabase = createClient()
       const safeName = input.file.name.replace(/[^\w.\-]+/g, "_")
@@ -224,9 +225,29 @@ export function useAddEmpresaComPdf(cotacaoId: string) {
         throw empresaError
       }
 
-      if (input.precos.length > 0) {
+      let precosDeNovosItens: { cotacaoItemId: string; valorUnitario: number }[] = []
+      if (input.novosItens.length > 0) {
+        const { data: itensCriados, error: itensError } = await supabase
+          .from("cotacao_itens")
+          .insert(
+            input.novosItens.map((item) => ({
+              cotacao_id: cotacaoId,
+              descricao: item.descricao,
+              quantidade: 1,
+            }))
+          )
+          .select("id")
+        if (itensError) throw itensError
+        precosDeNovosItens = itensCriados.map((item, idx) => ({
+          cotacaoItemId: item.id,
+          valorUnitario: input.novosItens[idx].valorUnitario,
+        }))
+      }
+
+      const todosPrecos = [...input.precos, ...precosDeNovosItens]
+      if (todosPrecos.length > 0) {
         const { error: precosError } = await supabase.from("cotacao_precos").upsert(
-          input.precos.map((p) => ({
+          todosPrecos.map((p) => ({
             cotacao_item_id: p.cotacaoItemId,
             cotacao_empresa_id: empresa.id,
             valor_unitario: p.valorUnitario,

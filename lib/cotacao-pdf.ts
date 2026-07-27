@@ -23,6 +23,54 @@ function extrairPrecoDoTrecho(trecho: string): number | null {
   return Number(primeiro)
 }
 
+function limparDescricaoCandidata(texto: string): string {
+  return texto
+    .replace(/\s+/g, " ")
+    .replace(/^[❖➢➤•▪◦*\-–—]+\s*/, "")
+    .replace(/^\d+[.)]\s*/, "")
+    .replace(/\s*[❖➢➤•▪◦]+\s*$/, "")
+    .trim()
+}
+
+// Tenta encontrar uma tabela "ITEM/SERVIÇO ... VALOR" no texto do PDF e
+// extrair cada linha como um item candidato com sua descrição e preço.
+// Sempre tratar como sugestão — mostrar para o usuário revisar/excluir antes
+// de criar os itens de fato.
+export function extrairItensCandidatos(
+  texto: string
+): { descricao: string; valor: number }[] {
+  const linhas = texto.split("\n")
+  const headerIdx = linhas.findIndex((linha) => {
+    const norm = normalizar(linha)
+    return norm.includes("item") && (norm.includes("valor") || norm.includes("preco"))
+  })
+  if (headerIdx === -1) return []
+
+  const itens: { descricao: string; valor: number }[] = []
+  let bufferDescricao: string[] = []
+
+  for (let i = headerIdx + 1; i < linhas.length; i++) {
+    const linha = linhas[i]
+    if (/^--\s*\d+\s+of\s+\d+\s*--$/i.test(linha.trim())) break
+    if (linha.trim() === "") continue
+
+    const preco = extrairPrecoDoTrecho(linha)
+    if (preco !== null) {
+      const textoAntesDoPreco = linha
+        .replace(/(?:r\$\s*)?\d{1,3}(?:\.\d{3})*,\d{2}|\d+\.\d{2}/i, "")
+        .trim()
+      if (textoAntesDoPreco) bufferDescricao.push(textoAntesDoPreco)
+      const descricao = limparDescricaoCandidata(bufferDescricao.join(" "))
+      if (descricao) itens.push({ descricao, valor: preco })
+      bufferDescricao = []
+    } else {
+      bufferDescricao.push(linha)
+    }
+  }
+
+  return itens
+}
+
 export function sugerirPrecos(
   texto: string,
   itens: { id: string; descricao: string }[]

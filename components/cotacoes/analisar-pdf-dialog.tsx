@@ -5,7 +5,7 @@ import { FileText, Upload } from "lucide-react"
 import { toast } from "sonner"
 
 import { formatarCnpj } from "@/lib/cnpj"
-import { sugerirPrecos } from "@/lib/cotacao-pdf"
+import { extrairItensCandidatos, sugerirPrecos } from "@/lib/cotacao-pdf"
 import { useAddEmpresaComPdf, type CotacaoItem } from "@/lib/queries/cotacoes"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -32,6 +32,7 @@ import {
 type Etapa = "arquivo" | "revisar"
 
 type PrecoLinha = { incluir: boolean; valor: number | "" }
+type ItemCandidato = { incluir: boolean; descricao: string; valor: number | "" }
 
 export function AnalisarPdfDialog({
   cotacaoId,
@@ -53,6 +54,7 @@ export function AnalisarPdfDialog({
   const [situacao, setSituacao] = useState("")
   const [endereco, setEndereco] = useState("")
   const [precos, setPrecos] = useState<Record<string, PrecoLinha>>({})
+  const [itensCandidatos, setItensCandidatos] = useState<ItemCandidato[]>([])
 
   const criarEmpresa = useAddEmpresaComPdf(cotacaoId)
 
@@ -65,6 +67,7 @@ export function AnalisarPdfDialog({
     setSituacao("")
     setEndereco("")
     setPrecos({})
+    setItensCandidatos([])
   }
 
   async function handleAnalisar() {
@@ -101,6 +104,15 @@ export function AnalisarPdfDialog({
         novo[item.id] = { incluir: valor !== null, valor: valor ?? "" }
       }
       setPrecos(novo)
+
+      const jaExistem = new Set(itens.map((item) => item.descricao.trim().toLowerCase()))
+      const candidatos = extrairItensCandidatos(dados.texto ?? "").filter(
+        (c) => !jaExistem.has(c.descricao.trim().toLowerCase())
+      )
+      setItensCandidatos(
+        candidatos.map((c) => ({ incluir: true, descricao: c.descricao, valor: c.valor }))
+      )
+
       setEtapa("revisar")
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Não foi possível analisar o PDF")
@@ -111,6 +123,12 @@ export function AnalisarPdfDialog({
 
   function updatePreco(itemId: string, patch: Partial<PrecoLinha>) {
     setPrecos((prev) => ({ ...prev, [itemId]: { ...prev[itemId], ...patch } }))
+  }
+
+  function updateItemCandidato(index: number, patch: Partial<ItemCandidato>) {
+    setItensCandidatos((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, ...patch } : item))
+    )
   }
 
   async function handleConfirmar() {
@@ -130,6 +148,9 @@ export function AnalisarPdfDialog({
         precos: Object.entries(precos)
           .filter(([, v]) => v.incluir && v.valor !== "")
           .map(([itemId, v]) => ({ cotacaoItemId: itemId, valorUnitario: Number(v.valor) })),
+        novosItens: itensCandidatos
+          .filter((item) => item.incluir && item.descricao.trim() && item.valor !== "")
+          .map((item) => ({ descricao: item.descricao.trim(), valorUnitario: Number(item.valor) })),
       })
       toast.success("Empresa e preços importados")
       setOpen(false)
@@ -153,8 +174,9 @@ export function AnalisarPdfDialog({
           <DialogTitle>Analisar cotação em PDF</DialogTitle>
           <DialogDescription>
             Envie o PDF da proposta da empresa. O CNPJ é identificado e consultado
-            automaticamente na Receita Federal, e os preços dos itens já cadastrados
-            são sugeridos a partir do texto do documento.
+            automaticamente na Receita Federal, os itens da tabela de preços são
+            detectados no documento, e os preços dos itens já cadastrados são
+            sugeridos a partir do texto.
           </DialogDescription>
         </DialogHeader>
 
@@ -162,8 +184,8 @@ export function AnalisarPdfDialog({
           <div className="flex flex-col gap-4">
             {itens.length === 0 && (
               <p className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
-                Cadastre os itens da cotação antes de importar um PDF, para que os
-                preços possam ser sugeridos automaticamente.
+                Esta cotação ainda não tem itens cadastrados — o sistema vai tentar
+                detectar os itens e preços direto na tabela do PDF.
               </p>
             )}
             <div className="flex flex-col gap-2">
@@ -218,6 +240,62 @@ export function AnalisarPdfDialog({
               <p className="text-xs text-muted-foreground">Razão social: {razaoSocial}</p>
             )}
             {endereco && <p className="text-xs text-muted-foreground">Endereço: {endereco}</p>}
+
+            {itensCandidatos.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <Label>Itens detectados na proposta</Label>
+                <div className="rounded-lg border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-10" />
+                        <TableHead>Descrição</TableHead>
+                        <TableHead className="w-32">Valor</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {itensCandidatos.map((item, index) => (
+                        <TableRow key={index}>
+                          <TableCell>
+                            <Checkbox
+                              checked={item.incluir}
+                              onCheckedChange={(checked) =>
+                                updateItemCandidato(index, { incluir: !!checked })
+                              }
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              value={item.descricao}
+                              onChange={(e) =>
+                                updateItemCandidato(index, { descricao: e.target.value })
+                              }
+                              disabled={!item.incluir}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={item.valor}
+                              onChange={(e) =>
+                                updateItemCandidato(index, {
+                                  valor: e.target.value === "" ? "" : e.target.valueAsNumber,
+                                })
+                              }
+                              disabled={!item.incluir}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Esses itens serão criados na cotação junto com o preço desta empresa.
+                </p>
+              </div>
+            )}
 
             <div className="flex flex-col gap-2">
               <Label>Itens e preços sugeridos</Label>
