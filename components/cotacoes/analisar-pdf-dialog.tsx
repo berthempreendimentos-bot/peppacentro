@@ -9,6 +9,7 @@ import { extrairItensCandidatos, sugerirPrecos } from "@/lib/cotacao-pdf"
 import { useAddEmpresaComPdf, type CotacaoItem } from "@/lib/queries/cotacoes"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { CurrencyInput } from "@/components/ui/currency-input"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -258,7 +259,7 @@ export function AnalisarPdfDialog({
                           <TableRow>
                             <TableHead className="w-8" />
                             <TableHead>Descrição</TableHead>
-                            <TableHead className="w-24">Valor</TableHead>
+                            <TableHead className="w-32">Valor</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -283,17 +284,11 @@ export function AnalisarPdfDialog({
                                 />
                               </TableCell>
                               <TableCell>
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  value={item.valor}
-                                  onChange={(e) =>
-                                    updateItemCandidato(index, {
-                                      valor: e.target.value === "" ? "" : e.target.valueAsNumber,
-                                    })
-                                  }
+                                <CurrencyInput
+                                  value={item.valor === "" ? 0 : item.valor}
+                                  onChange={(valor) => updateItemCandidato(index, { valor })}
                                   disabled={!item.incluir}
-                                  className="h-8"
+                                  className="h-8 text-right"
                                 />
                               </TableCell>
                             </TableRow>
@@ -315,7 +310,7 @@ export function AnalisarPdfDialog({
                           <TableRow>
                             <TableHead className="w-8" />
                             <TableHead>Item</TableHead>
-                            <TableHead className="w-24">Preço</TableHead>
+                            <TableHead className="w-32">Preço</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -329,18 +324,18 @@ export function AnalisarPdfDialog({
                                   }
                                 />
                               </TableCell>
-                              <TableCell className="truncate">{item.descricao}</TableCell>
+                              <TableCell className="max-w-64 whitespace-normal break-words">
+                                {item.descricao}
+                              </TableCell>
                               <TableCell>
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  value={precos[item.id]?.valor ?? ""}
-                                  onChange={(e) =>
-                                    updatePreco(item.id, {
-                                      valor: e.target.value === "" ? "" : e.target.valueAsNumber,
-                                    })
+                                <CurrencyInput
+                                  value={
+                                    precos[item.id]?.valor === "" || precos[item.id]?.valor == null
+                                      ? 0
+                                      : Number(precos[item.id].valor)
                                   }
-                                  className="h-8"
+                                  onChange={(valor) => updatePreco(item.id, { valor })}
+                                  className="h-8 text-right"
                                 />
                               </TableCell>
                             </TableRow>

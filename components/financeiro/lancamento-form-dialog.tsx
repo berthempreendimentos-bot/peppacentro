@@ -26,6 +26,7 @@ import { useCreateCategoria, useCreateCentroCusto } from "@/lib/queries/centro-c
 import { useCreateFornecedor } from "@/lib/queries/fornecedores"
 import { useDocumentosLancamento, useDeleteDocumentoLancamento } from "@/lib/queries/lancamentos"
 import { Button } from "@/components/ui/button"
+import { CurrencyInput } from "@/components/ui/currency-input"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -52,36 +53,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-
-function CurrencyInput({
-  value,
-  onChange,
-  disabled,
-}: {
-  value: number
-  onChange: (val: number) => void
-  disabled?: boolean
-}) {
-  const [displayValue, setDisplayValue] = useState("")
-
-  useEffect(() => {
-    setDisplayValue(
-      new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value)
-    )
-  }, [value])
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value.replace(/\D/g, "")
-    if (!val) val = "0"
-    const num = Number(val) / 100
-    setDisplayValue(
-      new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(num)
-    )
-    onChange(num)
-  }
-
-  return <Input type="text" value={displayValue} onChange={handleChange} disabled={disabled} />
-}
 
 function CriarNovoDialog({
   title,
