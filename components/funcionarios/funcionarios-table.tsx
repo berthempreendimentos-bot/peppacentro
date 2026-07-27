@@ -117,7 +117,7 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
         />
       </div>
 
-      <div className="scrollbar-always max-h-[65vh] overflow-auto rounded-lg border">
+      <div className="scrollbar-always max-h-[70vh] overflow-auto rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
