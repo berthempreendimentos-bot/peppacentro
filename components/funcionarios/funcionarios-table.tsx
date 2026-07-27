@@ -117,29 +117,29 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
         />
       </div>
 
-      <div className="scrollbar-always overflow-x-auto rounded-lg border">
+      <div className="scrollbar-always max-h-[65vh] overflow-auto rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="sticky left-0 z-20 border-r bg-background">Nome</TableHead>
-              <TableHead>CPF</TableHead>
-              <TableHead>Função</TableHead>
-              <TableHead>Admissão</TableHead>
-              <TableHead className="text-right">Salário Base</TableHead>
-              <TableHead className="text-right">VT Informado</TableHead>
-              <TableHead className="text-right">VR Informado</TableHead>
-              <TableHead className="text-right">Desc. VT (6%)</TableHead>
-              <TableHead className="text-right">30% Periculosidade</TableHead>
-              <TableHead className="text-right">INSS Empregado</TableHead>
-              <TableHead className="text-right">Desc. VA (10%)</TableHead>
-              <TableHead className="text-right">Líquido do empregado</TableHead>
-              <TableHead className="bg-primary/10 text-right">FGTS 8%</TableHead>
-              <TableHead className="bg-primary/10 text-right">INSS Patronal 20%</TableHead>
-              <TableHead className="bg-primary/10 text-right">RAT 3%</TableHead>
-              <TableHead className="bg-primary/10 text-right">Terceiros 5,8%</TableHead>
-              <TableHead className="bg-primary/10 text-right">Total Encargos</TableHead>
-              <TableHead className="bg-primary/10 text-right">Custo Empresa</TableHead>
-              <TableHead className="w-10" />
+              <TableHead className="sticky top-0 left-0 z-30 border-r bg-background">Nome</TableHead>
+              <TableHead className="sticky top-0 z-20 bg-background">CPF</TableHead>
+              <TableHead className="sticky top-0 z-20 bg-background">Função</TableHead>
+              <TableHead className="sticky top-0 z-20 bg-background">Admissão</TableHead>
+              <TableHead className="sticky top-0 z-20 bg-background text-right">Salário Base</TableHead>
+              <TableHead className="sticky top-0 z-20 bg-background text-right">VT Informado</TableHead>
+              <TableHead className="sticky top-0 z-20 bg-background text-right">VR Informado</TableHead>
+              <TableHead className="sticky top-0 z-20 bg-background text-right">Desc. VT (6%)</TableHead>
+              <TableHead className="sticky top-0 z-20 bg-background text-right">30% Periculosidade</TableHead>
+              <TableHead className="sticky top-0 z-20 bg-background text-right">INSS Empregado</TableHead>
+              <TableHead className="sticky top-0 z-20 bg-background text-right">Desc. VA (10%)</TableHead>
+              <TableHead className="sticky top-0 z-20 bg-background text-right">Líquido do empregado</TableHead>
+              <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">FGTS 8%</TableHead>
+              <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">INSS Patronal 20%</TableHead>
+              <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">RAT 3%</TableHead>
+              <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">Terceiros 5,8%</TableHead>
+              <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">Total Encargos</TableHead>
+              <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">Custo Empresa</TableHead>
+              <TableHead className="sticky top-0 z-20 w-10 bg-background" />
             </TableRow>
           </TableHeader>
           <TableBody>

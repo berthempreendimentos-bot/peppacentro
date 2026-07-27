@@ -192,4 +192,7 @@
     background-color: var(--border);
     border-radius: 9999px;
   }
+  .bg-primary-tint-solid {
+    background-color: color-mix(in srgb, var(--primary) 10%, var(--background));
+  }
 }
