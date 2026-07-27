@@ -19,6 +19,14 @@ import { formatCurrencyBRL } from "@/lib/format"
 import { AnalisarPdfDialog } from "@/components/cotacoes/analisar-pdf-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -328,54 +336,93 @@ export function CotacaoComparativo({ cotacao }: { cotacao: CotacaoComDetalhes })
         </div>
         {empresas.length === 0 ? (
           <p className="py-4 text-center text-sm text-muted-foreground">
-            Nenhuma empresa cadastrada ainda.
+            Nenhuma empresa cadastrada ainda. Use &quot;Analisar PDF&quot; para importar
+            uma cotação, ou adicione manualmente.
           </p>
         ) : (
-          <div className="flex flex-col gap-1">
-            {empresas.map((empresa) => (
-              <div
-                key={empresa.id}
-                className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
-              >
-                <div className="flex flex-col">
-                  <span>
-                    {empresa.nome}
-                    {empresa.contato && (
-                      <span className="ml-2 text-muted-foreground">{empresa.contato}</span>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {empresas.map((empresa) => {
+              const total = totalPorEmpresa[empresa.id] ?? 0
+              const ehMelhor = empresa.id === melhorEmpresaId
+              return (
+                <Card
+                  key={empresa.id}
+                  className={`flex flex-col border-l-4 ${
+                    ehMelhor ? "border-l-primary" : "border-l-border"
+                  }`}
+                >
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-2">
+                      <CardTitle className="text-base">{empresa.nome}</CardTitle>
+                      {empresa.situacao_cadastral && (
+                        <Badge
+                          variant={
+                            empresa.situacao_cadastral.toLowerCase() === "ativa"
+                              ? "default"
+                              : "secondary"
+                          }
+                        >
+                          {empresa.situacao_cadastral}
+                        </Badge>
+                      )}
+                    </div>
+                    {empresa.cnpj && (
+                      <CardDescription className="font-mono text-xs">
+                        {formatarCnpj(empresa.cnpj)}
+                      </CardDescription>
                     )}
-                  </span>
-                  {(empresa.cnpj || empresa.situacao_cadastral) && (
-                    <span className="text-xs text-muted-foreground">
-                      {empresa.cnpj && formatarCnpj(empresa.cnpj)}
-                      {empresa.situacao_cadastral && ` — ${empresa.situacao_cadastral}`}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-1">
-                  {empresa.documento_storage_path && (
+                  </CardHeader>
+                  <CardContent className="flex-1 space-y-2">
+                    {empresa.razao_social && (
+                      <p className="line-clamp-1 text-xs text-muted-foreground">
+                        {empresa.razao_social}
+                      </p>
+                    )}
+                    {empresa.endereco && (
+                      <p className="line-clamp-1 text-xs text-muted-foreground">
+                        {empresa.endereco}
+                      </p>
+                    )}
+                    {empresa.contato && (
+                      <p className="text-xs text-muted-foreground">{empresa.contato}</p>
+                    )}
+                    <div className="flex flex-col gap-1 border-t pt-2">
+                      <span className="label-caps text-muted-foreground">Valor total</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xl font-bold text-primary">
+                          {formatCurrencyBRL(total)}
+                        </span>
+                        {ehMelhor && <Badge>Melhor opção</Badge>}
+                      </div>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="justify-end gap-1">
+                    {empresa.documento_storage_path && (
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        title="Ver PDF da cotação"
+                        onClick={() => handleVerPdf(empresa.documento_storage_path!)}
+                      >
+                        <FileText className="size-4" />
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      title="Ver PDF da cotação"
-                      onClick={() => handleVerPdf(empresa.documento_storage_path!)}
+                      title="Excluir empresa"
+                      onClick={() =>
+                        deleteEmpresa.mutate(empresa.id, {
+                          onSuccess: () => toast.success("Empresa removida"),
+                        })
+                      }
                     >
-                      <FileText className="size-4" />
+                      <Trash2 className="size-4" />
                     </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={() =>
-                      deleteEmpresa.mutate(empresa.id, {
-                        onSuccess: () => toast.success("Empresa removida"),
-                      })
-                    }
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+                  </CardFooter>
+                </Card>
+              )
+            })}
           </div>
         )}
       </div>
