@@ -44,5 +44,9 @@ next-env.d.ts
 # claude code local state
 .claude/
 
+# tesseract.js OCR language data (downloaded at runtime; cachePath in code
+# targets os.tmpdir(), this is just a safety net if that ever changes)
+*.traineddata
+
 # unrelated local file with credentials, not part of this project
 /accounts.json
