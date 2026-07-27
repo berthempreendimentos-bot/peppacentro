@@ -13,6 +13,7 @@ import { CronogramaList } from "@/components/cronograma/cronograma-list";
 import { MedicoesList } from "@/components/medicoes/medicoes-list";
 import { DocumentosTable } from "@/components/documentos/documentos-table";
 import { PlanilhaCustoTab } from "@/components/planilha-custo/planilha-custo-tab";
+import { FuncionariosList } from "@/components/funcionarios/funcionarios-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -33,6 +34,7 @@ const abasValidas = [
   "cronograma",
   "financeiro",
   "planilha-custo",
+  "funcionarios",
   "medicoes",
   "documentos",
 ];
@@ -115,6 +117,7 @@ export default function ContratoDetalhePage() {
           <TabsTrigger value="cronograma">Cronograma</TabsTrigger>
           <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
           <TabsTrigger value="planilha-custo">Planilha de Custo</TabsTrigger>
+          <TabsTrigger value="funcionarios">Funcionários</TabsTrigger>
           <TabsTrigger value="medicoes">Medições</TabsTrigger>
           <TabsTrigger value="documentos">Documentos</TabsTrigger>
         </TabsList>
@@ -132,6 +135,9 @@ export default function ContratoDetalhePage() {
         </TabsContent>
         <TabsContent value="planilha-custo">
           <PlanilhaCustoTab contratoId={contrato.id} />
+        </TabsContent>
+        <TabsContent value="funcionarios">
+          <FuncionariosList contratoId={contrato.id} />
         </TabsContent>
         <TabsContent value="medicoes">
           <MedicoesList contratoId={contrato.id} />

@@ -246,6 +246,38 @@ export interface Database {
           },
         ]
       }
+      funcionarios: {
+        Row: {
+          id: string
+          contrato_id: string
+          nome: string
+          cpf: string | null
+          funcao: string | null
+          data_admissao: string | null
+          salario_base: number
+          vt_informado: number
+          vr_informado: number
+          recebe_periculosidade: boolean
+          inss_percentual: number
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: Partial<Database["public"]["Tables"]["funcionarios"]["Row"]> & {
+          contrato_id: string
+          nome: string
+        }
+        Update: Partial<Database["public"]["Tables"]["funcionarios"]["Row"]>
+        Relationships: [
+          {
+            foreignKeyName: "funcionarios_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cronograma: {
         Row: {
           id: string
