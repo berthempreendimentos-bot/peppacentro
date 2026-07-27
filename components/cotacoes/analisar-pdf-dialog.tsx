@@ -169,14 +169,11 @@ export function AnalisarPdfDialog({
       }}
     >
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>Analisar cotação em PDF</DialogTitle>
           <DialogDescription>
-            Envie o PDF da proposta da empresa. O CNPJ é identificado e consultado
-            automaticamente na Receita Federal, os itens da tabela de preços são
-            detectados no documento, e os preços dos itens já cadastrados são
-            sugeridos a partir do texto.
+            CNPJ, itens e preços são identificados automaticamente a partir do PDF.
           </DialogDescription>
         </DialogHeader>
 
@@ -206,145 +203,155 @@ export function AnalisarPdfDialog({
         )}
 
         {etapa === "revisar" && (
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-2 rounded-lg border bg-muted/40 p-3 text-sm">
-              <FileText className="size-4 shrink-0 text-muted-foreground" />
-              {cnpj ? (
-                <span>
-                  CNPJ identificado: <span className="font-mono">{formatarCnpj(cnpj)}</span>
-                  {situacao && ` — ${situacao}`}
-                </span>
-              ) : (
-                <span className="text-muted-foreground">
-                  CNPJ não identificado automaticamente no PDF. Preencha manualmente se
-                  desejar.
-                </span>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2">
-                <Label>Nome da empresa</Label>
-                <Input value={nome} onChange={(e) => setNome(e.target.value)} />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label>CNPJ</Label>
-                <Input
-                  value={cnpj}
-                  onChange={(e) => setCnpj(e.target.value)}
-                  placeholder="00.000.000/0000-00"
-                />
-              </div>
-            </div>
-            {razaoSocial && (
-              <p className="text-xs text-muted-foreground">Razão social: {razaoSocial}</p>
-            )}
-            {endereco && <p className="text-xs text-muted-foreground">Endereço: {endereco}</p>}
-
-            {itensCandidatos.length > 0 && (
-              <div className="flex flex-col gap-2">
-                <Label>Itens detectados na proposta</Label>
-                <div className="rounded-lg border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-10" />
-                        <TableHead>Descrição</TableHead>
-                        <TableHead className="w-32">Valor</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {itensCandidatos.map((item, index) => (
-                        <TableRow key={index}>
-                          <TableCell>
-                            <Checkbox
-                              checked={item.incluir}
-                              onCheckedChange={(checked) =>
-                                updateItemCandidato(index, { incluir: !!checked })
-                              }
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              value={item.descricao}
-                              onChange={(e) =>
-                                updateItemCandidato(index, { descricao: e.target.value })
-                              }
-                              disabled={!item.incluir}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={item.valor}
-                              onChange={(e) =>
-                                updateItemCandidato(index, {
-                                  valor: e.target.value === "" ? "" : e.target.valueAsNumber,
-                                })
-                              }
-                              disabled={!item.incluir}
-                            />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Esses itens serão criados na cotação junto com o preço desta empresa.
-                </p>
-              </div>
-            )}
-
-            <div className="flex flex-col gap-2">
-              <Label>Itens e preços sugeridos</Label>
-              <div className="rounded-lg border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-10" />
-                      <TableHead>Item</TableHead>
-                      <TableHead className="w-32">Preço unit.</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {itens.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>
-                          <Checkbox
-                            checked={precos[item.id]?.incluir ?? false}
-                            onCheckedChange={(checked) =>
-                              updatePreco(item.id, { incluir: !!checked })
-                            }
-                          />
-                        </TableCell>
-                        <TableCell>{item.descricao}</TableCell>
-                        <TableCell>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={precos[item.id]?.valor ?? ""}
-                            onChange={(e) =>
-                              updatePreco(item.id, {
-                                valor: e.target.value === "" ? "" : e.target.valueAsNumber,
-                              })
-                            }
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {itens.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={3} className="py-4 text-center text-muted-foreground">
-                          Nenhum item cadastrado nesta cotação.
-                        </TableCell>
-                      </TableRow>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 rounded-lg border bg-muted/40 p-3">
+              <div className="flex items-start gap-2 text-sm">
+                <FileText className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                {cnpj ? (
+                  <span>
+                    CNPJ identificado: <span className="font-mono">{formatarCnpj(cnpj)}</span>
+                    {situacao && ` — ${situacao}`}
+                    {razaoSocial && (
+                      <span className="block text-xs text-muted-foreground">
+                        {razaoSocial}
+                        {endereco && ` · ${endereco}`}
+                      </span>
                     )}
-                  </TableBody>
-                </Table>
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">
+                    CNPJ não identificado automaticamente. Preencha manualmente se desejar.
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <Label className="label-caps text-muted-foreground">Nome da empresa</Label>
+                  <Input
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                    className="h-8"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label className="label-caps text-muted-foreground">CNPJ</Label>
+                  <Input
+                    value={cnpj}
+                    onChange={(e) => setCnpj(e.target.value)}
+                    placeholder="00.000.000/0000-00"
+                    className="h-8"
+                  />
+                </div>
               </div>
             </div>
+
+            {(itensCandidatos.length > 0 || itens.length > 0) && (
+              <div className="grid gap-3 md:grid-cols-2">
+                {itensCandidatos.length > 0 && (
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="label-caps text-muted-foreground">
+                      Itens detectados na proposta
+                    </Label>
+                    <div className="max-h-56 overflow-y-auto rounded-lg border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-8" />
+                            <TableHead>Descrição</TableHead>
+                            <TableHead className="w-24">Valor</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {itensCandidatos.map((item, index) => (
+                            <TableRow key={index}>
+                              <TableCell>
+                                <Checkbox
+                                  checked={item.incluir}
+                                  onCheckedChange={(checked) =>
+                                    updateItemCandidato(index, { incluir: !!checked })
+                                  }
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Input
+                                  value={item.descricao}
+                                  onChange={(e) =>
+                                    updateItemCandidato(index, { descricao: e.target.value })
+                                  }
+                                  disabled={!item.incluir}
+                                  className="h-8"
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  value={item.valor}
+                                  onChange={(e) =>
+                                    updateItemCandidato(index, {
+                                      valor: e.target.value === "" ? "" : e.target.valueAsNumber,
+                                    })
+                                  }
+                                  disabled={!item.incluir}
+                                  className="h-8"
+                                />
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                )}
+
+                {itens.length > 0 && (
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="label-caps text-muted-foreground">
+                      Itens e preços sugeridos
+                    </Label>
+                    <div className="max-h-56 overflow-y-auto rounded-lg border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-8" />
+                            <TableHead>Item</TableHead>
+                            <TableHead className="w-24">Preço</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {itens.map((item) => (
+                            <TableRow key={item.id}>
+                              <TableCell>
+                                <Checkbox
+                                  checked={precos[item.id]?.incluir ?? false}
+                                  onCheckedChange={(checked) =>
+                                    updatePreco(item.id, { incluir: !!checked })
+                                  }
+                                />
+                              </TableCell>
+                              <TableCell className="truncate">{item.descricao}</TableCell>
+                              <TableCell>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  value={precos[item.id]?.valor ?? ""}
+                                  onChange={(e) =>
+                                    updatePreco(item.id, {
+                                      valor: e.target.value === "" ? "" : e.target.valueAsNumber,
+                                    })
+                                  }
+                                  className="h-8"
+                                />
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <DialogFooter>
               <Button onClick={handleConfirmar} disabled={criarEmpresa.isPending}>
