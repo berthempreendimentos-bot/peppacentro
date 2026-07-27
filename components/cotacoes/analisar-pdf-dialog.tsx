@@ -6,7 +6,8 @@ import { toast } from "sonner"
 
 import { formatarCnpj } from "@/lib/cnpj"
 import { extrairItensCandidatos, sugerirPrecos } from "@/lib/cotacao-pdf"
-import { useAddEmpresaComPdf, type CotacaoItem } from "@/lib/queries/cotacoes"
+import { useAddEmpresaComPdf, type CotacaoEmpresa, type CotacaoItem } from "@/lib/queries/cotacoes"
+import { getErrorMessage } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { CurrencyInput } from "@/components/ui/currency-input"
@@ -43,7 +44,7 @@ export function AnalisarPdfDialog({
 }: {
   cotacaoId: string
   itens: CotacaoItem[]
-  empresas: any[]
+  empresas: CotacaoEmpresa[]
   trigger: React.ReactNode
 }) {
   const [open, setOpen] = useState(false)
@@ -135,7 +136,7 @@ export function AnalisarPdfDialog({
 
       setEtapa("revisar")
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Não foi possível analisar o PDF")
+      toast.error(getErrorMessage(error, "Não foi possível analisar o PDF"))
     } finally {
       setCarregando(false)
     }
@@ -176,7 +177,7 @@ export function AnalisarPdfDialog({
       setOpen(false)
       resetTudo()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Não foi possível salvar")
+      toast.error(getErrorMessage(error, "Não foi possível salvar"))
     }
   }
 
