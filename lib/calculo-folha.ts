@@ -18,7 +18,7 @@ export function calcularEncargos(funcionario: FuncionarioBase) {
   const periculosidadeValor = funcionario.recebe_periculosidade
     ? funcionario.salario_base * TAXA_PERICULOSIDADE
     : 0
-  const descVt = funcionario.salario_base * TAXA_DESC_VT
+  const descVt = funcionario.vt_informado > 0 ? funcionario.salario_base * TAXA_DESC_VT : 0
   const descVa = funcionario.vr_informado * TAXA_DESC_VA
   const inssEmpregadoValor = funcionario.salario_base * (funcionario.inss_percentual / 100)
 
