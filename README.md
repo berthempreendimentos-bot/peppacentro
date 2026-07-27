@@ -22,8 +22,15 @@ e acompanhamento da execução de contratos. Next.js 15 (App Router) + Supabase
    SUPABASE_SERVICE_ROLE_KEY=
    ```
 
-2. Aplique as migrations em `supabase/migrations/` (em ordem, via SQL Editor
-   do Supabase ou Supabase CLI).
+2. Aplique as migrations em `supabase/migrations/` (em ordem), colando cada
+   arquivo no SQL Editor do Supabase, ou rodando localmente:
+
+   ```bash
+   node scripts/run-migration.mjs supabase/migrations/0017_cotacoes.sql
+   ```
+
+   Esse script precisa de `SUPABASE_DB_URL` (Project Settings → Database →
+   Connection string → URI) no `.env.local`.
 
 3. Instale as dependências e crie o primeiro usuário admin:
 
@@ -56,3 +63,4 @@ e acompanhamento da execução de contratos. Next.js 15 (App Router) + Supabase
 - `npm run build` — build de produção
 - `npm run start` — serve o build de produção
 - `npm run lint` — lint
+- `node scripts/run-migration.mjs <arquivo.sql>` — aplica uma migration direto no Postgres
