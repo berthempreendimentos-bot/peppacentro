@@ -124,10 +124,10 @@ export function LancamentosGlobaisTable() {
           placeholder="Buscar por descrição, contrato ou cliente..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="max-w-sm"
+          className="max-w-[260px]"
         />
         <Select value={tipo} onValueChange={setTipo}>
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-36">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -140,7 +140,7 @@ export function LancamentosGlobaisTable() {
           </SelectContent>
         </Select>
         <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-36">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -153,7 +153,7 @@ export function LancamentosGlobaisTable() {
           </SelectContent>
         </Select>
         <Select value={mes} onValueChange={setMes}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-36">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -167,7 +167,7 @@ export function LancamentosGlobaisTable() {
         </Select>
         <LancamentoFormDialog
           trigger={
-            <Button className="ml-auto">
+            <Button className="ml-auto shrink-0">
               <Plus /> Novo Lançamento
             </Button>
           }
