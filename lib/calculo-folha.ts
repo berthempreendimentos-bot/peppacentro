@@ -28,14 +28,7 @@ export function calcularEncargos(funcionario: FuncionarioBase) {
   const rat = baseEncargos * TAXA_RAT
   const terceiros = baseEncargos * TAXA_TERCEIROS
 
-  const liquido =
-    funcionario.salario_base +
-    periculosidadeValor +
-    funcionario.vt_informado +
-    funcionario.vr_informado -
-    descVt -
-    descVa -
-    inssEmpregadoValor
+  const liquido = funcionario.salario_base - descVt - inssEmpregadoValor - descVa
 
   const totalEncargos = fgts + inssPatronal + rat + terceiros
   const custoEmpresa =
