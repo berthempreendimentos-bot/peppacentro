@@ -31,6 +31,7 @@ export const lancamentoSchema = z.object({
   categoria_id: z.string().optional(),
   valor: z.number().min(0.01, "Informe um valor"),
   data: z.string().min(1, "Informe a data"),
+  mes_referencia: z.string().optional().nullable(),
   fornecedor_id: z.string().optional(),
   centro_custo_id: z.string().optional(),
   status: z.enum(["pendente", "pago", "atrasado", "cancelado"]),

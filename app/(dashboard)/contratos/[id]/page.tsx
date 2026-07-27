@@ -24,6 +24,7 @@ const situacaoLabel: Record<string, string> = {
   executado: "Executado",
   encerrado: "Encerrado",
   cancelado: "Cancelado",
+  integracao: "Integração",
 };
 
 const abasValidas = [

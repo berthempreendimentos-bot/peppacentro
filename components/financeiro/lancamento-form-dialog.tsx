@@ -172,6 +172,7 @@ const emptyValues: LancamentoInput = {
   categoria_id: "",
   valor: 0,
   data: new Date().toISOString().slice(0, 10),
+  mes_referencia: new Date().toISOString().slice(0, 7),
   fornecedor_id: "",
   centro_custo_id: "",
   status: "pendente",
@@ -228,6 +229,7 @@ export function LancamentoFormDialog({
               categoria_id: lancamento.categoria_id ?? "",
               valor: lancamento.valor,
               data: lancamento.data,
+              mes_referencia: lancamento.mes_referencia ?? lancamento.data.slice(0, 7),
               fornecedor_id: lancamento.fornecedor_id ?? "",
               centro_custo_id: lancamento.centro_custo_id ?? "",
               status: lancamento.status,
@@ -374,7 +376,7 @@ export function LancamentoFormDialog({
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <FormField
                 control={form.control}
                 name="valor"
@@ -396,6 +398,19 @@ export function LancamentoFormDialog({
                     <FormLabel>Data</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="mes_referencia"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mês Referência</FormLabel>
+                    <FormControl>
+                      <Input type="month" {...field} value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

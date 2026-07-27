@@ -35,6 +35,7 @@ const situacaoLabel: Record<string, string> = {
   executado: "Executado",
   encerrado: "Encerrado",
   cancelado: "Cancelado",
+  integracao: "Integração",
 }
 
 const situacaoVariant: Record<string, "default" | "outline" | "secondary" | "destructive"> = {
@@ -42,6 +43,7 @@ const situacaoVariant: Record<string, "default" | "outline" | "secondary" | "des
   executado: "secondary",
   encerrado: "outline",
   cancelado: "destructive",
+  integracao: "default",
 }
 
 const situacaoColor: Record<string, string> = {
@@ -49,6 +51,7 @@ const situacaoColor: Record<string, string> = {
   executado: "border-l-secondary",
   encerrado: "border-l-muted-foreground",
   cancelado: "border-l-destructive",
+  integracao: "border-l-blue-500",
 }
 
 const DURACAO_PADRAO_MESES = 12
@@ -128,7 +131,7 @@ export function ContratosTable() {
           </div>
         )}
         {filtrados.map((contrato) => {
-          const numPostos = contrato.postos_servico?.[0]?.count ?? 0
+          const numPostos = (contrato.postos_servico as any[])?.reduce((sum, p) => sum + (p.quantidade || 0), 0) ?? 0
           const duracao = calcularDuracao(contrato.data_inicio, contrato.data_fim)
           const valorMensal = contrato.valor_atual / duracao.total
           const borderColor = situacaoColor[contrato.situacao] || "border-l-border"

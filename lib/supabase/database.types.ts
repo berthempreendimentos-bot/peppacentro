@@ -4,7 +4,7 @@
 
 export type UserRole = "admin" | "gestor" | "financeiro" | "fiscal" | "visualizador"
 export type PessoaTipo = "PF" | "PJ"
-export type ContratoSituacao = "em_andamento" | "executado" | "encerrado" | "cancelado"
+export type ContratoSituacao = "em_andamento" | "executado" | "encerrado" | "cancelado" | "integracao"
 export type CronogramaEtapa =
   | "planejamento"
   | "execucao"
@@ -273,6 +273,7 @@ export interface Database {
           centro_custo_id: string | null
           documento_url: string | null
           status: LancamentoStatus
+          mes_referencia: string | null
           created_by: string | null
           created_at: string
           updated_at: string
@@ -283,6 +284,7 @@ export interface Database {
           descricao: string
           valor: number
           data: string
+          mes_referencia?: string | null
         }
         Update: Partial<Database["public"]["Tables"]["lancamentos"]["Row"]>
         Relationships: [

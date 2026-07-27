@@ -80,7 +80,7 @@ export function LancamentosTable({ contratoId }: { contratoId: string }) {
     if (!lancamentos) return []
     const mSet = new Set<string>()
     lancamentos.forEach((l) => {
-      mSet.add(l.data.substring(0, 7))
+      mSet.add(l.mes_referencia || l.data.substring(0, 7))
     })
     return Array.from(mSet).sort((a, b) => b.localeCompare(a))
   }, [lancamentos])
@@ -89,7 +89,8 @@ export function LancamentosTable({ contratoId }: { contratoId: string }) {
     return (lancamentos ?? []).filter((l) => {
       if (tipo !== "todos" && l.tipo !== tipo) return false
       if (status !== "todos" && l.status !== status) return false
-      if (mes !== "todos" && l.data.substring(0, 7) !== mes) return false
+      const lMes = l.mes_referencia || l.data.substring(0, 7)
+      if (mes !== "todos" && lMes !== mes) return false
       const texto = `${l.descricao} ${l.categorias?.nome ?? ""}`
       return texto.toLowerCase().includes(search.toLowerCase())
     })
