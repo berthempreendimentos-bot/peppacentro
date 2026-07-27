@@ -97,7 +97,7 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
   }
 
   return (
-    <div className="flex w-full min-w-0 flex-col gap-4">
+    <div className="sticky top-0 z-10 flex max-h-screen w-full min-w-0 flex-col gap-4 bg-background py-2">
       <div className="flex justify-end gap-2">
         <ImportarFuncionariosDialog
           contratoId={contratoId}
@@ -117,7 +117,7 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
         />
       </div>
 
-      <div className="scrollbar-always max-h-[70vh] overflow-auto rounded-lg border">
+      <div className="scrollbar-always min-h-0 flex-1 overflow-auto rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
