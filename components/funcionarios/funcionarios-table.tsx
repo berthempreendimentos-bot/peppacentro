@@ -20,6 +20,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -41,10 +42,47 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
+const TOTAIS_VAZIOS = {
+  salarioBase: 0,
+  vtInformado: 0,
+  vrInformado: 0,
+  descVt: 0,
+  periculosidadeValor: 0,
+  inssEmpregadoValor: 0,
+  descVa: 0,
+  liquido: 0,
+  fgts: 0,
+  inssPatronal: 0,
+  rat: 0,
+  terceiros: 0,
+  totalEncargos: 0,
+  custoEmpresa: 0,
+}
+
 export function FuncionariosList({ contratoId }: { contratoId: string }) {
   const { data: funcionarios, isLoading } = useFuncionarios(contratoId)
   const deleteFuncionario = useDeleteFuncionario(contratoId)
   const [paraExcluir, setParaExcluir] = useState<Funcionario | null>(null)
+
+  const totais = (funcionarios ?? []).reduce((acc, funcionario) => {
+    const encargos = calcularEncargos(funcionario)
+    return {
+      salarioBase: acc.salarioBase + funcionario.salario_base,
+      vtInformado: acc.vtInformado + funcionario.vt_informado,
+      vrInformado: acc.vrInformado + funcionario.vr_informado,
+      descVt: acc.descVt + encargos.descVt,
+      periculosidadeValor: acc.periculosidadeValor + encargos.periculosidadeValor,
+      inssEmpregadoValor: acc.inssEmpregadoValor + encargos.inssEmpregadoValor,
+      descVa: acc.descVa + encargos.descVa,
+      liquido: acc.liquido + encargos.liquido,
+      fgts: acc.fgts + encargos.fgts,
+      inssPatronal: acc.inssPatronal + encargos.inssPatronal,
+      rat: acc.rat + encargos.rat,
+      terceiros: acc.terceiros + encargos.terceiros,
+      totalEncargos: acc.totalEncargos + encargos.totalEncargos,
+      custoEmpresa: acc.custoEmpresa + encargos.custoEmpresa,
+    }
+  }, TOTAIS_VAZIOS)
 
   async function handleDelete() {
     if (!paraExcluir) return
@@ -59,7 +97,7 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex w-full min-w-0 flex-col gap-4">
       <div className="flex justify-end gap-2">
         <ImportarFuncionariosDialog
           contratoId={contratoId}
@@ -99,6 +137,8 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
               <TableHead className="bg-primary/10 text-right">INSS Patronal 20%</TableHead>
               <TableHead className="bg-primary/10 text-right">RAT 3%</TableHead>
               <TableHead className="bg-primary/10 text-right">Terceiros 5,8%</TableHead>
+              <TableHead className="bg-primary/10 text-right">Total Encargos</TableHead>
+              <TableHead className="bg-primary/10 text-right">Custo Empresa</TableHead>
               <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
@@ -106,7 +146,7 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
             {isLoading &&
               Array.from({ length: 3 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={17}>
+                  <TableCell colSpan={19}>
                     <Skeleton className="h-6 w-full" />
                   </TableCell>
                 </TableRow>
@@ -114,7 +154,7 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
             {!isLoading && (funcionarios ?? []).length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={17}
+                  colSpan={19}
                   className="py-8 text-center text-muted-foreground"
                 >
                   Nenhum funcionário cadastrado neste contrato.
@@ -179,6 +219,12 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
                   <TableCell className="bg-primary/5 text-right whitespace-nowrap">
                     {formatCurrencyBRL(encargos.terceiros)}
                   </TableCell>
+                  <TableCell className="bg-primary/5 text-right font-medium whitespace-nowrap">
+                    {formatCurrencyBRL(encargos.totalEncargos)}
+                  </TableCell>
+                  <TableCell className="bg-primary/5 text-right font-medium whitespace-nowrap">
+                    {formatCurrencyBRL(encargos.custoEmpresa)}
+                  </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -209,6 +255,61 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
               )
             })}
           </TableBody>
+          {!isLoading && (funcionarios ?? []).length > 0 && (
+            <TableFooter>
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
+                <TableCell className="sticky left-0 z-10 border-r bg-muted/50 font-semibold whitespace-nowrap">
+                  Total
+                </TableCell>
+                <TableCell />
+                <TableCell />
+                <TableCell />
+                <TableCell className="text-right font-semibold whitespace-nowrap">
+                  {formatCurrencyBRL(totais.salarioBase)}
+                </TableCell>
+                <TableCell className="text-right font-semibold whitespace-nowrap">
+                  {formatCurrencyBRL(totais.vtInformado)}
+                </TableCell>
+                <TableCell className="text-right font-semibold whitespace-nowrap">
+                  {formatCurrencyBRL(totais.vrInformado)}
+                </TableCell>
+                <TableCell className="text-right font-semibold whitespace-nowrap">
+                  {formatCurrencyBRL(totais.descVt)}
+                </TableCell>
+                <TableCell className="text-right font-semibold whitespace-nowrap">
+                  {formatCurrencyBRL(totais.periculosidadeValor)}
+                </TableCell>
+                <TableCell className="text-right font-semibold whitespace-nowrap">
+                  {formatCurrencyBRL(totais.inssEmpregadoValor)}
+                </TableCell>
+                <TableCell className="text-right font-semibold whitespace-nowrap">
+                  {formatCurrencyBRL(totais.descVa)}
+                </TableCell>
+                <TableCell className="text-right font-semibold whitespace-nowrap">
+                  {formatCurrencyBRL(totais.liquido)}
+                </TableCell>
+                <TableCell className="bg-primary/10 text-right font-semibold whitespace-nowrap">
+                  {formatCurrencyBRL(totais.fgts)}
+                </TableCell>
+                <TableCell className="bg-primary/10 text-right font-semibold whitespace-nowrap">
+                  {formatCurrencyBRL(totais.inssPatronal)}
+                </TableCell>
+                <TableCell className="bg-primary/10 text-right font-semibold whitespace-nowrap">
+                  {formatCurrencyBRL(totais.rat)}
+                </TableCell>
+                <TableCell className="bg-primary/10 text-right font-semibold whitespace-nowrap">
+                  {formatCurrencyBRL(totais.terceiros)}
+                </TableCell>
+                <TableCell className="bg-primary/10 text-right font-semibold whitespace-nowrap">
+                  {formatCurrencyBRL(totais.totalEncargos)}
+                </TableCell>
+                <TableCell className="bg-primary/10 text-right font-semibold whitespace-nowrap">
+                  {formatCurrencyBRL(totais.custoEmpresa)}
+                </TableCell>
+                <TableCell />
+              </TableRow>
+            </TableFooter>
+          )}
         </Table>
       </div>
 

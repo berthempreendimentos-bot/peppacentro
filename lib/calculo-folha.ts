@@ -37,6 +37,10 @@ export function calcularEncargos(funcionario: FuncionarioBase) {
     descVa -
     inssEmpregadoValor
 
+  const totalEncargos = fgts + inssPatronal + rat + terceiros
+  const custoEmpresa =
+    funcionario.salario_base + funcionario.vt_informado + funcionario.vr_informado + totalEncargos
+
   return {
     periculosidadeValor,
     descVt,
@@ -47,5 +51,7 @@ export function calcularEncargos(funcionario: FuncionarioBase) {
     rat,
     terceiros,
     liquido,
+    totalEncargos,
+    custoEmpresa,
   }
 }

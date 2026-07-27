@@ -136,7 +136,7 @@ export default function ContratoDetalhePage() {
         <TabsContent value="planilha-custo">
           <PlanilhaCustoTab contratoId={contrato.id} />
         </TabsContent>
-        <TabsContent value="funcionarios">
+        <TabsContent value="funcionarios" className="w-full min-w-0">
           <FuncionariosList contratoId={contrato.id} />
         </TabsContent>
         <TabsContent value="medicoes">
