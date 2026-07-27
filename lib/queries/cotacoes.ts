@@ -185,6 +185,41 @@ export function useAddEmpresa(cotacaoId: string) {
   })
 }
 
+async function garantirFornecedor(
+  supabase: ReturnType<typeof createClient>,
+  empresa: {
+    nome: string
+    cnpj?: string
+    endereco?: string
+    razaoSocial?: string
+    situacaoCadastral?: string
+  }
+) {
+  if (empresa.cnpj) {
+    const { data: existente } = await supabase
+      .from("fornecedores")
+      .select("id")
+      .eq("cpf_cnpj", empresa.cnpj)
+      .maybeSingle()
+    if (existente) return
+  }
+
+  const observacoes = [
+    empresa.razaoSocial ? `Razão social: ${empresa.razaoSocial}` : null,
+    empresa.situacaoCadastral ? `Situação cadastral: ${empresa.situacaoCadastral}` : null,
+    "Importado automaticamente a partir de uma cotação em PDF.",
+  ]
+    .filter(Boolean)
+    .join(" · ")
+
+  await supabase.from("fornecedores").insert({
+    nome: empresa.nome,
+    cpf_cnpj: empresa.cnpj || null,
+    endereco: empresa.endereco || null,
+    observacoes,
+  })
+}
+
 export function useAddEmpresaComPdf(cotacaoId: string) {
   const queryClient = useQueryClient()
   return useMutation({
@@ -225,6 +260,18 @@ export function useAddEmpresaComPdf(cotacaoId: string) {
         throw empresaError
       }
 
+      try {
+        await garantirFornecedor(supabase, {
+          nome: input.nome,
+          cnpj: input.cnpj,
+          endereco: input.endereco,
+          razaoSocial: input.razaoSocial,
+          situacaoCadastral: input.situacaoCadastral,
+        })
+      } catch {
+        // não bloqueia a importação da cotação se o cadastro de fornecedor falhar
+      }
+
       let precosDeNovosItens: { cotacaoItemId: string; valorUnitario: number }[] = []
       if (input.novosItens.length > 0) {
         const { data: itensCriados, error: itensError } = await supabase
@@ -260,6 +307,7 @@ export function useAddEmpresaComPdf(cotacaoId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: DETAIL_KEY(cotacaoId) })
       queryClient.invalidateQueries({ queryKey: ["cotacoes", cotacaoId, "precos"] })
+      queryClient.invalidateQueries({ queryKey: ["fornecedores"] })
     },
   })
 }
