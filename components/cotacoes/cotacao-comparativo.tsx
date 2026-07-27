@@ -295,17 +295,18 @@ export function CotacaoComparativo({ cotacao }: { cotacao: CotacaoComDetalhes })
             {itens.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
+                className="flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm"
               >
-                <span>
+                <span className="min-w-0 flex-1 break-words">
                   {item.descricao}
-                  <span className="ml-2 text-muted-foreground">
+                  <span className="ml-2 whitespace-nowrap text-muted-foreground">
                     {item.quantidade} {item.unidade ?? ""}
                   </span>
                 </span>
                 <Button
                   variant="ghost"
                   size="icon-sm"
+                  className="shrink-0"
                   onClick={() =>
                     deleteItem.mutate(item.id, { onSuccess: () => toast.success("Item removido") })
                   }
