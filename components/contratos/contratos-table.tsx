@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { MoreHorizontal, Pencil, Trash2, Wallet } from "lucide-react"
+import { Pencil, Trash2, Wallet } from "lucide-react"
 import { toast } from "sonner"
 
 import { useContratos, useDeleteContrato, type Contrato } from "@/lib/queries/contratos"
@@ -19,12 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import {
   AlertDialog,
@@ -232,21 +226,15 @@ export function ContratosTable() {
                     </Button>
                   }
                 />
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon-sm">
-                      <MoreHorizontal className="size-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      variant="destructive"
-                      onSelect={() => setParaExcluir(contrato)}
-                    >
-                      <Trash2 className="size-4 mr-2" /> Excluir
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <Button
+                  variant="outline"
+                  size="icon-sm"
+                  title="Excluir contrato"
+                  className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => setParaExcluir(contrato)}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
               </CardFooter>
             </Card>
           )
