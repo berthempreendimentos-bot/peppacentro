@@ -173,11 +173,15 @@ export function useAddEmpresa(cotacaoId: string) {
   return useMutation({
     mutationFn: async (input: { nome: string; cnpj?: string; contato?: string }) => {
       const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      const anexado_por = user ? (user.user_metadata?.nome || user.user_metadata?.full_name || user.email) : null
+
       const { error } = await supabase.from("cotacao_empresas").insert({
         cotacao_id: cotacaoId,
         nome: input.nome,
         cnpj: input.cnpj || null,
         contato: input.contato || null,
+        anexado_por,
       })
       if (error) throw error
     },
@@ -234,6 +238,9 @@ export function useAddEmpresaComPdf(cotacaoId: string) {
       novosItens: { descricao: string; valorUnitario: number }[]
     }) => {
       const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      const anexado_por = user ? (user.user_metadata?.nome || user.user_metadata?.full_name || user.email) : null
+
       const safeName = input.file.name.replace(/[^\w.\-]+/g, "_")
       const storagePath = `cotacao_${cotacaoId}/${Date.now()}_${safeName}`
 
@@ -252,6 +259,7 @@ export function useAddEmpresaComPdf(cotacaoId: string) {
           situacao_cadastral: input.situacaoCadastral || null,
           endereco: input.endereco || null,
           documento_storage_path: storagePath,
+          anexado_por,
         })
         .select("id")
         .single()

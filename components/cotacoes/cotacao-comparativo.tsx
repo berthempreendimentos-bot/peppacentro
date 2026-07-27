@@ -188,30 +188,49 @@ function PrecoInput({
   valorAtual: number | null
   onSalvar: (valor: number | null) => void
 }) {
-  const [valor, setValor] = useState(valorAtual !== null ? String(valorAtual) : "")
+  const formatBRL = (val: number) =>
+    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(val)
+
+  const [displayValue, setDisplayValue] = useState(() =>
+    valorAtual !== null ? formatBRL(valorAtual) : ""
+  )
 
   useEffect(() => {
-    setValor(valorAtual !== null ? String(valorAtual) : "")
+    setDisplayValue(valorAtual !== null ? formatBRL(valorAtual) : "")
   }, [valorAtual])
 
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = e.target.value.replace(/\D/g, "")
+    if (!val) {
+      setDisplayValue("")
+      return
+    }
+    const num = Number(val) / 100
+    setDisplayValue(formatBRL(num))
+  }
+
   function commit() {
-    const numero = valor.trim() === "" ? null : Number(valor)
-    onSalvar(numero !== null && !Number.isFinite(numero) ? null : numero)
+    if (!displayValue) {
+      onSalvar(null)
+      return
+    }
+    const val = displayValue.replace(/\D/g, "")
+    const num = Number(val) / 100
+    onSalvar(num)
   }
 
   return (
     <Input
-      type="number"
-      step="0.01"
-      min={0}
+      type="text"
+      inputMode="numeric"
       placeholder="—"
-      value={valor}
-      onChange={(e) => setValor(e.target.value)}
+      value={displayValue}
+      onChange={handleChange}
       onBlur={commit}
       onKeyDown={(e) => {
         if (e.key === "Enter") e.currentTarget.blur()
       }}
-      className="h-8 w-28"
+      className="h-8 w-32"
     />
   )
 }
@@ -283,49 +302,13 @@ export function CotacaoComparativo({ cotacao }: { cotacao: CotacaoComDetalhes })
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <h2 className="label-caps text-muted-foreground">Itens ({itens.length})</h2>
-          <AdicionarItemDialog cotacaoId={cotacao.id} />
-        </div>
-        {itens.length === 0 ? (
-          <p className="py-4 text-center text-sm text-muted-foreground">
-            Nenhum item cadastrado ainda.
-          </p>
-        ) : (
-          <div className="flex flex-col gap-1">
-            {itens.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm"
-              >
-                <span className="min-w-0 flex-1 break-words">
-                  {item.descricao}
-                  <span className="ml-2 whitespace-nowrap text-muted-foreground">
-                    {item.quantidade} {item.unidade ?? ""}
-                  </span>
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  className="shrink-0"
-                  onClick={() =>
-                    deleteItem.mutate(item.id, { onSuccess: () => toast.success("Item removido") })
-                  }
-                >
-                  <Trash2 className="size-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <h2 className="label-caps text-muted-foreground">Empresas ({empresas.length})</h2>
+          <h2 className="label-caps text-muted-foreground">Comparativo</h2>
           <div className="flex items-center gap-2">
+            <AdicionarItemDialog cotacaoId={cotacao.id} />
             <AnalisarPdfDialog
               cotacaoId={cotacao.id}
               itens={itens}
+              empresas={empresas}
               trigger={
                 <Button variant="outline" size="sm">
                   <FileText className="size-4" /> Analisar PDF
@@ -395,6 +378,11 @@ export function CotacaoComparativo({ cotacao }: { cotacao: CotacaoComDetalhes })
                         </span>
                         {ehMelhor && <Badge>Melhor opção</Badge>}
                       </div>
+                      {empresa.anexado_por && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Anexado por: {empresa.anexado_por}
+                        </p>
+                      )}
                     </div>
                   </CardContent>
                   <CardFooter className="justify-end gap-1">
@@ -448,11 +436,26 @@ export function CotacaoComparativo({ cotacao }: { cotacao: CotacaoComDetalhes })
                   const menor = menorPrecoDoItem(item.id)
                   return (
                     <TableRow key={item.id}>
-                      <TableCell className="font-medium">
-                        {item.descricao}
-                        <span className="block text-xs text-muted-foreground">
-                          {item.quantidade} {item.unidade ?? ""}
-                        </span>
+                      <TableCell className="font-medium align-top">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            {item.descricao}
+                            <span className="block text-xs text-muted-foreground">
+                              {item.quantidade} {item.unidade ?? ""}
+                            </span>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            className="shrink-0 h-6 w-6 text-muted-foreground hover:text-destructive"
+                            title="Remover item"
+                            onClick={() =>
+                              deleteItem.mutate(item.id, { onSuccess: () => toast.success("Item removido") })
+                            }
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </div>
                       </TableCell>
                       {empresas.map((empresa) => {
                         const key = `${item.id}_${empresa.id}`

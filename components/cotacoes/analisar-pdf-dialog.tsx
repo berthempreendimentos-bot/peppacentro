@@ -38,10 +38,12 @@ type ItemCandidato = { incluir: boolean; descricao: string; valor: number | "" }
 export function AnalisarPdfDialog({
   cotacaoId,
   itens,
+  empresas,
   trigger,
 }: {
   cotacaoId: string
   itens: CotacaoItem[]
+  empresas: any[]
   trigger: React.ReactNode
 }) {
   const [open, setOpen] = useState(false)
@@ -76,6 +78,14 @@ export function AnalisarPdfDialog({
       toast.error("Selecione um arquivo PDF")
       return
     }
+
+    // Validar arquivo duplicado
+    const arquivoJaAnexado = empresas.some(e => e.documento_storage_path?.includes(file.name.replace(/[^\w.\-]+/g, "_")))
+    if (arquivoJaAnexado) {
+      toast.error("Este arquivo PDF já foi anexado nesta cotação.")
+      return
+    }
+
     setCarregando(true)
     try {
       const formData = new FormData()
@@ -90,7 +100,16 @@ export function AnalisarPdfDialog({
       }
       const dados = await resposta.json()
 
-      if (dados.cnpj) setCnpj(dados.cnpj)
+      if (dados.cnpj) {
+        // Validar CNPJ duplicado
+        if (empresas.some(e => e.cnpj === dados.cnpj)) {
+          toast.error("Uma cotação com este CNPJ já foi adicionada ao comparativo.")
+          setCarregando(false)
+          return
+        }
+        setCnpj(dados.cnpj)
+      }
+      
       if (dados.empresa) {
         setRazaoSocial(dados.empresa.razaoSocial ?? "")
         setNome(dados.empresa.nomeFantasia || dados.empresa.razaoSocial || "")

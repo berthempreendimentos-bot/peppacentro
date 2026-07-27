@@ -674,6 +674,7 @@ export interface Database {
           situacao_cadastral: string | null
           endereco: string | null
           documento_storage_path: string | null
+          anexado_por: string | null
           created_at: string
         }
         Insert: Partial<Database["public"]["Tables"]["cotacao_empresas"]["Row"]> & {
