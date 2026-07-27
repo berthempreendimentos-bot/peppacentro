@@ -35,7 +35,7 @@ const situacaoLabel: Record<string, string> = {
   executado: "Executado",
   encerrado: "Encerrado",
   cancelado: "Cancelado",
-  integracao: "Integração",
+  inicializacao: "Inicialização",
 }
 
 const situacaoVariant: Record<string, "default" | "outline" | "secondary" | "destructive"> = {
@@ -43,7 +43,7 @@ const situacaoVariant: Record<string, "default" | "outline" | "secondary" | "des
   executado: "secondary",
   encerrado: "outline",
   cancelado: "destructive",
-  integracao: "default",
+  inicializacao: "default",
 }
 
 const situacaoColor: Record<string, string> = {
@@ -51,7 +51,7 @@ const situacaoColor: Record<string, string> = {
   executado: "border-l-secondary",
   encerrado: "border-l-muted-foreground",
   cancelado: "border-l-destructive",
-  integracao: "border-l-blue-500",
+  inicializacao: "border-l-blue-500",
 }
 
 const DURACAO_PADRAO_MESES = 12
@@ -131,7 +131,7 @@ export function ContratosTable() {
           </div>
         )}
         {filtrados.map((contrato) => {
-          const numPostos = (contrato.postos_servico as any[])?.reduce((sum, p) => sum + (p.quantidade || 0), 0) ?? 0
+          const numPostos = contrato.postos_servico?.reduce((sum, p) => sum + (p.quantidade || 0), 0) ?? 0
           const duracao = calcularDuracao(contrato.data_inicio, contrato.data_fim)
           const valorMensal = contrato.valor_atual / duracao.total
           const borderColor = situacaoColor[contrato.situacao] || "border-l-border"
@@ -194,6 +194,15 @@ export function ContratosTable() {
                     Finanças
                   </Button>
                 </Link>
+                <ContratoFormDialog
+                  contrato={contrato}
+                  trigger={
+                    <Button variant="outline" size="sm" title="Editar contrato">
+                      <Pencil className="size-4 mr-2" />
+                      Editar
+                    </Button>
+                  }
+                />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon-sm">
@@ -201,14 +210,6 @@ export function ContratosTable() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <ContratoFormDialog
-                      contrato={contrato}
-                      trigger={
-                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                          <Pencil className="size-4 mr-2" /> Editar
-                        </DropdownMenuItem>
-                      }
-                    />
                     <DropdownMenuItem
                       variant="destructive"
                       onSelect={() => setParaExcluir(contrato)}
