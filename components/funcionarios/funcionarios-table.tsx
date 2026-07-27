@@ -15,6 +15,7 @@ import { cn, getErrorMessage } from "@/lib/utils"
 import { FuncionarioFormDialog } from "@/components/funcionarios/funcionario-form-dialog"
 import { ImportarFuncionariosDialog } from "@/components/funcionarios/importar-funcionarios-dialog"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
@@ -63,8 +64,13 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
   const { data: funcionarios, isLoading } = useFuncionarios(contratoId)
   const deleteFuncionario = useDeleteFuncionario(contratoId)
   const [paraExcluir, setParaExcluir] = useState<Funcionario | null>(null)
+  const [search, setSearch] = useState("")
 
-  const totais = (funcionarios ?? []).reduce((acc, funcionario) => {
+  const filtrados = (funcionarios ?? []).filter((f) =>
+    `${f.nome} ${f.cpf ?? ""} ${f.funcao ?? ""}`.toLowerCase().includes(search.toLowerCase())
+  )
+
+  const totais = filtrados.reduce((acc, funcionario) => {
     const encargos = calcularEncargos(funcionario)
     return {
       salarioBase: acc.salarioBase + funcionario.salario_base,
@@ -98,51 +104,58 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
 
   return (
     <div className="sticky top-0 z-10 flex max-h-screen w-full min-w-0 flex-col gap-4 bg-background py-2">
-      <div className="flex justify-end gap-2">
-        <ImportarFuncionariosDialog
-          contratoId={contratoId}
-          trigger={
-            <Button variant="outline">
-              <Upload /> Importar
-            </Button>
-          }
+      <div className="flex flex-wrap items-center gap-3">
+        <Input
+          placeholder="Buscar por nome, CPF ou função..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="max-w-[260px]"
         />
-        <FuncionarioFormDialog
-          contratoId={contratoId}
-          trigger={
-            <Button>
-              <Plus /> Novo Funcionário
-            </Button>
-          }
-        />
+        <div className="ml-auto flex shrink-0 gap-2">
+          <ImportarFuncionariosDialog
+            contratoId={contratoId}
+            trigger={
+              <Button variant="outline">
+                <Upload /> Importar
+              </Button>
+            }
+          />
+          <FuncionarioFormDialog
+            contratoId={contratoId}
+            trigger={
+              <Button>
+                <Plus /> Novo Funcionário
+              </Button>
+            }
+          />
+        </div>
       </div>
 
-      <div className="scrollbar-always min-h-0 flex-1 overflow-auto rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="sticky top-0 left-0 z-30 border-r bg-background">Nome</TableHead>
-              <TableHead className="sticky top-0 z-20 bg-background">CPF</TableHead>
-              <TableHead className="sticky top-0 z-20 bg-background">Função</TableHead>
-              <TableHead className="sticky top-0 z-20 bg-background">Admissão</TableHead>
-              <TableHead className="sticky top-0 z-20 bg-background text-right">Salário Base</TableHead>
-              <TableHead className="sticky top-0 z-20 bg-background text-right">VT Informado</TableHead>
-              <TableHead className="sticky top-0 z-20 bg-background text-right">VR Informado</TableHead>
-              <TableHead className="sticky top-0 z-20 bg-background text-right">Desc. VT (6%)</TableHead>
-              <TableHead className="sticky top-0 z-20 bg-background text-right">30% Periculosidade</TableHead>
-              <TableHead className="sticky top-0 z-20 bg-background text-right">INSS Empregado</TableHead>
-              <TableHead className="sticky top-0 z-20 bg-background text-right">Desc. VA (10%)</TableHead>
-              <TableHead className="sticky top-0 z-20 bg-background text-right">Líquido do empregado</TableHead>
-              <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">FGTS 8%</TableHead>
-              <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">INSS Patronal 20%</TableHead>
-              <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">RAT 3%</TableHead>
-              <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">Terceiros 5,8%</TableHead>
-              <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">Total Encargos</TableHead>
-              <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">Custo Empresa</TableHead>
-              <TableHead className="sticky top-0 z-20 w-10 bg-background" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+      <Table wrapperClassName="scrollbar-always min-h-0 flex-1 overflow-auto max-h-[calc(100vh-250px)] rounded-lg border">
+        <TableHeader>
+          <TableRow>
+            <TableHead className="sticky top-0 left-0 z-30 border-r bg-background">Nome</TableHead>
+            <TableHead className="sticky top-0 z-20 bg-background">CPF</TableHead>
+            <TableHead className="sticky top-0 z-20 bg-background">Função</TableHead>
+            <TableHead className="sticky top-0 z-20 bg-background">Admissão</TableHead>
+            <TableHead className="sticky top-0 z-20 bg-background text-right">Salário Base</TableHead>
+            <TableHead className="sticky top-0 z-20 bg-background text-right">VT Informado</TableHead>
+            <TableHead className="sticky top-0 z-20 bg-background text-right">VR Informado</TableHead>
+            <TableHead className="sticky top-0 z-20 bg-background text-right">Desc. VT (6%)</TableHead>
+            <TableHead className="sticky top-0 z-20 bg-background text-right">30% Periculosidade</TableHead>
+            <TableHead className="sticky top-0 z-20 bg-background text-right">INSS Empregado</TableHead>
+            <TableHead className="sticky top-0 z-20 bg-background text-right">Desc. VA (10%)</TableHead>
+            <TableHead className="sticky top-0 z-20 bg-background text-right">Líquido do empregado</TableHead>
+            <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">FGTS 8%</TableHead>
+            <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">INSS Patronal 20%</TableHead>
+            <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">RAT 3%</TableHead>
+            <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">Terceiros 5,8%</TableHead>
+            <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">Total Encargos</TableHead>
+            <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">Custo Empresa</TableHead>
+            <TableHead className="sticky top-0 z-20 w-10 bg-background" />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
             {isLoading &&
               Array.from({ length: 3 }).map((_, i) => (
                 <TableRow key={i}>
@@ -151,17 +164,17 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
                   </TableCell>
                 </TableRow>
               ))}
-            {!isLoading && (funcionarios ?? []).length === 0 && (
+            {!isLoading && filtrados.length === 0 && (
               <TableRow>
                 <TableCell
                   colSpan={19}
                   className="py-8 text-center text-muted-foreground"
                 >
-                  Nenhum funcionário cadastrado neste contrato.
+                  Nenhum funcionário encontrado.
                 </TableCell>
               </TableRow>
             )}
-            {(funcionarios ?? []).map((funcionario, index) => {
+            {filtrados.map((funcionario, index) => {
               const encargos = calcularEncargos(funcionario)
               const linhaBg = index % 2 === 1 ? "bg-secondary" : "bg-background"
               return (
@@ -255,7 +268,7 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
               )
             })}
           </TableBody>
-          {!isLoading && (funcionarios ?? []).length > 0 && (
+          {!isLoading && filtrados.length > 0 && (
             <TableFooter>
               <TableRow className="bg-muted hover:bg-muted">
                 <TableCell className="sticky left-0 z-10 border-r bg-muted font-semibold whitespace-nowrap">
@@ -311,8 +324,6 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
             </TableFooter>
           )}
         </Table>
-      </div>
-
       <AlertDialog
         open={!!paraExcluir}
         onOpenChange={(open) => !open && setParaExcluir(null)}
