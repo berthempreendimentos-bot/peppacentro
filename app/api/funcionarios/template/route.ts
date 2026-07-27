@@ -10,6 +10,8 @@ export async function GET() {
       Cargo: "Vigilante",
       Admissão: "15/01/2024",
       "Salário Base": 2000,
+      "VT Informado": 220,
+      "VR Informado": 500,
     },
   ]
 

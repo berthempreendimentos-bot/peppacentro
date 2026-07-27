@@ -7,15 +7,22 @@ export type FuncionarioImportado = {
   funcao: string
   dataAdmissao: string
   salarioBase: number
+  vtInformado: number
+  vrInformado: number
   incluir: boolean
 }
 
-const ALIASES: Record<"nome" | "cpf" | "funcao" | "dataAdmissao" | "salarioBase", string[]> = {
+const ALIASES: Record<
+  "nome" | "cpf" | "funcao" | "dataAdmissao" | "salarioBase" | "vtInformado" | "vrInformado",
+  string[]
+> = {
   nome: ["nome"],
   cpf: ["cpf"],
   funcao: ["cargo", "funcao"],
   dataAdmissao: ["admissao", "data de admissao", "data admissao"],
   salarioBase: ["salario base", "salario"],
+  vtInformado: ["vt informado", "vt"],
+  vrInformado: ["vr informado", "vr"],
 }
 
 function normalizar(texto: string): string {
@@ -86,6 +93,8 @@ export function extrairFuncionarios(workbook: XLSX.WorkBook): FuncionarioImporta
   const colunaFuncao = encontrarColuna(cabecalhos, "funcao")
   const colunaAdmissao = encontrarColuna(cabecalhos, "dataAdmissao")
   const colunaSalario = encontrarColuna(cabecalhos, "salarioBase")
+  const colunaVt = encontrarColuna(cabecalhos, "vtInformado")
+  const colunaVr = encontrarColuna(cabecalhos, "vrInformado")
 
   const funcionarios: FuncionarioImportado[] = []
   linhas.forEach((linha, index) => {
@@ -98,6 +107,8 @@ export function extrairFuncionarios(workbook: XLSX.WorkBook): FuncionarioImporta
       funcao: colunaFuncao ? String(linha[colunaFuncao] ?? "").trim() : "",
       dataAdmissao: colunaAdmissao ? parseData(linha[colunaAdmissao]) : "",
       salarioBase: colunaSalario ? parseValorMonetario(linha[colunaSalario]) : 0,
+      vtInformado: colunaVt ? parseValorMonetario(linha[colunaVt]) : 0,
+      vrInformado: colunaVr ? parseValorMonetario(linha[colunaVr]) : 0,
       incluir: true,
     })
   })

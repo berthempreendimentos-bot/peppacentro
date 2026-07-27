@@ -104,7 +104,8 @@ export function ImportarFuncionariosDialog({
         <DialogHeader>
           <DialogTitle>Importar funcionários de uma planilha</DialogTitle>
           <DialogDescription>
-            Colunas reconhecidas: Nome, CPF, Cargo, Admissão e Salário Base.
+            Colunas reconhecidas: Nome, CPF, Cargo, Admissão, Salário Base, VT Informado e VR
+            Informado.
           </DialogDescription>
         </DialogHeader>
 
@@ -143,7 +144,9 @@ export function ImportarFuncionariosDialog({
                     <TableHead>CPF</TableHead>
                     <TableHead>Cargo</TableHead>
                     <TableHead>Admissão</TableHead>
-                    <TableHead className="w-36">Salário Base</TableHead>
+                    <TableHead className="w-32">Salário Base</TableHead>
+                    <TableHead className="w-28">VT Informado</TableHead>
+                    <TableHead className="w-28">VR Informado</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -196,6 +199,22 @@ export function ImportarFuncionariosDialog({
                         <CurrencyInput
                           value={f.salarioBase}
                           onChange={(valor) => updateFuncionario(f.linha, { salarioBase: valor })}
+                          disabled={!f.incluir}
+                          className="h-8"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <CurrencyInput
+                          value={f.vtInformado}
+                          onChange={(valor) => updateFuncionario(f.linha, { vtInformado: valor })}
+                          disabled={!f.incluir}
+                          className="h-8"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <CurrencyInput
+                          value={f.vrInformado}
+                          onChange={(valor) => updateFuncionario(f.linha, { vrInformado: valor })}
                           disabled={!f.incluir}
                           className="h-8"
                         />
