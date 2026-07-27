@@ -5,7 +5,7 @@ export const contratoSituacaoOptions = [
   { value: "executado", label: "Executado" },
   { value: "encerrado", label: "Encerrado" },
   { value: "cancelado", label: "Cancelado" },
-  { value: "integracao", label: "Integração" },
+  { value: "inicializacao", label: "Inicialização" },
 ] as const
 
 export const contratoSchema = z.object({
@@ -20,7 +20,7 @@ export const contratoSchema = z.object({
   data_assinatura: z.string().optional(),
   data_inicio: z.string().optional(),
   data_fim: z.string().optional(),
-  situacao: z.enum(["em_andamento", "executado", "encerrado", "cancelado", "integracao"]),
+  situacao: z.enum(["em_andamento", "executado", "encerrado", "cancelado", "inicializacao"]),
   fiscal_id: z.string().optional(),
   gestor_id: z.string().optional(),
 })

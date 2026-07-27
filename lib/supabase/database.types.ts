@@ -4,7 +4,7 @@
 
 export type UserRole = "admin" | "gestor" | "financeiro" | "fiscal" | "visualizador"
 export type PessoaTipo = "PF" | "PJ"
-export type ContratoSituacao = "em_andamento" | "executado" | "encerrado" | "cancelado" | "integracao"
+export type ContratoSituacao = "em_andamento" | "executado" | "encerrado" | "cancelado" | "inicializacao"
 export type CronogramaEtapa =
   | "planejamento"
   | "execucao"

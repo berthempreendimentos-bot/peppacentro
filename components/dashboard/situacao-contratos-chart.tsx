@@ -12,6 +12,7 @@ const situacaoLabel: Record<string, string> = {
   executado: "Executado",
   encerrado: "Encerrado",
   cancelado: "Cancelado",
+  inicializacao: "Inicialização",
 }
 
 const situacaoColor: Record<string, string> = {
@@ -19,6 +20,7 @@ const situacaoColor: Record<string, string> = {
   executado: "var(--status-good)",
   encerrado: "var(--chart-6)",
   cancelado: "var(--status-critical)",
+  inicializacao: "var(--chart-2)",
 }
 
 export function SituacaoContratosChart() {
