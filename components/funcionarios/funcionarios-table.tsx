@@ -11,7 +11,7 @@ import {
 } from "@/lib/queries/funcionarios"
 import { calcularEncargos } from "@/lib/calculo-folha"
 import { formatCpfCnpj, formatCurrencyBRL, formatDate } from "@/lib/format"
-import { getErrorMessage } from "@/lib/utils"
+import { cn, getErrorMessage } from "@/lib/utils"
 import { FuncionarioFormDialog } from "@/components/funcionarios/funcionario-form-dialog"
 import { ImportarFuncionariosDialog } from "@/components/funcionarios/importar-funcionarios-dialog"
 import { Button } from "@/components/ui/button"
@@ -83,7 +83,7 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nome</TableHead>
+              <TableHead className="sticky left-0 z-20 border-r bg-background">Nome</TableHead>
               <TableHead>CPF</TableHead>
               <TableHead>Função</TableHead>
               <TableHead>Admissão</TableHead>
@@ -121,11 +121,14 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
                 </TableCell>
               </TableRow>
             )}
-            {(funcionarios ?? []).map((funcionario) => {
+            {(funcionarios ?? []).map((funcionario, index) => {
               const encargos = calcularEncargos(funcionario)
+              const linhaBg = index % 2 === 1 ? "bg-muted/30" : "bg-background"
               return (
-                <TableRow key={funcionario.id}>
-                  <TableCell className="font-medium whitespace-nowrap">
+                <TableRow key={funcionario.id} className={linhaBg}>
+                  <TableCell
+                    className={cn("sticky left-0 z-10 border-r font-medium whitespace-nowrap", linhaBg)}
+                  >
                     {funcionario.nome}
                   </TableCell>
                   <TableCell className="whitespace-nowrap">
