@@ -112,6 +112,26 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["fornecedores"]["Row"]>
         Relationships: [Relationship]
       }
+      empresas: {
+        Row: {
+          id: string
+          nome: string
+          nome_fantasia: string | null
+          cnpj: string | null
+          telefone: string | null
+          email: string | null
+          endereco: string | null
+          observacoes: string | null
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: Partial<Database["public"]["Tables"]["empresas"]["Row"]> & {
+          nome: string
+        }
+        Update: Partial<Database["public"]["Tables"]["empresas"]["Row"]>
+        Relationships: [Relationship]
+      }
       centro_custos: {
         Row: {
           id: string

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { Wallet } from "lucide-react"
 
 import { navItems } from "@/lib/nav-items"
+import type { UserRole } from "@/lib/supabase/database.types"
 import {
   Sidebar,
   SidebarContent,
@@ -17,8 +18,9 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-export function AppSidebar() {
+export function AppSidebar({ role }: { role: UserRole }) {
   const pathname = usePathname()
+  const itensVisiveis = navItems.filter((item) => !("adminOnly" in item) || role === "admin")
 
   return (
     <Sidebar collapsible="icon">
@@ -40,7 +42,7 @@ export function AppSidebar() {
           <SidebarGroupLabel className="label-caps">Módulos</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => {
+              {itensVisiveis.map((item) => {
                 const isActive =
                   pathname === item.url || pathname.startsWith(`${item.url}/`)
                 return (

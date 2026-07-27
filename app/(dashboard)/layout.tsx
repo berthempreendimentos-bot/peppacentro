@@ -27,7 +27,7 @@ export default async function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar role={perfil?.role ?? "visualizador"} />
       <SidebarInset>
         <Topbar
           nome={perfil?.nome ?? ""}

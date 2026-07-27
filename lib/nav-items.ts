@@ -10,6 +10,7 @@ import {
   Tags,
   BarChart3,
   Scale,
+  Settings,
 } from "lucide-react"
 
 export const navItems = [
@@ -24,4 +25,5 @@ export const navItems = [
   { title: "Fornecedores", url: "/fornecedores", icon: Building2 },
   { title: "Centro de Custos", url: "/centro-custos", icon: Tags },
   { title: "Relatórios", url: "/relatorios", icon: BarChart3 },
+  { title: "Configurações", url: "/configuracoes", icon: Settings, adminOnly: true },
 ] as const
