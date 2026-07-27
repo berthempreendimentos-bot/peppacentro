@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { createClient } from "@/lib/supabase/client"
 import type { FuncionarioInput } from "@/lib/validations/funcionarios"
+import type { FuncionarioImportado } from "@/lib/xlsx/funcionarios-import"
 import type { Database } from "@/lib/supabase/database.types"
 
 export type Funcionario = Database["public"]["Tables"]["funcionarios"]["Row"]
@@ -73,6 +74,37 @@ export function useUpdateFuncionario(contratoId: string) {
           inss_percentual: input.inss_percentual,
         })
         .eq("id", id)
+      if (error) throw error
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY(contratoId) }),
+  })
+}
+
+export function useImportFuncionarios(contratoId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (funcionarios: FuncionarioImportado[]) => {
+      const selecionados = funcionarios.filter((f) => f.incluir)
+      if (selecionados.length === 0) return
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      const { error } = await supabase.from("funcionarios").insert(
+        selecionados.map((f) => ({
+          contrato_id: contratoId,
+          nome: f.nome,
+          cpf: f.cpf || null,
+          funcao: f.funcao || null,
+          data_admissao: f.dataAdmissao || null,
+          salario_base: f.salarioBase,
+          vt_informado: 0,
+          vr_informado: 0,
+          recebe_periculosidade: false,
+          inss_percentual: 11,
+          created_by: user?.id,
+        }))
+      )
       if (error) throw error
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY(contratoId) }),

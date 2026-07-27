@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react"
+import { MoreHorizontal, Pencil, Plus, Trash2, Upload } from "lucide-react"
 import { toast } from "sonner"
 
 import {
@@ -13,6 +13,7 @@ import { calcularEncargos } from "@/lib/calculo-folha"
 import { formatCpfCnpj, formatCurrencyBRL, formatDate } from "@/lib/format"
 import { getErrorMessage } from "@/lib/utils"
 import { FuncionarioFormDialog } from "@/components/funcionarios/funcionario-form-dialog"
+import { ImportarFuncionariosDialog } from "@/components/funcionarios/importar-funcionarios-dialog"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -59,7 +60,15 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <ImportarFuncionariosDialog
+          contratoId={contratoId}
+          trigger={
+            <Button variant="outline">
+              <Upload /> Importar
+            </Button>
+          }
+        />
         <FuncionarioFormDialog
           contratoId={contratoId}
           trigger={
