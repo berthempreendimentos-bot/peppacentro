@@ -6,7 +6,7 @@ import { MoreHorizontal, Pencil, Trash2, Wallet } from "lucide-react"
 import { toast } from "sonner"
 
 import { useContratos, useDeleteContrato, type Contrato } from "@/lib/queries/contratos"
-import { formatCurrencyBRL, formatDate } from "@/lib/format"
+import { formatCurrencyBRL } from "@/lib/format"
 import { ContratoFormDialog } from "@/components/contratos/contrato-form-dialog"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -42,6 +42,39 @@ const situacaoVariant: Record<string, "default" | "outline" | "secondary" | "des
   executado: "secondary",
   encerrado: "outline",
   cancelado: "destructive",
+}
+
+const situacaoColor: Record<string, string> = {
+  em_andamento: "border-l-primary",
+  executado: "border-l-secondary",
+  encerrado: "border-l-muted-foreground",
+  cancelado: "border-l-destructive",
+}
+
+const DURACAO_PADRAO_MESES = 12
+
+function calcularDuracao(dataInicio: string | null, dataFim: string | null) {
+  if (!dataInicio || !dataFim) {
+    return { atual: null, total: DURACAO_PADRAO_MESES, estimado: true }
+  }
+
+  const inicio = new Date(dataInicio)
+  const fim = new Date(dataFim)
+  const hoje = new Date()
+
+  const total = Math.max(
+    1,
+    (fim.getFullYear() - inicio.getFullYear()) * 12 + (fim.getMonth() - inicio.getMonth()) + 1
+  )
+  const atual = Math.min(
+    Math.max(
+      (hoje.getFullYear() - inicio.getFullYear()) * 12 + (hoje.getMonth() - inicio.getMonth()) + 1,
+      1
+    ),
+    total
+  )
+
+  return { atual, total, estimado: false }
 }
 
 export function ContratosTable() {
@@ -96,9 +129,13 @@ export function ContratosTable() {
         )}
         {filtrados.map((contrato) => {
           const numPostos = contrato.postos_servico?.[0]?.count ?? 0
+          const duracao = calcularDuracao(contrato.data_inicio, contrato.data_fim)
+          const valorMensal = contrato.valor_atual / duracao.total
+          const borderColor = situacaoColor[contrato.situacao] || "border-l-border"
+
           return (
-            <Card key={contrato.id} className="flex flex-col hover:border-primary/50 transition-colors">
-              <CardHeader className="pb-3">
+            <Card key={contrato.id} className={`flex flex-col border-l-4 transition-shadow hover:shadow-md ${borderColor}`}>
+              <CardHeader>
                 <div className="flex items-start justify-between gap-2">
                   <CardTitle className="text-xl">
                     <Link href={`/contratos/${contrato.id}`} className="hover:underline">
@@ -115,22 +152,36 @@ export function ContratosTable() {
               </CardHeader>
               <CardContent className="flex-1 space-y-4">
                 <div className="text-sm">
-                  <p className="text-muted-foreground mb-1">Objeto</p>
+                  <p className="label-caps text-muted-foreground mb-1">Objeto</p>
                   <p className="line-clamp-2" title={contrato.objeto}>{contrato.objeto}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <p className="text-muted-foreground">Fim</p>
-                    <p className="font-medium">{formatDate(contrato.data_fim)}</p>
+                    <p className="label-caps text-muted-foreground mb-1">Duração</p>
+                    <p className="font-medium">
+                      {duracao.atual !== null ? `${duracao.atual} / ${duracao.total} meses` : "—"}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">Postos</p>
+                    <p className="label-caps text-muted-foreground mb-1">Postos</p>
                     <p className="font-medium">{numPostos}</p>
                   </div>
                 </div>
-                <div className="pt-2 border-t text-sm">
-                  <p className="text-muted-foreground mb-1">Valor Atual</p>
-                  <p className="font-semibold text-lg">{formatCurrencyBRL(contrato.valor_atual)}</p>
+                <div className="flex flex-col gap-3 border-t pt-3">
+                  <div>
+                    <p className="label-caps text-muted-foreground mb-0.5">
+                      Valor Mensal{duracao.estimado && " (estimado)"}
+                    </p>
+                    <p className="font-mono text-xl font-bold text-primary">
+                      {formatCurrencyBRL(valorMensal)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="label-caps text-muted-foreground mb-0.5">Valor Total</p>
+                    <p className="font-mono text-base font-medium text-muted-foreground">
+                      {formatCurrencyBRL(contrato.valor_atual)}
+                    </p>
+                  </div>
                 </div>
               </CardContent>
               <CardFooter className="pt-2 pb-4 flex items-center justify-end gap-2 border-t bg-muted/20">
