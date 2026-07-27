@@ -117,7 +117,7 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
         />
       </div>
 
-      <div className="overflow-x-auto rounded-lg border">
+      <div className="scrollbar-always overflow-x-auto rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -163,7 +163,7 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
             )}
             {(funcionarios ?? []).map((funcionario, index) => {
               const encargos = calcularEncargos(funcionario)
-              const linhaBg = index % 2 === 1 ? "bg-muted/30" : "bg-background"
+              const linhaBg = index % 2 === 1 ? "bg-secondary" : "bg-background"
               return (
                 <TableRow key={funcionario.id} className={linhaBg}>
                   <TableCell
@@ -257,8 +257,8 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
           </TableBody>
           {!isLoading && (funcionarios ?? []).length > 0 && (
             <TableFooter>
-              <TableRow className="bg-muted/50 hover:bg-muted/50">
-                <TableCell className="sticky left-0 z-10 border-r bg-muted/50 font-semibold whitespace-nowrap">
+              <TableRow className="bg-muted hover:bg-muted">
+                <TableCell className="sticky left-0 z-10 border-r bg-muted font-semibold whitespace-nowrap">
                   Total
                 </TableCell>
                 <TableCell />
