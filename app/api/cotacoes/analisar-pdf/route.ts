@@ -1,5 +1,6 @@
 import { tmpdir } from "os"
 
+import { createCanvas, loadImage } from "@napi-rs/canvas"
 import { NextRequest, NextResponse } from "next/server"
 import { PDFParse } from "pdf-parse"
 import { createWorker, OEM } from "tesseract.js"
@@ -11,15 +12,36 @@ export const maxDuration = 60
 
 const MAX_PAGINAS_OCR = 2
 
+// Timbres/logos costumam ter o endereço e o CNPJ em cinza bem claro, baixo
+// contraste com o fundo branco — o que o OCR não reconhece direito. Binariza
+// a imagem (qualquer coisa que não seja quase-branco vira preto) antes do
+// OCR pra realçar esse texto claro.
+async function realcarContraste(png: Uint8Array): Promise<Buffer> {
+  const imagem = await loadImage(Buffer.from(png))
+  const canvas = createCanvas(imagem.width, imagem.height)
+  const ctx = canvas.getContext("2d")
+  ctx.drawImage(imagem, 0, 0)
+  const imageData = ctx.getImageData(0, 0, imagem.width, imagem.height)
+  const d = imageData.data
+  for (let i = 0; i < d.length; i += 4) {
+    const cinza = (d[i] + d[i + 1] + d[i + 2]) / 3
+    const valor = cinza > 235 ? 255 : 0
+    d[i] = d[i + 1] = d[i + 2] = valor
+  }
+  ctx.putImageData(imageData, 0, 0)
+  return canvas.toBuffer("image/png")
+}
+
 async function extrairCnpjViaOcr(parser: PDFParse): Promise<string | null> {
-  const screenshot = await parser.getScreenshot({ scale: 2, partial: [1, MAX_PAGINAS_OCR] })
+  const screenshot = await parser.getScreenshot({ scale: 3, partial: [1, MAX_PAGINAS_OCR] })
   // cachePath aponta pro diretório temporário do SO — em serverless (Vercel)
   // só /tmp é gravável, e o padrão do pacote pode tentar escrever em
   // node_modules, o que falha nesse ambiente.
   const worker = await createWorker("por", OEM.LSTM_ONLY, { cachePath: tmpdir() })
   try {
     for (const pagina of screenshot.pages) {
-      const { data } = await worker.recognize(Buffer.from(pagina.data))
+      const imagemRealcada = await realcarContraste(pagina.data)
+      const { data } = await worker.recognize(imagemRealcada)
       const cnpj = extrairCnpj(data.text)
       if (cnpj) return cnpj
     }
