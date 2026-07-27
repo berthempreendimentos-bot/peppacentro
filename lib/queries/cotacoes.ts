@@ -185,6 +185,64 @@ export function useAddEmpresa(cotacaoId: string) {
   })
 }
 
+export function useAddEmpresaComPdf(cotacaoId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: {
+      file: File
+      nome: string
+      cnpj?: string
+      razaoSocial?: string
+      situacaoCadastral?: string
+      endereco?: string
+      precos: { cotacaoItemId: string; valorUnitario: number }[]
+    }) => {
+      const supabase = createClient()
+      const safeName = input.file.name.replace(/[^\w.\-]+/g, "_")
+      const storagePath = `cotacao_${cotacaoId}/${Date.now()}_${safeName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from("contratos")
+        .upload(storagePath, input.file, { upsert: false })
+      if (uploadError) throw uploadError
+
+      const { data: empresa, error: empresaError } = await supabase
+        .from("cotacao_empresas")
+        .insert({
+          cotacao_id: cotacaoId,
+          nome: input.nome,
+          cnpj: input.cnpj || null,
+          razao_social: input.razaoSocial || null,
+          situacao_cadastral: input.situacaoCadastral || null,
+          endereco: input.endereco || null,
+          documento_storage_path: storagePath,
+        })
+        .select("id")
+        .single()
+      if (empresaError) {
+        await supabase.storage.from("contratos").remove([storagePath])
+        throw empresaError
+      }
+
+      if (input.precos.length > 0) {
+        const { error: precosError } = await supabase.from("cotacao_precos").upsert(
+          input.precos.map((p) => ({
+            cotacao_item_id: p.cotacaoItemId,
+            cotacao_empresa_id: empresa.id,
+            valor_unitario: p.valorUnitario,
+          })),
+          { onConflict: "cotacao_item_id,cotacao_empresa_id" }
+        )
+        if (precosError) throw precosError
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: DETAIL_KEY(cotacaoId) })
+      queryClient.invalidateQueries({ queryKey: ["cotacoes", cotacaoId, "precos"] })
+    },
+  })
+}
+
 export function useDeleteEmpresa(cotacaoId: string) {
   const queryClient = useQueryClient()
   return useMutation({

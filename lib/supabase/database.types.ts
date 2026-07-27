@@ -670,6 +670,10 @@ export interface Database {
           nome: string
           cnpj: string | null
           contato: string | null
+          razao_social: string | null
+          situacao_cadastral: string | null
+          endereco: string | null
+          documento_storage_path: string | null
           created_at: string
         }
         Insert: Partial<Database["public"]["Tables"]["cotacao_empresas"]["Row"]> & {

@@ -1,7 +1,7 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { Plus, Trash2 } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
+import { FileText, Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import {
@@ -13,7 +13,10 @@ import {
   usePrecos,
   type CotacaoComDetalhes,
 } from "@/lib/queries/cotacoes"
+import { useDownloadDocumento } from "@/lib/queries/documentos"
+import { formatarCnpj } from "@/lib/cnpj"
 import { formatCurrencyBRL } from "@/lib/format"
+import { AnalisarPdfDialog } from "@/components/cotacoes/analisar-pdf-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -179,6 +182,10 @@ function PrecoInput({
 }) {
   const [valor, setValor] = useState(valorAtual !== null ? String(valorAtual) : "")
 
+  useEffect(() => {
+    setValor(valorAtual !== null ? String(valorAtual) : "")
+  }, [valorAtual])
+
   function commit() {
     const numero = valor.trim() === "" ? null : Number(valor)
     onSalvar(numero !== null && !Number.isFinite(numero) ? null : numero)
@@ -206,9 +213,19 @@ export function CotacaoComparativo({ cotacao }: { cotacao: CotacaoComDetalhes })
   const deleteItem = useDeleteItem(cotacao.id)
   const deleteEmpresa = useDeleteEmpresa(cotacao.id)
   const setPreco = useSetPreco(cotacao.id)
+  const downloadDocumento = useDownloadDocumento()
 
   const itens = cotacao.cotacao_itens
   const empresas = cotacao.cotacao_empresas
+
+  async function handleVerPdf(storagePath: string) {
+    try {
+      const url = await downloadDocumento.mutateAsync(storagePath)
+      window.open(url, "_blank")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível abrir o PDF")
+    }
+  }
 
   const precoMap = useMemo(() => {
     const map = new Map<string, number | null>()
@@ -296,7 +313,18 @@ export function CotacaoComparativo({ cotacao }: { cotacao: CotacaoComDetalhes })
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <h2 className="label-caps text-muted-foreground">Empresas ({empresas.length})</h2>
-          <AdicionarEmpresaDialog cotacaoId={cotacao.id} />
+          <div className="flex items-center gap-2">
+            <AnalisarPdfDialog
+              cotacaoId={cotacao.id}
+              itens={itens}
+              trigger={
+                <Button variant="outline" size="sm">
+                  <FileText className="size-4" /> Analisar PDF
+                </Button>
+              }
+            />
+            <AdicionarEmpresaDialog cotacaoId={cotacao.id} />
+          </div>
         </div>
         {empresas.length === 0 ? (
           <p className="py-4 text-center text-sm text-muted-foreground">
@@ -309,23 +337,43 @@ export function CotacaoComparativo({ cotacao }: { cotacao: CotacaoComDetalhes })
                 key={empresa.id}
                 className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
               >
-                <span>
-                  {empresa.nome}
-                  {empresa.contato && (
-                    <span className="ml-2 text-muted-foreground">{empresa.contato}</span>
+                <div className="flex flex-col">
+                  <span>
+                    {empresa.nome}
+                    {empresa.contato && (
+                      <span className="ml-2 text-muted-foreground">{empresa.contato}</span>
+                    )}
+                  </span>
+                  {(empresa.cnpj || empresa.situacao_cadastral) && (
+                    <span className="text-xs text-muted-foreground">
+                      {empresa.cnpj && formatarCnpj(empresa.cnpj)}
+                      {empresa.situacao_cadastral && ` — ${empresa.situacao_cadastral}`}
+                    </span>
                   )}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() =>
-                    deleteEmpresa.mutate(empresa.id, {
-                      onSuccess: () => toast.success("Empresa removida"),
-                    })
-                  }
-                >
-                  <Trash2 className="size-4" />
-                </Button>
+                </div>
+                <div className="flex items-center gap-1">
+                  {empresa.documento_storage_path && (
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      title="Ver PDF da cotação"
+                      onClick={() => handleVerPdf(empresa.documento_storage_path!)}
+                    >
+                      <FileText className="size-4" />
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() =>
+                      deleteEmpresa.mutate(empresa.id, {
+                        onSuccess: () => toast.success("Empresa removida"),
+                      })
+                    }
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
