@@ -13,6 +13,13 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -54,6 +61,10 @@ const situacaoColor: Record<string, string> = {
   inicializacao: "border-l-blue-500",
 }
 
+const situacaoBadgeClassName: Record<string, string> = {
+  inicializacao: "bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400",
+}
+
 const DURACAO_PADRAO_MESES = 12
 
 function calcularDuracao(dataInicio: string | null, dataFim: string | null) {
@@ -84,13 +95,15 @@ export function ContratosTable() {
   const { data: contratos, isLoading } = useContratos()
   const deleteContrato = useDeleteContrato()
   const [search, setSearch] = useState("")
+  const [situacaoFiltro, setSituacaoFiltro] = useState("todos")
   const [paraExcluir, setParaExcluir] = useState<Contrato | null>(null)
 
-  const filtrados = (contratos ?? []).filter((c) =>
-    `${c.numero} ${c.objeto} ${c.clientes?.nome ?? ""}`
+  const filtrados = (contratos ?? []).filter((c) => {
+    if (situacaoFiltro !== "todos" && c.situacao !== situacaoFiltro) return false
+    return `${c.numero} ${c.objeto} ${c.clientes?.nome ?? ""}`
       .toLowerCase()
       .includes(search.toLowerCase())
-  )
+  })
 
   async function handleDelete() {
     if (!paraExcluir) return
@@ -106,12 +119,27 @@ export function ContratosTable() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Input
-        placeholder="Buscar por número, objeto ou cliente..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="max-w-sm"
-      />
+      <div className="flex flex-wrap gap-3">
+        <Input
+          placeholder="Buscar por número, objeto ou cliente..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="max-w-sm"
+        />
+        <Select value={situacaoFiltro} onValueChange={setSituacaoFiltro}>
+          <SelectTrigger className="w-48">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todas as situações</SelectItem>
+            {Object.entries(situacaoLabel).map(([value, label]) => (
+              <SelectItem key={value} value={value}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {isLoading &&
           Array.from({ length: 4 }).map((_, i) => (
@@ -145,7 +173,10 @@ export function ContratosTable() {
                       {contrato.numero}
                     </Link>
                   </CardTitle>
-                  <Badge variant={situacaoVariant[contrato.situacao]}>
+                  <Badge
+                    variant={situacaoVariant[contrato.situacao]}
+                    className={situacaoBadgeClassName[contrato.situacao]}
+                  >
                     {situacaoLabel[contrato.situacao]}
                   </Badge>
                 </div>
@@ -189,17 +220,15 @@ export function ContratosTable() {
               </CardContent>
               <CardFooter className="pt-2 pb-4 flex items-center justify-end gap-2 border-t bg-muted/20">
                 <Link href={`/contratos/${contrato.id}?tab=financeiro`}>
-                  <Button variant="outline" size="sm" title="Lançamentos">
-                    <Wallet className="size-4 mr-2" />
-                    Finanças
+                  <Button variant="outline" size="icon-sm" title="Lançamentos">
+                    <Wallet className="size-4" />
                   </Button>
                 </Link>
                 <ContratoFormDialog
                   contrato={contrato}
                   trigger={
-                    <Button variant="outline" size="sm" title="Editar contrato">
-                      <Pencil className="size-4 mr-2" />
-                      Editar
+                    <Button variant="outline" size="icon-sm" title="Editar contrato">
+                      <Pencil className="size-4" />
                     </Button>
                   }
                 />
