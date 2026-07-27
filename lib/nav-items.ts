@@ -9,6 +9,7 @@ import {
   Building2,
   Tags,
   BarChart3,
+  Scale,
 } from "lucide-react"
 
 export const navItems = [
@@ -16,6 +17,7 @@ export const navItems = [
   { title: "Contratos", url: "/contratos", icon: FileText },
   { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Financeiro", url: "/financeiro", icon: Wallet },
+  { title: "Cotações", url: "/cotacoes", icon: Scale },
   { title: "Documentos", url: "/documentos", icon: FolderOpen },
   { title: "Cronograma", url: "/cronograma", icon: CalendarClock },
   { title: "Medições", url: "/medicoes", icon: ClipboardList },

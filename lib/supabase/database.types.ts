@@ -40,6 +40,7 @@ export type DocumentoCategoria =
   | "aditivo"
   | "apolice"
   | "outro"
+export type CotacaoStatus = "aberta" | "fechada" | "cancelada"
 
 type Relationship = {
   foreignKeyName: string
@@ -609,6 +610,110 @@ export interface Database {
             columns: ["contrato_id"]
             isOneToOne: false
             referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cotacoes: {
+        Row: {
+          id: string
+          contrato_id: string | null
+          titulo: string
+          descricao: string | null
+          status: CotacaoStatus
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: Partial<Database["public"]["Tables"]["cotacoes"]["Row"]> & {
+          titulo: string
+        }
+        Update: Partial<Database["public"]["Tables"]["cotacoes"]["Row"]>
+        Relationships: [
+          {
+            foreignKeyName: "cotacoes_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cotacao_itens: {
+        Row: {
+          id: string
+          cotacao_id: string
+          descricao: string
+          quantidade: number
+          unidade: string | null
+          created_at: string
+        }
+        Insert: Partial<Database["public"]["Tables"]["cotacao_itens"]["Row"]> & {
+          cotacao_id: string
+          descricao: string
+        }
+        Update: Partial<Database["public"]["Tables"]["cotacao_itens"]["Row"]>
+        Relationships: [
+          {
+            foreignKeyName: "cotacao_itens_cotacao_id_fkey"
+            columns: ["cotacao_id"]
+            isOneToOne: false
+            referencedRelation: "cotacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cotacao_empresas: {
+        Row: {
+          id: string
+          cotacao_id: string
+          nome: string
+          cnpj: string | null
+          contato: string | null
+          created_at: string
+        }
+        Insert: Partial<Database["public"]["Tables"]["cotacao_empresas"]["Row"]> & {
+          cotacao_id: string
+          nome: string
+        }
+        Update: Partial<Database["public"]["Tables"]["cotacao_empresas"]["Row"]>
+        Relationships: [
+          {
+            foreignKeyName: "cotacao_empresas_cotacao_id_fkey"
+            columns: ["cotacao_id"]
+            isOneToOne: false
+            referencedRelation: "cotacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cotacao_precos: {
+        Row: {
+          id: string
+          cotacao_item_id: string
+          cotacao_empresa_id: string
+          valor_unitario: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: Partial<Database["public"]["Tables"]["cotacao_precos"]["Row"]> & {
+          cotacao_item_id: string
+          cotacao_empresa_id: string
+        }
+        Update: Partial<Database["public"]["Tables"]["cotacao_precos"]["Row"]>
+        Relationships: [
+          {
+            foreignKeyName: "cotacao_precos_cotacao_item_id_fkey"
+            columns: ["cotacao_item_id"]
+            isOneToOne: false
+            referencedRelation: "cotacao_itens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotacao_precos_cotacao_empresa_id_fkey"
+            columns: ["cotacao_empresa_id"]
+            isOneToOne: false
+            referencedRelation: "cotacao_empresas"
             referencedColumns: ["id"]
           },
         ]
