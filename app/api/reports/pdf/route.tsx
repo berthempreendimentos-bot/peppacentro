@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server"
 import { ContratosPdfDocument, FinanceiroPdfDocument } from "@/lib/reports/pdf"
 
 export const runtime = "nodejs"
+export const maxDuration = 30
 
 export async function GET(request: NextRequest) {
   const tipo = request.nextUrl.searchParams.get("tipo") ?? "financeiro"

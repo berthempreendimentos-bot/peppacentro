@@ -17,7 +17,7 @@ export function useContratos() {
       const supabase = createClient()
       const { data, error } = await supabase
         .from("contratos")
-        .select("*, clientes(nome)")
+        .select("*, clientes(nome), postos_servico(count)")
         .order("created_at", { ascending: false })
       if (error) throw error
       return data

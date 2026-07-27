@@ -10,15 +10,8 @@ import { formatCurrencyBRL, formatDate } from "@/lib/format"
 import { ContratoFormDialog } from "@/components/contratos/contrato-form-dialog"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -83,109 +76,97 @@ export function ContratosTable() {
         onChange={(e) => setSearch(e.target.value)}
         className="max-w-sm"
       />
-      <div className="rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Número</TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Objeto</TableHead>
-              <TableHead>Valor atual</TableHead>
-              <TableHead>Situação</TableHead>
-              <TableHead>Fim</TableHead>
-              <TableHead className="w-10" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading &&
-              Array.from({ length: 4 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell colSpan={7}>
-                    <Skeleton className="h-6 w-full" />
-                  </TableCell>
-                </TableRow>
-              ))}
-            {!isLoading && filtrados.length === 0 && (
-              <TableRow>
-                <TableCell
-                  colSpan={7}
-                  className="py-8 text-center text-muted-foreground"
-                >
-                  Nenhum contrato encontrado.
-                </TableCell>
-              </TableRow>
-            )}
-            {filtrados.map((contrato) => (
-              <TableRow key={contrato.id} className="cursor-pointer">
-                <TableCell className="font-medium">
-                  <Link href={`/contratos/${contrato.id}`} className="block">
-                    {contrato.numero}
-                  </Link>
-                </TableCell>
-                <TableCell>
-                  <Link href={`/contratos/${contrato.id}`} className="block">
-                    {contrato.clientes?.nome ?? "—"}
-                  </Link>
-                </TableCell>
-                <TableCell>
-                  <Link
-                    href={`/contratos/${contrato.id}`}
-                    className="block max-w-xs truncate"
-                  >
-                    {contrato.objeto}
-                  </Link>
-                </TableCell>
-                <TableCell>
-                  <Link href={`/contratos/${contrato.id}`} className="block">
-                    {formatCurrencyBRL(contrato.valor_atual)}
-                  </Link>
-                </TableCell>
-                <TableCell>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {isLoading &&
+          Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-1/2" />
+                <Skeleton className="h-4 w-1/3" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-20 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        {!isLoading && filtrados.length === 0 && (
+          <div className="col-span-full py-8 text-center text-muted-foreground">
+            Nenhum contrato encontrado.
+          </div>
+        )}
+        {filtrados.map((contrato) => {
+          const numPostos = contrato.postos_servico?.[0]?.count ?? 0
+          return (
+            <Card key={contrato.id} className="flex flex-col hover:border-primary/50 transition-colors">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between gap-2">
+                  <CardTitle className="text-xl">
+                    <Link href={`/contratos/${contrato.id}`} className="hover:underline">
+                      {contrato.numero}
+                    </Link>
+                  </CardTitle>
                   <Badge variant={situacaoVariant[contrato.situacao]}>
                     {situacaoLabel[contrato.situacao]}
                   </Badge>
-                </TableCell>
-                <TableCell>
-                  <Link href={`/contratos/${contrato.id}`} className="block">
-                    {formatDate(contrato.data_fim)}
-                  </Link>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center justify-end gap-1">
-                    <Link href={`/contratos/${contrato.id}?tab=financeiro`}>
-                      <Button variant="ghost" size="icon-sm" title="Lançamentos">
-                        <Wallet className="size-4" />
-                      </Button>
-                    </Link>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon-sm">
-                          <MoreHorizontal className="size-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <ContratoFormDialog
-                          contrato={contrato}
-                          trigger={
-                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                              <Pencil className="size-4" /> Editar
-                            </DropdownMenuItem>
-                          }
-                        />
-                        <DropdownMenuItem
-                          variant="destructive"
-                          onSelect={() => setParaExcluir(contrato)}
-                        >
-                          <Trash2 className="size-4" /> Excluir
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                </div>
+                <CardDescription className="line-clamp-1" title={contrato.clientes?.nome ?? ""}>
+                  {contrato.clientes?.nome ?? "Sem cliente"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 space-y-4">
+                <div className="text-sm">
+                  <p className="text-muted-foreground mb-1">Objeto</p>
+                  <p className="line-clamp-2" title={contrato.objeto}>{contrato.objeto}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Fim</p>
+                    <p className="font-medium">{formatDate(contrato.data_fim)}</p>
                   </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                  <div>
+                    <p className="text-muted-foreground">Postos</p>
+                    <p className="font-medium">{numPostos}</p>
+                  </div>
+                </div>
+                <div className="pt-2 border-t text-sm">
+                  <p className="text-muted-foreground mb-1">Valor Atual</p>
+                  <p className="font-semibold text-lg">{formatCurrencyBRL(contrato.valor_atual)}</p>
+                </div>
+              </CardContent>
+              <CardFooter className="pt-2 pb-4 flex items-center justify-end gap-2 border-t bg-muted/20">
+                <Link href={`/contratos/${contrato.id}?tab=financeiro`}>
+                  <Button variant="outline" size="sm" title="Lançamentos">
+                    <Wallet className="size-4 mr-2" />
+                    Finanças
+                  </Button>
+                </Link>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon-sm">
+                      <MoreHorizontal className="size-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <ContratoFormDialog
+                      contrato={contrato}
+                      trigger={
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <Pencil className="size-4 mr-2" /> Editar
+                        </DropdownMenuItem>
+                      }
+                    />
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onSelect={() => setParaExcluir(contrato)}
+                    >
+                      <Trash2 className="size-4 mr-2" /> Excluir
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </CardFooter>
+            </Card>
+          )
+        })}
       </div>
 
       <AlertDialog

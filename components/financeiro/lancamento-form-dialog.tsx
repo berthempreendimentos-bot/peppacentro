@@ -21,7 +21,7 @@ import { useCategorias } from "@/lib/queries/centro-custos"
 import { useFornecedores } from "@/lib/queries/fornecedores"
 import { useCentroCustos } from "@/lib/queries/centro-custos"
 import { useContratos } from "@/lib/queries/contratos"
-import { useDownloadDocumento, useDeleteDocumento } from "@/lib/queries/documentos"
+import { useDownloadDocumento } from "@/lib/queries/documentos"
 import { useCreateCategoria, useCreateCentroCusto } from "@/lib/queries/centro-custos"
 import { useCreateFornecedor } from "@/lib/queries/fornecedores"
 import { useDocumentosLancamento, useDeleteDocumentoLancamento } from "@/lib/queries/lancamentos"
@@ -52,11 +52,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-
-function nomeArquivoDoAnexo(path: string) {
-  const base = path.split("/").pop() ?? path
-  return base.replace(/^\d+_/, "")
-}
 
 function CurrencyInput({
   value,

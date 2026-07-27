@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { buildWorkbookBuffer } from "@/lib/reports/excel"
 
+export const maxDuration = 30
+
 export async function GET(request: NextRequest) {
   const tipo = request.nextUrl.searchParams.get("tipo") ?? "financeiro"
   const supabase = await createClient()

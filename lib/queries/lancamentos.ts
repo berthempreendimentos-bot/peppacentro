@@ -178,8 +178,8 @@ export function useDeleteDocumentoLancamento() {
       // Exclui do storage
       await supabase.storage.from(NF_BUCKET).remove([storagePath])
     },
-    onSuccess: (_, variables) => {
-      // Idealmente precisaríamos do lancamentoId para invalidar a lista certa, 
+    onSuccess: () => {
+      // Idealmente precisaríamos do lancamentoId para invalidar a lista certa,
       // mas como é uma exclusão de anexo, invalidar queries relacionadas já ajuda.
       queryClient.invalidateQueries({ queryKey: ["lancamentos"] })
     },
