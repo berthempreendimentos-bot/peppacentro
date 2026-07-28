@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { FileText, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react"
+import { FileSpreadsheet, FileText, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { useMedicoes, useDeleteMedicao, type Medicao } from "@/lib/queries/medicoes"
@@ -89,20 +89,21 @@ export function MedicoesList({ contratoId }: { contratoId: string }) {
               <TableHead>Status</TableHead>
               <TableHead className="w-10" />
               <TableHead className="w-10" />
+              <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading &&
               Array.from({ length: 3 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={8}>
+                  <TableCell colSpan={9}>
                     <Skeleton className="h-6 w-full" />
                   </TableCell>
                 </TableRow>
               ))}
             {!isLoading && medicoes?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
                   Nenhuma medição cadastrada.
                 </TableCell>
               </TableRow>
@@ -118,6 +119,13 @@ export function MedicoesList({ contratoId }: { contratoId: string }) {
                   <Badge variant={statusVariant[medicao.status]}>
                     {statusLabel[medicao.status]}
                   </Badge>
+                </TableCell>
+                <TableCell>
+                  <Button variant="ghost" size="icon-sm" title="Baixar Espelho de Medição (Excel)" asChild>
+                    <a href={`/api/medicoes/${medicao.id}/excel`}>
+                      <FileSpreadsheet className="size-4" />
+                    </a>
+                  </Button>
                 </TableCell>
                 <TableCell>
                   <Button variant="ghost" size="icon-sm" title="Baixar Espelho de Medição (PDF)" asChild>
