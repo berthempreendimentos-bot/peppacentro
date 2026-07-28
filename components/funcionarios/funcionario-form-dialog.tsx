@@ -46,7 +46,6 @@ const emptyValues: FuncionarioInput = {
   vt_informado: 0,
   vr_informado: 0,
   recebe_periculosidade: false,
-  inss_percentual: 11,
 }
 
 export function FuncionarioFormDialog({
@@ -81,7 +80,6 @@ export function FuncionarioFormDialog({
               vt_informado: funcionario.vt_informado,
               vr_informado: funcionario.vr_informado,
               recebe_periculosidade: funcionario.recebe_periculosidade,
-              inss_percentual: funcionario.inss_percentual,
             }
           : emptyValues
       )
@@ -213,25 +211,6 @@ export function FuncionarioFormDialog({
                 )}
               />
             </div>
-            <FormField
-              control={form.control}
-              name="inss_percentual"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>INSS Empregado (%)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min={0}
-                      value={field.value}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             <FormField
               control={form.control}
               name="recebe_periculosidade"

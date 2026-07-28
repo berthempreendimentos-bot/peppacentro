@@ -9,7 +9,6 @@ export const funcionarioSchema = z.object({
   vt_informado: z.number().min(0, "Informe um valor válido"),
   vr_informado: z.number().min(0, "Informe um valor válido"),
   recebe_periculosidade: z.boolean(),
-  inss_percentual: z.number().min(0, "Informe um percentual válido"),
 })
 
 export type FuncionarioInput = z.infer<typeof funcionarioSchema>

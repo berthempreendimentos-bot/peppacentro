@@ -6,12 +6,35 @@ export const TAXA_INSS_PATRONAL = 0.2
 export const TAXA_RAT = 0.03
 export const TAXA_TERCEIROS = 0.058
 
+// Tabela progressiva do INSS (empregado CLT): cada faixa é tributada só na
+// parte do salário que cai dentro dela, até o teto da Previdência Social.
+const FAIXAS_INSS_EMPREGADO = [
+  { limite: 1621.0, aliquota: 0.075 },
+  { limite: 2902.84, aliquota: 0.09 },
+  { limite: 4354.27, aliquota: 0.12 },
+  { limite: 8475.55, aliquota: 0.14 },
+]
+
+export function calcularInssEmpregado(salarioBase: number): number {
+  const teto = FAIXAS_INSS_EMPREGADO[FAIXAS_INSS_EMPREGADO.length - 1].limite
+  const salario = Math.min(salarioBase, teto)
+
+  let inss = 0
+  let limiteAnterior = 0
+  for (const faixa of FAIXAS_INSS_EMPREGADO) {
+    if (salario <= limiteAnterior) break
+    const baseFaixa = Math.min(salario, faixa.limite) - limiteAnterior
+    inss += baseFaixa * faixa.aliquota
+    limiteAnterior = faixa.limite
+  }
+  return inss
+}
+
 export type FuncionarioBase = {
   salario_base: number
   vt_informado: number
   vr_informado: number
   recebe_periculosidade: boolean
-  inss_percentual: number
 }
 
 export function calcularEncargos(funcionario: FuncionarioBase) {
@@ -20,7 +43,7 @@ export function calcularEncargos(funcionario: FuncionarioBase) {
     : 0
   const descVt = funcionario.vt_informado > 0 ? funcionario.salario_base * TAXA_DESC_VT : 0
   const descVa = funcionario.vr_informado * TAXA_DESC_VA
-  const inssEmpregadoValor = funcionario.salario_base * (funcionario.inss_percentual / 100)
+  const inssEmpregadoValor = calcularInssEmpregado(funcionario.salario_base)
 
   const baseEncargos = funcionario.salario_base + periculosidadeValor
   const fgts = baseEncargos * TAXA_FGTS

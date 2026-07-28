@@ -46,7 +46,6 @@ export function useCreateFuncionario(contratoId: string) {
         vt_informado: input.vt_informado,
         vr_informado: input.vr_informado,
         recebe_periculosidade: input.recebe_periculosidade,
-        inss_percentual: input.inss_percentual,
         created_by: user?.id,
       })
       if (error) throw error
@@ -71,7 +70,6 @@ export function useUpdateFuncionario(contratoId: string) {
           vt_informado: input.vt_informado,
           vr_informado: input.vr_informado,
           recebe_periculosidade: input.recebe_periculosidade,
-          inss_percentual: input.inss_percentual,
         })
         .eq("id", id)
       if (error) throw error
@@ -101,25 +99,9 @@ export function useImportFuncionarios(contratoId: string) {
           vt_informado: f.vtInformado,
           vr_informado: f.vrInformado,
           recebe_periculosidade: false,
-          inss_percentual: 11,
           created_by: user?.id,
         }))
       )
-      if (error) throw error
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY(contratoId) }),
-  })
-}
-
-export function useUpdateInssEmMassa(contratoId: string) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async (inssPercentual: number) => {
-      const supabase = createClient()
-      const { error } = await supabase
-        .from("funcionarios")
-        .update({ inss_percentual: inssPercentual })
-        .eq("contrato_id", contratoId)
       if (error) throw error
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY(contratoId) }),
