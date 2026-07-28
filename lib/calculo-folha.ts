@@ -48,3 +48,46 @@ export function calcularEncargos(funcionario: FuncionarioBase) {
     custoEmpresa,
   }
 }
+
+const TOTAIS_VAZIOS = {
+  quantidade: 0,
+  salarioBase: 0,
+  vtInformado: 0,
+  vrInformado: 0,
+  descVt: 0,
+  periculosidadeValor: 0,
+  inssEmpregadoValor: 0,
+  descVa: 0,
+  liquido: 0,
+  fgts: 0,
+  inssPatronal: 0,
+  rat: 0,
+  terceiros: 0,
+  totalEncargos: 0,
+  custoEmpresa: 0,
+}
+
+export type TotaisFolha = typeof TOTAIS_VAZIOS
+
+export function somarTotais(funcionarios: FuncionarioBase[]): TotaisFolha {
+  return funcionarios.reduce((acc, funcionario) => {
+    const encargos = calcularEncargos(funcionario)
+    return {
+      quantidade: acc.quantidade + 1,
+      salarioBase: acc.salarioBase + funcionario.salario_base,
+      vtInformado: acc.vtInformado + funcionario.vt_informado,
+      vrInformado: acc.vrInformado + funcionario.vr_informado,
+      descVt: acc.descVt + encargos.descVt,
+      periculosidadeValor: acc.periculosidadeValor + encargos.periculosidadeValor,
+      inssEmpregadoValor: acc.inssEmpregadoValor + encargos.inssEmpregadoValor,
+      descVa: acc.descVa + encargos.descVa,
+      liquido: acc.liquido + encargos.liquido,
+      fgts: acc.fgts + encargos.fgts,
+      inssPatronal: acc.inssPatronal + encargos.inssPatronal,
+      rat: acc.rat + encargos.rat,
+      terceiros: acc.terceiros + encargos.terceiros,
+      totalEncargos: acc.totalEncargos + encargos.totalEncargos,
+      custoEmpresa: acc.custoEmpresa + encargos.custoEmpresa,
+    }
+  }, TOTAIS_VAZIOS)
+}

@@ -9,7 +9,7 @@ import {
   useDeleteFuncionario,
   type Funcionario,
 } from "@/lib/queries/funcionarios"
-import { calcularEncargos } from "@/lib/calculo-folha"
+import { calcularEncargos, somarTotais } from "@/lib/calculo-folha"
 import { formatCpfCnpj, formatCurrencyBRL, formatDate } from "@/lib/format"
 import { cn, getErrorMessage } from "@/lib/utils"
 import { AlterarInssDialog } from "@/components/funcionarios/alterar-inss-dialog"
@@ -44,23 +44,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
-const TOTAIS_VAZIOS = {
-  salarioBase: 0,
-  vtInformado: 0,
-  vrInformado: 0,
-  descVt: 0,
-  periculosidadeValor: 0,
-  inssEmpregadoValor: 0,
-  descVa: 0,
-  liquido: 0,
-  fgts: 0,
-  inssPatronal: 0,
-  rat: 0,
-  terceiros: 0,
-  totalEncargos: 0,
-  custoEmpresa: 0,
-}
-
 export function FuncionariosList({ contratoId }: { contratoId: string }) {
   const { data: funcionarios, isLoading } = useFuncionarios(contratoId)
   const deleteFuncionario = useDeleteFuncionario(contratoId)
@@ -71,25 +54,7 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
     `${f.nome} ${f.cpf ?? ""} ${f.funcao ?? ""}`.toLowerCase().includes(search.toLowerCase())
   )
 
-  const totais = filtrados.reduce((acc, funcionario) => {
-    const encargos = calcularEncargos(funcionario)
-    return {
-      salarioBase: acc.salarioBase + funcionario.salario_base,
-      vtInformado: acc.vtInformado + funcionario.vt_informado,
-      vrInformado: acc.vrInformado + funcionario.vr_informado,
-      descVt: acc.descVt + encargos.descVt,
-      periculosidadeValor: acc.periculosidadeValor + encargos.periculosidadeValor,
-      inssEmpregadoValor: acc.inssEmpregadoValor + encargos.inssEmpregadoValor,
-      descVa: acc.descVa + encargos.descVa,
-      liquido: acc.liquido + encargos.liquido,
-      fgts: acc.fgts + encargos.fgts,
-      inssPatronal: acc.inssPatronal + encargos.inssPatronal,
-      rat: acc.rat + encargos.rat,
-      terceiros: acc.terceiros + encargos.terceiros,
-      totalEncargos: acc.totalEncargos + encargos.totalEncargos,
-      custoEmpresa: acc.custoEmpresa + encargos.custoEmpresa,
-    }
-  }, TOTAIS_VAZIOS)
+  const totais = somarTotais(filtrados)
 
   async function handleDelete() {
     if (!paraExcluir) return
