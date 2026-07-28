@@ -223,10 +223,10 @@ export function buildFolhaResumoSheet(
 
   sheet.addRow([])
   sheet.addRow([])
-  linhaSecao(sheet, "TOTAL DESPESA: FOLHA + ENCARGOS", 5)
+  linhaSecao(sheet, "TOTAL DESPESA: FOLHA + FGTS", 5)
 
-  const rowEncargos2 = sheet.addRow(["Encargos Patronais", totais.totalEncargos])
-  formula(rowEncargos2.getCell(2), `B${rowTotalEncargos.number}`, totais.totalEncargos)
+  const rowEncargos2 = sheet.addRow([`FGTS (${formatarPercentual(taxasEfetivas.fgts)})`, totais.fgts])
+  formula(rowEncargos2.getCell(2), `B${linhaEncargosInicio}`, totais.fgts)
   rowEncargos2.getCell(2).numFmt = FORMATO_MOEDA
   aplicarBordaLinha(rowEncargos2, 2)
   const rowEmpregados = sheet.addRow(["Líquido dos Empregados", totais.liquido])
@@ -235,14 +235,16 @@ export function buildFolhaResumoSheet(
   aplicarBordaLinha(rowEmpregados, 2)
   rowEmpregados.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_LINHA_PAR } }
 
+  const totalGastoFolhaFgts = totais.fgts + totais.liquido
+
   sheet.addRow([])
-  const rowTotalGasto = sheet.addRow(["TOTAL DE GASTOS", totais.custoEmpresa])
+  const rowTotalGasto = sheet.addRow(["TOTAL DE GASTOS", totalGastoFolhaFgts])
   rowTotalGasto.getCell(1).font = { bold: true, size: 13 }
   rowTotalGasto.getCell(2).font = { bold: true, size: 13 }
   formula(
     rowTotalGasto.getCell(2),
     `SUM(B${rowEncargos2.number}:B${rowEmpregados.number})`,
-    totais.custoEmpresa
+    totalGastoFolhaFgts
   )
   rowTotalGasto.getCell(2).numFmt = FORMATO_MOEDA
   rowTotalGasto.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_DESTAQUE } }
