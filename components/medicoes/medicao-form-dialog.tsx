@@ -104,7 +104,6 @@ export function MedicaoFormDialog({
   const vtAtual = totaisFolha.vtInformado
   const vrAtual = totaisFolha.vrInformado
 
-  const maoDeObra = isEditing ? medicao.mao_de_obra : maoDeObraAtual
   const valeTransporte = isEditing ? medicao.vale_transporte : vtAtual
   const valeRefeicao = isEditing ? medicao.vale_refeicao : vrAtual
 
@@ -113,10 +112,11 @@ export function MedicaoFormDialog({
     defaultValues: emptyValues,
   })
 
+  const maoDeObra = form.watch("mao_de_obra")
   const material = form.watch("material")
 
   const resumo = calcularResumoMedicao({
-    maoDeObra,
+    maoDeObra: maoDeObra || 0,
     valeTransporte,
     valeRefeicao,
     material: material || 0,
@@ -152,12 +152,11 @@ export function MedicaoFormDialog({
   }, [open, medicao, proximoNumero])
 
   useEffect(() => {
-    form.setValue("mao_de_obra", maoDeObra)
     form.setValue("vale_transporte", valeTransporte)
     form.setValue("vale_refeicao", valeRefeicao)
     form.setValue("valor", resumo.valorAFaturar)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [maoDeObra, valeTransporte, valeRefeicao, resumo.valorAFaturar])
+  }, [valeTransporte, valeRefeicao, resumo.valorAFaturar])
 
   async function onSubmit(values: MedicaoInput) {
     try {
@@ -191,9 +190,23 @@ export function MedicaoFormDialog({
             <div className="rounded-lg border bg-muted/30 p-4">
               <p className="mb-3 text-sm font-semibold">Resumo da medição</p>
               <div className="flex flex-col gap-1.5">
-                <LinhaResumo
-                  label={isEditing ? "Mão de obra (gravado)" : "Mão de obra (Folha de Pagamento)"}
-                  valor={maoDeObra}
+                <FormField
+                  control={form.control}
+                  name="mao_de_obra"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between gap-4 space-y-0">
+                      <FormLabel className="text-sm text-muted-foreground">Mão de obra</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          className="h-7 w-32 text-right"
+                          value={field.value}
+                          onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
                 />
                 <LinhaResumo
                   label={isEditing ? "Vale Transporte (gravado)" : "Vale Transporte (Folha de Pagamento)"}
