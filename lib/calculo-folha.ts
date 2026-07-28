@@ -52,8 +52,9 @@ export function calcularEncargos(funcionario: FuncionarioBase) {
     : 0
   const descVt = funcionario.vt_informado > 0 ? funcionario.salario_base * TAXA_DESC_VT : 0
   const descVa = funcionario.vr_informado * TAXA_DESC_VA
-  const inssEmpregadoValor = calcularInssEmpregado(funcionario.salario_base)
-  const inssAliquotaMarginal = obterAliquotaInssMarginal(funcionario.salario_base)
+  const baseInss = funcionario.salario_base + periculosidadeValor
+  const inssEmpregadoValor = calcularInssEmpregado(baseInss)
+  const inssAliquotaMarginal = obterAliquotaInssMarginal(baseInss)
 
   const baseEncargos = funcionario.salario_base + periculosidadeValor
   const fgts = baseEncargos * TAXA_FGTS
