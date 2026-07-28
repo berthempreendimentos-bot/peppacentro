@@ -4,7 +4,7 @@ import { renderToBuffer } from "@react-pdf/renderer"
 import { createClient } from "@/lib/supabase/server"
 import { FolhaPagamentoPdfDocument } from "@/lib/reports/pdf"
 import { calcularEncargos, somarTotais } from "@/lib/calculo-folha"
-import { formatMesAno } from "@/lib/format"
+import { contentDispositionAnexo, formatMesAno } from "@/lib/format"
 
 export const runtime = "nodejs"
 export const maxDuration = 30
@@ -15,15 +15,18 @@ export async function GET(
 ) {
   const { id } = await params
   const supabase = await createClient()
-  const { data: funcionarios, error } = await supabase
-    .from("funcionarios")
-    .select("*")
-    .eq("contrato_id", id)
-    .order("nome")
+  const [{ data: contrato }, { data: funcionarios, error }] = await Promise.all([
+    supabase.from("contratos").select("numero, clientes(nome)").eq("id", id).maybeSingle(),
+    supabase.from("funcionarios").select("*").eq("contrato_id", id).order("nome"),
+  ])
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  const contratoTitulo = contrato
+    ? `Contrato Nº ${contrato.numero}${contrato.clientes?.nome ? ` — ${contrato.clientes.nome}` : ""}`
+    : "Contrato"
 
   const lista = funcionarios ?? []
   const totais = somarTotais(lista)
@@ -63,19 +66,24 @@ export async function GET(
     }
   })
 
+  const mesReferencia = formatMesAno()
+
   const buffer = await renderToBuffer(
     <FolhaPagamentoPdfDocument
-      mesReferencia={formatMesAno()}
+      contratoTitulo={contratoTitulo}
+      mesReferencia={mesReferencia}
       funcionarios={funcionariosRows}
       porFuncao={porFuncao}
       totais={totais}
     />
   )
 
+  const nomeArquivo = `Folha de Pagamento - ${contrato?.numero ?? "Contrato"} - ${mesReferencia}.pdf`
+
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": 'attachment; filename="folha-de-pagamento.pdf"',
+      "Content-Disposition": contentDispositionAnexo(nomeArquivo),
     },
   })
 }

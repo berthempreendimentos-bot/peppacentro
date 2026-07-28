@@ -121,12 +121,71 @@ type FuncaoResumoRow = {
   custoEmpresa: number
 }
 
+const COR_TITULO_BG = "#ffd700"
+const COR_TITULO_TEXTO = "#1a1b22"
+const COR_SECAO_BG = "#1a1b22"
+const COR_SECAO_TEXTO = "#ffffff"
+const COR_LINHA_PAR = "#f7f6fb"
+const COR_BORDA = "#d0c6ab"
+
+const stylesFolha = StyleSheet.create({
+  tituloBarra: {
+    backgroundColor: COR_TITULO_BG,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 2,
+  },
+  tituloTexto: { fontSize: 15, fontFamily: "Helvetica-Bold", color: COR_TITULO_TEXTO },
+  subtitulo: { fontSize: 9, color: "#666666", marginBottom: 14, paddingHorizontal: 12 },
+  kpiCaixa: {
+    flexDirection: "row",
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COR_BORDA,
+    borderRadius: 3,
+  },
+  kpiItem: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderRightWidth: 1,
+    borderRightColor: COR_BORDA,
+  },
+  kpiLabel: { fontSize: 7, color: "#666666", marginBottom: 3, textTransform: "uppercase" },
+  kpiValor: { fontSize: 11, fontFamily: "Helvetica-Bold" },
+  secaoBarra: {
+    backgroundColor: COR_SECAO_BG,
+    paddingVertical: 5,
+    paddingHorizontal: 8,
+    marginBottom: 4,
+  },
+  secaoTexto: { fontSize: 10, fontFamily: "Helvetica-Bold", color: COR_SECAO_TEXTO },
+  tabelaHeaderRow: {
+    flexDirection: "row",
+    backgroundColor: COR_SECAO_BG,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+  },
+  tabelaHeaderCell: { fontFamily: "Helvetica-Bold", fontSize: 9, color: COR_SECAO_TEXTO },
+  tabelaRow: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: COR_BORDA,
+    paddingVertical: 5,
+    paddingHorizontal: 4,
+  },
+  tabelaRowPar: { backgroundColor: COR_LINHA_PAR },
+  tabelaCell: { flex: 1, fontSize: 9 },
+})
+
 export function FolhaPagamentoPdfDocument({
+  contratoTitulo,
   mesReferencia,
   funcionarios,
   porFuncao,
   totais,
 }: {
+  contratoTitulo: string
   mesReferencia: string
   funcionarios: FuncionarioFolhaRow[]
   porFuncao: FuncaoResumoRow[]
@@ -141,61 +200,90 @@ export function FolhaPagamentoPdfDocument({
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <Text style={styles.title}>Folha de Pagamento</Text>
-        <Text style={styles.subtitle}>
+        <View style={stylesFolha.tituloBarra}>
+          <Text style={stylesFolha.tituloTexto}>Folha de Pagamento — {contratoTitulo}</Text>
+        </View>
+        <Text style={stylesFolha.subtitulo}>
           Referência: {mesReferencia} · Gerado em {formatDate(new Date().toISOString())}
         </Text>
 
-        <View style={{ marginBottom: 16, flexDirection: "row", gap: 16 }}>
-          <Text>Funcionários: {totais.quantidade}</Text>
-          <Text>Salário Base: {formatCurrencyBRL(totais.salarioBase)}</Text>
-          <Text>Líquido: {formatCurrencyBRL(totais.liquido)}</Text>
-          <Text>Encargos: {formatCurrencyBRL(totais.totalEncargos)}</Text>
-          <Text>Custo Total: {formatCurrencyBRL(totais.custoEmpresa)}</Text>
+        <View style={stylesFolha.kpiCaixa}>
+          <View style={stylesFolha.kpiItem}>
+            <Text style={stylesFolha.kpiLabel}>Funcionários</Text>
+            <Text style={stylesFolha.kpiValor}>{totais.quantidade}</Text>
+          </View>
+          <View style={stylesFolha.kpiItem}>
+            <Text style={stylesFolha.kpiLabel}>Salário Base</Text>
+            <Text style={stylesFolha.kpiValor}>{formatCurrencyBRL(totais.salarioBase)}</Text>
+          </View>
+          <View style={stylesFolha.kpiItem}>
+            <Text style={stylesFolha.kpiLabel}>Líquido</Text>
+            <Text style={stylesFolha.kpiValor}>{formatCurrencyBRL(totais.liquido)}</Text>
+          </View>
+          <View style={stylesFolha.kpiItem}>
+            <Text style={stylesFolha.kpiLabel}>Encargos Patronais</Text>
+            <Text style={stylesFolha.kpiValor}>{formatCurrencyBRL(totais.totalEncargos)}</Text>
+          </View>
+          <View style={[stylesFolha.kpiItem, { borderRightWidth: 0 }]}>
+            <Text style={stylesFolha.kpiLabel}>Custo Total</Text>
+            <Text style={stylesFolha.kpiValor}>{formatCurrencyBRL(totais.custoEmpresa)}</Text>
+          </View>
         </View>
 
-        <Text style={[styles.title, { fontSize: 12, marginBottom: 8 }]}>Resumo por função</Text>
+        <View style={stylesFolha.secaoBarra}>
+          <Text style={stylesFolha.secaoTexto}>RESUMO POR FUNÇÃO</Text>
+        </View>
         <View style={styles.table}>
-          <View style={styles.headerRow}>
-            <Text style={[styles.cell, styles.headerCell, { flex: 2 }]}>Função</Text>
-            <Text style={[styles.cell, styles.headerCell]}>Qtd.</Text>
-            <Text style={[styles.cell, styles.headerCell]}>Salário Base</Text>
-            <Text style={[styles.cell, styles.headerCell]}>Líquido</Text>
-            <Text style={[styles.cell, styles.headerCell]}>Encargos</Text>
-            <Text style={[styles.cell, styles.headerCell]}>Custo Total</Text>
+          <View style={stylesFolha.tabelaHeaderRow}>
+            <Text style={[stylesFolha.tabelaCell, stylesFolha.tabelaHeaderCell, { flex: 2 }]}>
+              Função
+            </Text>
+            <Text style={[stylesFolha.tabelaCell, stylesFolha.tabelaHeaderCell]}>Qtd.</Text>
+            <Text style={[stylesFolha.tabelaCell, stylesFolha.tabelaHeaderCell]}>Salário Base</Text>
+            <Text style={[stylesFolha.tabelaCell, stylesFolha.tabelaHeaderCell]}>Líquido</Text>
+            <Text style={[stylesFolha.tabelaCell, stylesFolha.tabelaHeaderCell]}>Encargos</Text>
+            <Text style={[stylesFolha.tabelaCell, stylesFolha.tabelaHeaderCell]}>Custo Total</Text>
           </View>
           {porFuncao.map((f, i) => (
-            <View style={styles.row} key={i}>
-              <Text style={[styles.cell, { flex: 2 }]}>{f.funcao}</Text>
-              <Text style={styles.cell}>{f.quantidade}</Text>
-              <Text style={styles.cell}>{formatCurrencyBRL(f.salarioBase)}</Text>
-              <Text style={styles.cell}>{formatCurrencyBRL(f.liquido)}</Text>
-              <Text style={styles.cell}>{formatCurrencyBRL(f.totalEncargos)}</Text>
-              <Text style={styles.cell}>{formatCurrencyBRL(f.custoEmpresa)}</Text>
+            <View
+              style={[stylesFolha.tabelaRow, ...(i % 2 === 1 ? [stylesFolha.tabelaRowPar] : [])]}
+              key={i}
+            >
+              <Text style={[stylesFolha.tabelaCell, { flex: 2 }]}>{f.funcao}</Text>
+              <Text style={stylesFolha.tabelaCell}>{f.quantidade}</Text>
+              <Text style={stylesFolha.tabelaCell}>{formatCurrencyBRL(f.salarioBase)}</Text>
+              <Text style={stylesFolha.tabelaCell}>{formatCurrencyBRL(f.liquido)}</Text>
+              <Text style={stylesFolha.tabelaCell}>{formatCurrencyBRL(f.totalEncargos)}</Text>
+              <Text style={stylesFolha.tabelaCell}>{formatCurrencyBRL(f.custoEmpresa)}</Text>
             </View>
           ))}
         </View>
 
-        <Text style={[styles.title, { fontSize: 12, marginTop: 20, marginBottom: 8 }]}>
-          Funcionários
-        </Text>
+        <View style={[stylesFolha.secaoBarra, { marginTop: 20 }]}>
+          <Text style={stylesFolha.secaoTexto}>FUNCIONÁRIOS</Text>
+        </View>
         <View style={styles.table}>
-          <View style={styles.headerRow}>
-            <Text style={[styles.cell, styles.headerCell, { flex: 2 }]}>Nome</Text>
-            <Text style={[styles.cell, styles.headerCell]}>Função</Text>
-            <Text style={[styles.cell, styles.headerCell]}>Salário Base</Text>
-            <Text style={[styles.cell, styles.headerCell]}>Líquido</Text>
-            <Text style={[styles.cell, styles.headerCell]}>Encargos</Text>
-            <Text style={[styles.cell, styles.headerCell]}>Custo Total</Text>
+          <View style={stylesFolha.tabelaHeaderRow}>
+            <Text style={[stylesFolha.tabelaCell, stylesFolha.tabelaHeaderCell, { flex: 2 }]}>
+              Nome
+            </Text>
+            <Text style={[stylesFolha.tabelaCell, stylesFolha.tabelaHeaderCell]}>Função</Text>
+            <Text style={[stylesFolha.tabelaCell, stylesFolha.tabelaHeaderCell]}>Salário Base</Text>
+            <Text style={[stylesFolha.tabelaCell, stylesFolha.tabelaHeaderCell]}>Líquido</Text>
+            <Text style={[stylesFolha.tabelaCell, stylesFolha.tabelaHeaderCell]}>Encargos</Text>
+            <Text style={[stylesFolha.tabelaCell, stylesFolha.tabelaHeaderCell]}>Custo Total</Text>
           </View>
           {funcionarios.map((f, i) => (
-            <View style={styles.row} key={i}>
-              <Text style={[styles.cell, { flex: 2 }]}>{f.nome}</Text>
-              <Text style={styles.cell}>{f.funcao}</Text>
-              <Text style={styles.cell}>{formatCurrencyBRL(f.salarioBase)}</Text>
-              <Text style={styles.cell}>{formatCurrencyBRL(f.liquido)}</Text>
-              <Text style={styles.cell}>{formatCurrencyBRL(f.totalEncargos)}</Text>
-              <Text style={styles.cell}>{formatCurrencyBRL(f.custoEmpresa)}</Text>
+            <View
+              style={[stylesFolha.tabelaRow, ...(i % 2 === 1 ? [stylesFolha.tabelaRowPar] : [])]}
+              key={i}
+            >
+              <Text style={[stylesFolha.tabelaCell, { flex: 2 }]}>{f.nome}</Text>
+              <Text style={stylesFolha.tabelaCell}>{f.funcao}</Text>
+              <Text style={stylesFolha.tabelaCell}>{formatCurrencyBRL(f.salarioBase)}</Text>
+              <Text style={stylesFolha.tabelaCell}>{formatCurrencyBRL(f.liquido)}</Text>
+              <Text style={stylesFolha.tabelaCell}>{formatCurrencyBRL(f.totalEncargos)}</Text>
+              <Text style={stylesFolha.tabelaCell}>{formatCurrencyBRL(f.custoEmpresa)}</Text>
             </View>
           ))}
         </View>

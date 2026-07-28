@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { createClient } from "@/lib/supabase/server"
 import { buildFolhaPagamentoWorkbook } from "@/lib/reports/folha-excel"
-import { formatMesAno } from "@/lib/format"
+import { contentDispositionAnexo, formatMesAno } from "@/lib/format"
 
 export const runtime = "nodejs"
 export const maxDuration = 30
@@ -26,17 +26,20 @@ export async function GET(
   const contratoTitulo = contrato
     ? `Contrato Nº ${contrato.numero}${contrato.clientes?.nome ? ` — ${contrato.clientes.nome}` : ""}`
     : "Contrato"
+  const mesReferencia = formatMesAno()
 
   const buffer = await buildFolhaPagamentoWorkbook({
     contratoTitulo,
-    mesReferencia: formatMesAno(),
+    mesReferencia,
     funcionarios: funcionarios ?? [],
   })
+
+  const nomeArquivo = `Folha de Pagamento - ${contrato?.numero ?? "Contrato"} - ${mesReferencia}.xlsx`
 
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": 'attachment; filename="folha-de-pagamento.xlsx"',
+      "Content-Disposition": contentDispositionAnexo(nomeArquivo),
     },
   })
 }

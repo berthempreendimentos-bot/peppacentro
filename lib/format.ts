@@ -51,3 +51,10 @@ export function formatMesAno(date: Date = new Date()) {
   const texto = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(date)
   return texto.charAt(0).toUpperCase() + texto.slice(1)
 }
+
+export function contentDispositionAnexo(nomeArquivo: string): string {
+  const semAcento = nomeArquivo.normalize("NFD").replace(new RegExp("[\\u0300-\\u036f]", "g"), "")
+  const asciiSeguro = semAcento.replace(/[^\x20-\x7E]/g, "_").replace(/"/g, "")
+  const codificado = encodeURIComponent(nomeArquivo)
+  return `attachment; filename="${asciiSeguro}"; filename*=UTF-8''${codificado}`
+}
