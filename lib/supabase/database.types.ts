@@ -81,6 +81,7 @@ export interface Database {
           telefone: string | null
           email: string | null
           endereco: string | null
+          praca_pagamento: string | null
           observacoes: string | null
           created_by: string | null
           created_at: string

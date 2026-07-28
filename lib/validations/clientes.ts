@@ -13,6 +13,7 @@ export const clienteSchema = z
     telefone: z.string().optional(),
     email: z.string().email("Email inválido").optional().or(z.literal("")),
     endereco: z.string().optional(),
+    praca_pagamento: z.string().optional(),
     observacoes: z.string().optional(),
   })
   .refine(

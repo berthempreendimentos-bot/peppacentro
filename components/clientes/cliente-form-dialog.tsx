@@ -43,6 +43,7 @@ const emptyValues: ClienteInput = {
   telefone: "",
   email: "",
   endereco: "",
+  praca_pagamento: "",
   observacoes: "",
 }
 
@@ -75,6 +76,7 @@ export function ClienteFormDialog({
               telefone: cliente.telefone ?? "",
               email: cliente.email ?? "",
               endereco: cliente.endereco ?? "",
+              praca_pagamento: cliente.praca_pagamento ?? "",
               observacoes: cliente.observacoes ?? "",
             }
           : emptyValues
@@ -210,6 +212,19 @@ export function ClienteFormDialog({
                   <FormLabel>Endereço</FormLabel>
                   <FormControl>
                     <Input placeholder="Endereço completo" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="praca_pagamento"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Praça de Pagamento</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ex: Banco do Brasil" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
