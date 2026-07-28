@@ -4,8 +4,14 @@ import {
   calcularContaDepositoVinculada,
   calcularEncargos,
   somarTotais,
+  TAXA_DECIMO_TERCEIRO,
+  TAXA_DESC_VA,
+  TAXA_DESC_VT,
+  TAXA_FERIAS_ADICIONAL,
   TAXA_FGTS,
+  TAXA_INCIDENCIA_SUBMODULO_22,
   TAXA_INSS_PATRONAL,
+  TAXA_MULTA_FGTS,
   TAXA_RAT,
   TAXA_TERCEIROS,
   type FuncionarioBase,
@@ -87,6 +93,10 @@ function resolverTaxas(taxas?: TaxasTributos): TaxasTributos {
   return taxas ?? { fgts: TAXA_FGTS, inssPatronal: TAXA_INSS_PATRONAL, rat: TAXA_RAT, terceiros: TAXA_TERCEIROS }
 }
 
+function formula(cell: ExcelJS.Cell, expressao: string, resultado: number) {
+  cell.value = { formula: expressao, result: resultado }
+}
+
 export function buildFolhaResumoSheet(
   workbook: ExcelJS.Workbook,
   {
@@ -137,6 +147,9 @@ export function buildFolhaResumoSheet(
     ["Desconto INSS Empregado", totais.inssEmpregadoValor],
   ]
 
+  // Linhas 5, 6 e 7 — valores de origem (não são fórmulas: vêm da soma dos
+  // funcionários, calculada em lib/calculo-folha.ts).
+  const linhaProventosInicio = linhaCab.number + 1
   for (let i = 0; i < 3; i++) {
     const row = sheet.addRow([proventos[i][0], proventos[i][1], "", descontos[i][0], descontos[i][1]])
     row.getCell(2).numFmt = FORMATO_MOEDA
@@ -147,6 +160,7 @@ export function buildFolhaResumoSheet(
       row.getCell(4).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_LINHA_PAR } }
     }
   }
+  const linhaProventosFim = linhaProventosInicio + 2
 
   const totalProventos = totais.salarioBase + totais.vtInformado + totais.vrInformado
   const totalDescontos = totais.descVt + totais.descVa + totais.inssEmpregadoValor
@@ -156,6 +170,8 @@ export function buildFolhaResumoSheet(
     rowTotais.getCell(col).font = { bold: true }
     rowTotais.getCell(col).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_TOTAL } }
   })
+  formula(rowTotais.getCell(2), `SUM(B${linhaProventosInicio}:B${linhaProventosFim})`, totalProventos)
+  formula(rowTotais.getCell(5), `SUM(E${linhaProventosInicio}:E${linhaProventosFim})`, totalDescontos)
   rowTotais.getCell(2).numFmt = FORMATO_MOEDA
   rowTotais.getCell(5).numFmt = FORMATO_MOEDA
   aplicarBordaLinha(rowTotais, 5)
@@ -165,6 +181,7 @@ export function buildFolhaResumoSheet(
   sheet.mergeCells(rowLiquido.number, 1, rowLiquido.number, 1)
   rowLiquido.getCell(1).font = { bold: true, size: 12 }
   rowLiquido.getCell(2).font = { bold: true, size: 12 }
+  formula(rowLiquido.getCell(2), `B${rowTotais.number}-E${rowTotais.number}`, totais.liquido)
   rowLiquido.getCell(2).numFmt = FORMATO_MOEDA
   rowLiquido.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_DESTAQUE } }
   rowLiquido.getCell(2).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_DESTAQUE } }
@@ -179,17 +196,26 @@ export function buildFolhaResumoSheet(
     [`RAT (${formatarPercentual(taxasEfetivas.rat)})`, totais.rat],
     [`Terceiros (${formatarPercentual(taxasEfetivas.terceiros)})`, totais.terceiros],
   ]
+  let linhaEncargosInicio = 0
   encargos.forEach(([label, valor], i) => {
     const row = sheet.addRow([label, valor])
+    if (i === 0) linhaEncargosInicio = row.number
     row.getCell(2).numFmt = FORMATO_MOEDA
     aplicarBordaLinha(row, 2)
     if (i % 2 === 1) {
       row.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_LINHA_PAR } }
     }
   })
+  const linhaEncargosFim = linhaEncargosInicio + encargos.length - 1
+
   const rowTotalEncargos = sheet.addRow(["TOTAL ENCARGOS", totais.totalEncargos])
   rowTotalEncargos.getCell(1).font = { bold: true }
   rowTotalEncargos.getCell(2).font = { bold: true }
+  formula(
+    rowTotalEncargos.getCell(2),
+    `SUM(B${linhaEncargosInicio}:B${linhaEncargosFim})`,
+    totais.totalEncargos
+  )
   rowTotalEncargos.getCell(2).numFmt = FORMATO_MOEDA
   rowTotalEncargos.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_TOTAL } }
   rowTotalEncargos.getCell(2).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_TOTAL } }
@@ -200,9 +226,11 @@ export function buildFolhaResumoSheet(
   linhaSecao(sheet, "TOTAL DESPESA: FOLHA + ENCARGOS", 5)
 
   const rowEncargos2 = sheet.addRow(["Encargos Patronais", totais.totalEncargos])
+  formula(rowEncargos2.getCell(2), `B${rowTotalEncargos.number}`, totais.totalEncargos)
   rowEncargos2.getCell(2).numFmt = FORMATO_MOEDA
   aplicarBordaLinha(rowEncargos2, 2)
   const rowEmpregados = sheet.addRow(["Líquido dos Empregados", totais.liquido])
+  formula(rowEmpregados.getCell(2), `B${rowLiquido.number}`, totais.liquido)
   rowEmpregados.getCell(2).numFmt = FORMATO_MOEDA
   aplicarBordaLinha(rowEmpregados, 2)
   rowEmpregados.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_LINHA_PAR } }
@@ -211,6 +239,11 @@ export function buildFolhaResumoSheet(
   const rowTotalGasto = sheet.addRow(["TOTAL DE GASTOS", totais.custoEmpresa])
   rowTotalGasto.getCell(1).font = { bold: true, size: 13 }
   rowTotalGasto.getCell(2).font = { bold: true, size: 13 }
+  formula(
+    rowTotalGasto.getCell(2),
+    `SUM(B${rowEncargos2.number}:B${rowEmpregados.number})`,
+    totais.custoEmpresa
+  )
   rowTotalGasto.getCell(2).numFmt = FORMATO_MOEDA
   rowTotalGasto.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_DESTAQUE } }
   rowTotalGasto.getCell(2).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_DESTAQUE } }
@@ -227,20 +260,29 @@ export function buildFolhaResumoSheet(
     ["Incidência do submódulo 2.2 (7,82%)", conta.incidenciaSubmodulo22],
     ["Multa do FGTS (4,00%)", conta.multaFgts],
   ]
+  let linhaContaInicio = 0
   contaLinhas.forEach(([label, valor], i) => {
     const row = sheet.addRow([label, valor])
+    if (i === 0) linhaContaInicio = row.number
     row.getCell(2).numFmt = FORMATO_MOEDA
     aplicarBordaLinha(row, 2)
     if (i % 2 === 1) {
       row.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_LINHA_PAR } }
     }
   })
+  const linhaContaFim = linhaContaInicio + contaLinhas.length - 1
+
   const rowTotalRetencao = sheet.addRow([
     "TOTAL DE RETENÇÃO MENSAL (32,25%)",
     conta.totalRetencaoMensal,
   ])
   rowTotalRetencao.getCell(1).font = { bold: true }
   rowTotalRetencao.getCell(2).font = { bold: true }
+  formula(
+    rowTotalRetencao.getCell(2),
+    `SUM(B${linhaContaInicio}:B${linhaContaFim})`,
+    conta.totalRetencaoMensal
+  )
   rowTotalRetencao.getCell(2).numFmt = FORMATO_MOEDA
   rowTotalRetencao.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_TOTAL } }
   rowTotalRetencao.getCell(2).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_TOTAL } }
@@ -349,6 +391,17 @@ export function buildPorFuncaoSheet(
     cell.font = { bold: true }
     cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_TOTAL } }
   })
+
+  if (linhas.length > 0) {
+    const primeiraLinha = headerRow.number + 1
+    const ultimaLinha = headerRow.number + linhas.length
+    formula(rowTotal.getCell(2), `SUM(B${primeiraLinha}:B${ultimaLinha})`, totais.quantidade)
+    formula(rowTotal.getCell(3), `SUM(C${primeiraLinha}:C${ultimaLinha})`, totais.salarioBase)
+    formula(rowTotal.getCell(4), `SUM(D${primeiraLinha}:D${ultimaLinha})`, totais.liquido)
+    formula(rowTotal.getCell(5), `SUM(E${primeiraLinha}:E${ultimaLinha})`, totais.totalEncargos)
+    formula(rowTotal.getCell(6), `SUM(F${primeiraLinha}:F${ultimaLinha})`, totais.custoEmpresa)
+  }
+
   rowTotal.getCell(3).numFmt = FORMATO_MOEDA
   rowTotal.getCell(4).numFmt = FORMATO_MOEDA
   rowTotal.getCell(5).numFmt = FORMATO_MOEDA
@@ -407,6 +460,12 @@ export function buildFuncionariosSheet(
 
   const colunasMoeda = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
 
+  // Colunas cuja fórmula referencia apenas células da própria linha (E =
+  // Salário Base, I = Periculosidade, F = VT, G = VR, H = Desc. VT,
+  // J = INSS Empregado, K = Desc. VA, M-P = FGTS/INSS Patronal/RAT/Terceiros).
+  // INSS Empregado (progressivo por faixas) e Periculosidade (depende de um
+  // campo booleano que não aparece nesta planilha) continuam como valor
+  // calculado, não fórmula.
   funcionarios.forEach((f, i) => {
     const e = calcularEncargos(f, taxas)
     const row = sheet.addRow([
@@ -429,6 +488,18 @@ export function buildFuncionariosSheet(
       e.totalEncargos,
       e.custoEmpresa,
     ])
+
+    const r = row.number
+    formula(row.getCell(8), `IF(F${r}>0,E${r}*${TAXA_DESC_VT},0)`, e.descVt)
+    formula(row.getCell(11), `G${r}*${TAXA_DESC_VA}`, e.descVa)
+    formula(row.getCell(12), `E${r}-H${r}-J${r}-K${r}`, e.liquido)
+    formula(row.getCell(13), `(E${r}+I${r})*${taxasEfetivas.fgts}`, e.fgts)
+    formula(row.getCell(14), `(E${r}+I${r})*${taxasEfetivas.inssPatronal}`, e.inssPatronal)
+    formula(row.getCell(15), `(E${r}+I${r})*${taxasEfetivas.rat}`, e.rat)
+    formula(row.getCell(16), `(E${r}+I${r})*${taxasEfetivas.terceiros}`, e.terceiros)
+    formula(row.getCell(17), `M${r}+N${r}+O${r}+P${r}`, e.totalEncargos)
+    formula(row.getCell(18), `E${r}+F${r}+G${r}+Q${r}`, e.custoEmpresa)
+
     colunasMoeda.forEach((col) => {
       row.getCell(col).numFmt = FORMATO_MOEDA
     })
@@ -451,7 +522,13 @@ export function buildContaDepositoVinculadaSheet(
     contratoTitulo,
     mesReferencia,
     funcionarios,
-  }: { contratoTitulo: string; mesReferencia: string; funcionarios: FuncionarioComId[] }
+    taxas,
+  }: {
+    contratoTitulo: string
+    mesReferencia: string
+    funcionarios: FuncionarioComId[]
+    taxas?: TaxasTributos
+  }
 ) {
   const sheet = workbook.addWorksheet("Conta-Depósito Vinculada")
   const colunas = [
@@ -490,7 +567,7 @@ export function buildContaDepositoVinculadaSheet(
   let totalRetencaoPostos = 0
 
   funcionarios.forEach((f, i) => {
-    const encargos = calcularEncargos(f)
+    const encargos = calcularEncargos(f, taxas)
     const conta = calcularContaDepositoVinculada(encargos.remuneracaoTotal)
 
     totalRemuneracao += encargos.remuneracaoTotal
@@ -511,6 +588,15 @@ export function buildContaDepositoVinculadaSheet(
       conta.totalRetencaoMensal,
       conta.totalRetencaoMensal,
     ])
+
+    const r = row.number
+    formula(row.getCell(3), `B${r}*${TAXA_DECIMO_TERCEIRO}`, conta.decimoTerceiro)
+    formula(row.getCell(4), `B${r}*${TAXA_FERIAS_ADICIONAL}`, conta.feriasAdicional)
+    formula(row.getCell(5), `B${r}*${TAXA_INCIDENCIA_SUBMODULO_22}`, conta.incidenciaSubmodulo22)
+    formula(row.getCell(6), `B${r}*${TAXA_MULTA_FGTS}`, conta.multaFgts)
+    formula(row.getCell(7), `SUM(C${r}:F${r})`, conta.totalRetencaoMensal)
+    formula(row.getCell(8), `G${r}`, conta.totalRetencaoMensal)
+
     colunasMoeda.forEach((col) => {
       row.getCell(col).numFmt = FORMATO_MOEDA
     })
@@ -536,6 +622,19 @@ export function buildContaDepositoVinculadaSheet(
     cell.font = { bold: true }
     cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_TOTAL } }
   })
+
+  if (funcionarios.length > 0) {
+    const primeiraLinha = headerRow.number + 1
+    const ultimaLinha = headerRow.number + funcionarios.length
+    formula(rowTotal.getCell(2), `SUM(B${primeiraLinha}:B${ultimaLinha})`, totalRemuneracao)
+    formula(rowTotal.getCell(3), `SUM(C${primeiraLinha}:C${ultimaLinha})`, totalDecimoTerceiro)
+    formula(rowTotal.getCell(4), `SUM(D${primeiraLinha}:D${ultimaLinha})`, totalFeriasAdicional)
+    formula(rowTotal.getCell(5), `SUM(E${primeiraLinha}:E${ultimaLinha})`, totalIncidencia)
+    formula(rowTotal.getCell(6), `SUM(F${primeiraLinha}:F${ultimaLinha})`, totalMulta)
+    formula(rowTotal.getCell(7), `SUM(G${primeiraLinha}:G${ultimaLinha})`, totalRetencaoMensal)
+    formula(rowTotal.getCell(8), `SUM(H${primeiraLinha}:H${ultimaLinha})`, totalRetencaoPostos)
+  }
+
   colunasMoeda.forEach((col) => {
     rowTotal.getCell(col).numFmt = FORMATO_MOEDA
   })
