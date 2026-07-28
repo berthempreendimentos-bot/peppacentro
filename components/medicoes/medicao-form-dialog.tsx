@@ -14,6 +14,7 @@ import { useCreateMedicao, useUpdateMedicao, type Medicao } from "@/lib/queries/
 import { useFuncionarios } from "@/lib/queries/funcionarios"
 import { useContrato } from "@/lib/queries/contratos"
 import { somarTotais } from "@/lib/calculo-folha"
+import { useTributos } from "@/hooks/use-tributos"
 import { calcularResumoMedicao } from "@/lib/calculo-medicao"
 import { formatCurrencyBRL } from "@/lib/format"
 import { Button } from "@/components/ui/button"
@@ -90,13 +91,15 @@ export function MedicaoFormDialog({
   const updateMedicao = useUpdateMedicao(contratoId)
   const { data: funcionarios } = useFuncionarios(contratoId)
   const { data: contrato } = useContrato(contratoId)
+  const { taxas } = useTributos()
   const isEditing = !!medicao
 
   // Em uma medição nova, Mão de Obra/VT/VR vêm ao vivo da Folha de Pagamento
-  // (aba Funcionários). Ao editar uma medição existente, mantém os valores
-  // gravados na época, para não reescrever a fatura de um mês passado se a
-  // folha atual mudou.
-  const totaisFolha = somarTotais(funcionarios ?? [])
+  // (aba Funcionários), já com as taxas de FGTS/INSS Patronal/RAT/Terceiros
+  // configuradas em "Tributos". Ao editar uma medição existente, mantém os
+  // valores gravados na época, para não reescrever a fatura de um mês
+  // passado se a folha ou as taxas mudarem depois.
+  const totaisFolha = somarTotais(funcionarios ?? [], taxas)
   const maoDeObraAtual = totaisFolha.custoEmpresa - totaisFolha.vtInformado - totaisFolha.vrInformado
   const vtAtual = totaisFolha.vtInformado
   const vrAtual = totaisFolha.vrInformado

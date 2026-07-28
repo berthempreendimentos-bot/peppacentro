@@ -4,7 +4,12 @@ import {
   calcularContaDepositoVinculada,
   calcularEncargos,
   somarTotais,
+  TAXA_FGTS,
+  TAXA_INSS_PATRONAL,
+  TAXA_RAT,
+  TAXA_TERCEIROS,
   type FuncionarioBase,
+  type TaxasTributos,
 } from "@/lib/calculo-folha"
 import { formatCpfCnpj, formatDate } from "@/lib/format"
 
@@ -74,13 +79,27 @@ function aplicarBordaLinha(row: ExcelJS.Row, colunas: number) {
   }
 }
 
+function formatarPercentual(fracao: number): string {
+  return `${(fracao * 100).toFixed(1).replace(".0", "")}%`
+}
+
+function resolverTaxas(taxas?: TaxasTributos): TaxasTributos {
+  return taxas ?? { fgts: TAXA_FGTS, inssPatronal: TAXA_INSS_PATRONAL, rat: TAXA_RAT, terceiros: TAXA_TERCEIROS }
+}
+
 export function buildFolhaResumoSheet(
   workbook: ExcelJS.Workbook,
   {
     contratoTitulo,
     mesReferencia,
     funcionarios,
-  }: { contratoTitulo: string; mesReferencia: string; funcionarios: FuncionarioComId[] }
+    taxas,
+  }: {
+    contratoTitulo: string
+    mesReferencia: string
+    funcionarios: FuncionarioComId[]
+    taxas?: TaxasTributos
+  }
 ) {
   const sheet = workbook.addWorksheet("Resumo")
   sheet.columns = [
@@ -94,7 +113,8 @@ export function buildFolhaResumoSheet(
   adicionarTitulo(sheet, 5, contratoTitulo, mesReferencia)
   sheet.addRow([])
 
-  const totais = somarTotais(funcionarios)
+  const taxasEfetivas = resolverTaxas(taxas)
+  const totais = somarTotais(funcionarios, taxas)
 
   const linhaCab = sheet.addRow(["DESCRIÇÃO", "PROVENTOS", "", "", "DESCONTOS"])
   ;[1, 2, 4, 5].forEach((col) => {
@@ -154,10 +174,10 @@ export function buildFolhaResumoSheet(
   linhaSecao(sheet, "ENCARGOS PATRONAIS", 5)
 
   const encargos: [string, number][] = [
-    ["FGTS (8%)", totais.fgts],
-    ["INSS Patronal (20%)", totais.inssPatronal],
-    ["RAT (3%)", totais.rat],
-    ["Terceiros (5,8%)", totais.terceiros],
+    [`FGTS (${formatarPercentual(taxasEfetivas.fgts)})`, totais.fgts],
+    [`INSS Patronal (${formatarPercentual(taxasEfetivas.inssPatronal)})`, totais.inssPatronal],
+    [`RAT (${formatarPercentual(taxasEfetivas.rat)})`, totais.rat],
+    [`Terceiros (${formatarPercentual(taxasEfetivas.terceiros)})`, totais.terceiros],
   ]
   encargos.forEach(([label, valor], i) => {
     const row = sheet.addRow([label, valor])
@@ -235,7 +255,13 @@ export function buildPorFuncaoSheet(
     contratoTitulo,
     mesReferencia,
     funcionarios,
-  }: { contratoTitulo: string; mesReferencia: string; funcionarios: FuncionarioComId[] }
+    taxas,
+  }: {
+    contratoTitulo: string
+    mesReferencia: string
+    funcionarios: FuncionarioComId[]
+    taxas?: TaxasTributos
+  }
 ) {
   const sheet = workbook.addWorksheet("Por Função")
   sheet.columns = [
@@ -255,7 +281,7 @@ export function buildPorFuncaoSheet(
   >()
   for (const funcionario of funcionarios) {
     const chave = funcionario.funcao?.trim() || "Sem função"
-    const encargos = calcularEncargos(funcionario)
+    const encargos = calcularEncargos(funcionario, taxas)
     const atual = porFuncao.get(chave) ?? {
       quantidade: 0,
       salarioBase: 0,
@@ -310,7 +336,7 @@ export function buildPorFuncaoSheet(
     }
   })
 
-  const totais = somarTotais(funcionarios)
+  const totais = somarTotais(funcionarios, taxas)
   const rowTotal = sheet.addRow([
     "Total",
     totais.quantidade,
@@ -338,9 +364,16 @@ export function buildFuncionariosSheet(
     contratoTitulo,
     mesReferencia,
     funcionarios,
-  }: { contratoTitulo: string; mesReferencia: string; funcionarios: FuncionarioComId[] }
+    taxas,
+  }: {
+    contratoTitulo: string
+    mesReferencia: string
+    funcionarios: FuncionarioComId[]
+    taxas?: TaxasTributos
+  }
 ) {
   const sheet = workbook.addWorksheet("Funcionários")
+  const taxasEfetivas = resolverTaxas(taxas)
   const colunas = [
     { header: "Nome", width: 28 },
     { header: "CPF", width: 16 },
@@ -354,10 +387,10 @@ export function buildFuncionariosSheet(
     { header: "INSS Empregado", width: 14 },
     { header: "Desc. VA (10%)", width: 13 },
     { header: "Líquido do Empregado", width: 16 },
-    { header: "FGTS 8%", width: 12 },
-    { header: "INSS Patronal 20%", width: 15 },
-    { header: "RAT 3%", width: 11 },
-    { header: "Terceiros 5,8%", width: 13 },
+    { header: `FGTS ${formatarPercentual(taxasEfetivas.fgts)}`, width: 12 },
+    { header: `INSS Patronal ${formatarPercentual(taxasEfetivas.inssPatronal)}`, width: 15 },
+    { header: `RAT ${formatarPercentual(taxasEfetivas.rat)}`, width: 11 },
+    { header: `Terceiros ${formatarPercentual(taxasEfetivas.terceiros)}`, width: 13 },
     { header: "Total Encargos", width: 14 },
     { header: "Custo Empresa", width: 14 },
   ]
@@ -375,7 +408,7 @@ export function buildFuncionariosSheet(
   const colunasMoeda = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
 
   funcionarios.forEach((f, i) => {
-    const e = calcularEncargos(f)
+    const e = calcularEncargos(f, taxas)
     const row = sheet.addRow([
       f.nome,
       formatCpfCnpj(f.cpf) || "",
@@ -515,6 +548,7 @@ export async function buildFolhaPagamentoWorkbook(params: {
   contratoTitulo: string
   mesReferencia: string
   funcionarios: FuncionarioComId[]
+  taxas?: TaxasTributos
 }) {
   const workbook = new ExcelJS.Workbook()
   buildFolhaResumoSheet(workbook, params)

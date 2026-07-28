@@ -12,6 +12,7 @@ import {
 
 import { useFuncionarios } from "@/lib/queries/funcionarios"
 import { calcularEncargos, somarTotais } from "@/lib/calculo-folha"
+import { useTributos, taxasParaQueryString } from "@/hooks/use-tributos"
 import { formatCurrencyBRL, formatMesAno } from "@/lib/format"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -50,6 +51,7 @@ function KpiCard({
 
 export function FolhaPagamentoResumo({ contratoId }: { contratoId: string }) {
   const { data: funcionarios, isLoading } = useFuncionarios(contratoId)
+  const { taxas } = useTributos()
 
   if (isLoading) {
     return (
@@ -65,7 +67,7 @@ export function FolhaPagamentoResumo({ contratoId }: { contratoId: string }) {
   }
 
   const lista = funcionarios ?? []
-  const totais = somarTotais(lista)
+  const totais = somarTotais(lista, taxas)
 
   const porFuncao = new Map<
     string,
@@ -73,7 +75,7 @@ export function FolhaPagamentoResumo({ contratoId }: { contratoId: string }) {
   >()
   for (const funcionario of lista) {
     const chave = funcionario.funcao?.trim() || "Sem função"
-    const encargos = calcularEncargos(funcionario)
+    const encargos = calcularEncargos(funcionario, taxas)
     const atual = porFuncao.get(chave) ?? {
       quantidade: 0,
       salarioBase: 0,
@@ -101,12 +103,12 @@ export function FolhaPagamentoResumo({ contratoId }: { contratoId: string }) {
         </p>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" asChild>
-            <a href={`/api/funcionarios/${contratoId}/folha-excel`}>
+            <a href={`/api/funcionarios/${contratoId}/folha-excel?${taxasParaQueryString(taxas)}`}>
               <FileSpreadsheet /> Excel
             </a>
           </Button>
           <Button variant="outline" size="sm" asChild>
-            <a href={`/api/funcionarios/${contratoId}/folha-pdf`}>
+            <a href={`/api/funcionarios/${contratoId}/folha-pdf?${taxasParaQueryString(taxas)}`}>
               <FileText /> PDF
             </a>
           </Button>

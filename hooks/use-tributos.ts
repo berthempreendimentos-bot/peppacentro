@@ -43,3 +43,15 @@ export function useTributos() {
 
   return { taxas, saveTaxas, resetTaxas, isLoaded, defaultTaxas: DEFAULT_TAXAS }
 }
+
+// Os relatórios de Excel/PDF rodam no servidor e não enxergam o
+// localStorage, por isso a tela de exportação manda as taxas atuais
+// como query params para o relatório bater com o que está na tela.
+export function taxasParaQueryString(taxas: TaxasTributos): string {
+  return new URLSearchParams({
+    fgts: String(taxas.fgts),
+    inssPatronal: String(taxas.inssPatronal),
+    rat: String(taxas.rat),
+    terceiros: String(taxas.terceiros),
+  }).toString()
+}

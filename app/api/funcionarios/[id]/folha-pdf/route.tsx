@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server"
 import { FolhaPagamentoPdfDocument } from "@/lib/reports/pdf"
 import { calcularEncargos, somarTotais } from "@/lib/calculo-folha"
 import { contentDispositionAnexo, formatMesAno } from "@/lib/format"
+import { lerTaxasDaUrl } from "@/lib/reports/taxas-url"
 
 export const runtime = "nodejs"
 export const maxDuration = 30
@@ -15,6 +16,7 @@ export async function GET(
 ) {
   const { id } = await params
   const supabase = await createClient()
+  const taxas = lerTaxasDaUrl(request.nextUrl.searchParams)
   const [{ data: contrato }, { data: funcionarios, error }] = await Promise.all([
     supabase.from("contratos").select("numero, clientes(nome)").eq("id", id).maybeSingle(),
     supabase.from("funcionarios").select("*").eq("contrato_id", id).order("nome"),
@@ -29,12 +31,12 @@ export async function GET(
     : "Contrato"
 
   const lista = funcionarios ?? []
-  const totais = somarTotais(lista)
+  const totais = somarTotais(lista, taxas)
 
   const porFuncaoMap = new Map<string, { quantidade: number; salarioBase: number; liquido: number; totalEncargos: number; custoEmpresa: number }>()
   for (const funcionario of lista) {
     const chave = funcionario.funcao?.trim() || "Sem função"
-    const encargos = calcularEncargos(funcionario)
+    const encargos = calcularEncargos(funcionario, taxas)
     const atual = porFuncaoMap.get(chave) ?? {
       quantidade: 0,
       salarioBase: 0,
@@ -55,7 +57,7 @@ export async function GET(
     .sort((a, b) => b.custoEmpresa - a.custoEmpresa)
 
   const funcionariosRows = lista.map((f) => {
-    const e = calcularEncargos(f)
+    const e = calcularEncargos(f, taxas)
     return {
       nome: f.nome,
       funcao: f.funcao ?? "—",

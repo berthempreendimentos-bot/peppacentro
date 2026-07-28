@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { buildFolhaPagamentoWorkbook } from "@/lib/reports/folha-excel"
 import { contentDispositionAnexo, formatMesAno } from "@/lib/format"
+import { lerTaxasDaUrl } from "@/lib/reports/taxas-url"
 
 export const runtime = "nodejs"
 export const maxDuration = 30
@@ -13,6 +14,7 @@ export async function GET(
 ) {
   const { id } = await params
   const supabase = await createClient()
+  const taxas = lerTaxasDaUrl(request.nextUrl.searchParams)
 
   const [{ data: contrato }, { data: funcionarios, error }] = await Promise.all([
     supabase.from("contratos").select("numero, clientes(nome)").eq("id", id).maybeSingle(),
@@ -32,6 +34,7 @@ export async function GET(
     contratoTitulo,
     mesReferencia,
     funcionarios: funcionarios ?? [],
+    taxas,
   })
 
   const nomeArquivo = `Folha de Pagamento - ${contrato?.numero ?? "Contrato"} - ${mesReferencia}.xlsx`
