@@ -175,6 +175,9 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
                   </TableCell>
                   <TableCell className="text-right whitespace-nowrap">
                     {formatCurrencyBRL(encargos.inssEmpregadoValor)}
+                    <span className="ml-1 text-xs text-muted-foreground">
+                      ({(encargos.inssAliquotaMarginal * 100).toFixed(1)}%)
+                    </span>
                   </TableCell>
                   <TableCell className="text-right whitespace-nowrap">
                     {formatCurrencyBRL(encargos.descVa)}

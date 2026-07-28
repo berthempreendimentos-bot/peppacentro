@@ -30,6 +30,15 @@ export function calcularInssEmpregado(salarioBase: number): number {
   return inss
 }
 
+// Alíquota da faixa mais alta atingida pelo salário (alíquota marginal),
+// usada só para exibição ao lado do valor de INSS na tela.
+export function obterAliquotaInssMarginal(salarioBase: number): number {
+  const teto = FAIXAS_INSS_EMPREGADO[FAIXAS_INSS_EMPREGADO.length - 1].limite
+  const salario = Math.min(salarioBase, teto)
+  const faixa = FAIXAS_INSS_EMPREGADO.find((f) => salario <= f.limite)
+  return (faixa ?? FAIXAS_INSS_EMPREGADO[FAIXAS_INSS_EMPREGADO.length - 1]).aliquota
+}
+
 export type FuncionarioBase = {
   salario_base: number
   vt_informado: number
@@ -44,6 +53,7 @@ export function calcularEncargos(funcionario: FuncionarioBase) {
   const descVt = funcionario.vt_informado > 0 ? funcionario.salario_base * TAXA_DESC_VT : 0
   const descVa = funcionario.vr_informado * TAXA_DESC_VA
   const inssEmpregadoValor = calcularInssEmpregado(funcionario.salario_base)
+  const inssAliquotaMarginal = obterAliquotaInssMarginal(funcionario.salario_base)
 
   const baseEncargos = funcionario.salario_base + periculosidadeValor
   const fgts = baseEncargos * TAXA_FGTS
@@ -62,6 +72,7 @@ export function calcularEncargos(funcionario: FuncionarioBase) {
     descVt,
     descVa,
     inssEmpregadoValor,
+    inssAliquotaMarginal,
     fgts,
     inssPatronal,
     rat,
