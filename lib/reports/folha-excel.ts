@@ -196,6 +196,36 @@ export function buildFolhaResumoSheet(
   rowTotalGasto.getCell(2).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_DESTAQUE } }
   rowTotalGasto.height = 22
 
+  sheet.addRow([])
+  sheet.addRow([])
+  linhaSecao(sheet, "CONTA-DEPÓSITO VINCULADA", 5)
+
+  const conta = calcularContaDepositoVinculada(totais.remuneracaoTotal)
+  const contaLinhas: [string, number][] = [
+    ["13º Salário (8,33%)", conta.decimoTerceiro],
+    ["Férias e Adicional de Férias (12,10%)", conta.feriasAdicional],
+    ["Incidência do submódulo 2.2 (7,82%)", conta.incidenciaSubmodulo22],
+    ["Multa do FGTS (4,00%)", conta.multaFgts],
+  ]
+  contaLinhas.forEach(([label, valor], i) => {
+    const row = sheet.addRow([label, valor])
+    row.getCell(2).numFmt = FORMATO_MOEDA
+    aplicarBordaLinha(row, 2)
+    if (i % 2 === 1) {
+      row.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_LINHA_PAR } }
+    }
+  })
+  const rowTotalRetencao = sheet.addRow([
+    "TOTAL DE RETENÇÃO MENSAL (32,25%)",
+    conta.totalRetencaoMensal,
+  ])
+  rowTotalRetencao.getCell(1).font = { bold: true }
+  rowTotalRetencao.getCell(2).font = { bold: true }
+  rowTotalRetencao.getCell(2).numFmt = FORMATO_MOEDA
+  rowTotalRetencao.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_TOTAL } }
+  rowTotalRetencao.getCell(2).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_TOTAL } }
+  aplicarBordaLinha(rowTotalRetencao, 2)
+
   return sheet
 }
 

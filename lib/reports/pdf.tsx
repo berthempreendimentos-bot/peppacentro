@@ -1,5 +1,6 @@
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer"
 
+import { calcularContaDepositoVinculada } from "@/lib/calculo-folha"
 import { formatCurrencyBRL, formatDate } from "@/lib/format"
 
 const styles = StyleSheet.create({
@@ -195,8 +196,11 @@ export function FolhaPagamentoPdfDocument({
     liquido: number
     totalEncargos: number
     custoEmpresa: number
+    remuneracaoTotal: number
   }
 }) {
+  const conta = calcularContaDepositoVinculada(totais.remuneracaoTotal)
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -286,6 +290,48 @@ export function FolhaPagamentoPdfDocument({
               <Text style={stylesFolha.tabelaCell}>{formatCurrencyBRL(f.custoEmpresa)}</Text>
             </View>
           ))}
+        </View>
+
+        <View style={[stylesFolha.secaoBarra, { marginTop: 20 }]}>
+          <Text style={stylesFolha.secaoTexto}>CONTA-DEPÓSITO VINCULADA</Text>
+        </View>
+        <View style={styles.table}>
+          <View style={stylesFolha.tabelaHeaderRow}>
+            <Text style={[stylesFolha.tabelaCell, stylesFolha.tabelaHeaderCell, { flex: 2 }]}>
+              Descrição
+            </Text>
+            <Text style={[stylesFolha.tabelaCell, stylesFolha.tabelaHeaderCell]}>Valor</Text>
+          </View>
+          <View style={stylesFolha.tabelaRow}>
+            <Text style={[stylesFolha.tabelaCell, { flex: 2 }]}>13º Salário (8,33%)</Text>
+            <Text style={stylesFolha.tabelaCell}>{formatCurrencyBRL(conta.decimoTerceiro)}</Text>
+          </View>
+          <View style={[stylesFolha.tabelaRow, stylesFolha.tabelaRowPar]}>
+            <Text style={[stylesFolha.tabelaCell, { flex: 2 }]}>
+              Férias e Adicional de Férias (12,10%)
+            </Text>
+            <Text style={stylesFolha.tabelaCell}>{formatCurrencyBRL(conta.feriasAdicional)}</Text>
+          </View>
+          <View style={stylesFolha.tabelaRow}>
+            <Text style={[stylesFolha.tabelaCell, { flex: 2 }]}>
+              Incidência do submódulo 2.2 (7,82%)
+            </Text>
+            <Text style={stylesFolha.tabelaCell}>
+              {formatCurrencyBRL(conta.incidenciaSubmodulo22)}
+            </Text>
+          </View>
+          <View style={[stylesFolha.tabelaRow, stylesFolha.tabelaRowPar]}>
+            <Text style={[stylesFolha.tabelaCell, { flex: 2 }]}>Multa do FGTS (4,00%)</Text>
+            <Text style={stylesFolha.tabelaCell}>{formatCurrencyBRL(conta.multaFgts)}</Text>
+          </View>
+          <View style={stylesFolha.tabelaRow}>
+            <Text style={[stylesFolha.tabelaCell, { flex: 2, fontFamily: "Helvetica-Bold" }]}>
+              Total de Retenção Mensal (32,25%)
+            </Text>
+            <Text style={[stylesFolha.tabelaCell, { fontFamily: "Helvetica-Bold" }]}>
+              {formatCurrencyBRL(conta.totalRetencaoMensal)}
+            </Text>
+          </View>
         </View>
       </Page>
     </Document>
