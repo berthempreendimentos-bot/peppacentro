@@ -15,6 +15,10 @@ export const medicaoSchema = z.object({
   percentual_executado: z.number().min(0).max(100),
   data: z.string().optional(),
   status: z.enum(["pendente", "aprovada", "paga", "atrasada", "rejeitada"]),
+  mao_de_obra: z.number().min(0),
+  vale_transporte: z.number().min(0),
+  vale_refeicao: z.number().min(0),
+  material: z.number().min(0),
 })
 
 export type MedicaoInput = z.infer<typeof medicaoSchema>

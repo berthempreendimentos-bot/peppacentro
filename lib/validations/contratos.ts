@@ -23,6 +23,7 @@ export const contratoSchema = z.object({
   situacao: z.enum(["em_andamento", "executado", "encerrado", "cancelado", "inicializacao"]),
   fiscal_id: z.string().optional(),
   gestor_id: z.string().optional(),
+  iss_aliquota: z.number().min(0).max(100),
 })
 
 export type ContratoInput = z.infer<typeof contratoSchema>

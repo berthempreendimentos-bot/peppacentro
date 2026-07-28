@@ -186,6 +186,7 @@ export interface Database {
           situacao: ContratoSituacao
           fiscal_id: string | null
           gestor_id: string | null
+          iss_aliquota: number
           created_by: string | null
           created_at: string
           updated_at: string
@@ -385,6 +386,10 @@ export interface Database {
           status: MedicaoStatus
           arquivo_url: string | null
           lancamento_id: string | null
+          mao_de_obra: number
+          vale_transporte: number
+          vale_refeicao: number
+          material: number
           created_by: string | null
           created_at: string
           updated_at: string

@@ -11,6 +11,11 @@ import {
   type MedicaoInput,
 } from "@/lib/validations/medicoes"
 import { useCreateMedicao, useUpdateMedicao, type Medicao } from "@/lib/queries/medicoes"
+import { useFuncionarios } from "@/lib/queries/funcionarios"
+import { useContrato } from "@/lib/queries/contratos"
+import { somarTotais } from "@/lib/calculo-folha"
+import { calcularResumoMedicao } from "@/lib/calculo-medicao"
+import { formatCurrencyBRL } from "@/lib/format"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -37,6 +42,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
 
 const emptyValues: MedicaoInput = {
   numero: 1,
@@ -45,6 +51,27 @@ const emptyValues: MedicaoInput = {
   percentual_executado: 0,
   data: "",
   status: "pendente",
+  mao_de_obra: 0,
+  vale_transporte: 0,
+  vale_refeicao: 0,
+  material: 0,
+}
+
+function LinhaResumo({
+  label,
+  valor,
+  destaque,
+}: {
+  label: string
+  valor: number
+  destaque?: boolean
+}) {
+  return (
+    <div className={`flex items-center justify-between text-sm ${destaque ? "font-semibold" : ""}`}>
+      <span className={destaque ? "" : "text-muted-foreground"}>{label}</span>
+      <span>{formatCurrencyBRL(valor)}</span>
+    </div>
+  )
 }
 
 export function MedicaoFormDialog({
@@ -61,11 +88,36 @@ export function MedicaoFormDialog({
   const [open, setOpen] = useState(false)
   const createMedicao = useCreateMedicao(contratoId)
   const updateMedicao = useUpdateMedicao(contratoId)
+  const { data: funcionarios } = useFuncionarios(contratoId)
+  const { data: contrato } = useContrato(contratoId)
   const isEditing = !!medicao
+
+  // Em uma medição nova, Mão de Obra/VT/VR vêm ao vivo da Folha de Pagamento
+  // (aba Funcionários). Ao editar uma medição existente, mantém os valores
+  // gravados na época, para não reescrever a fatura de um mês passado se a
+  // folha atual mudou.
+  const totaisFolha = somarTotais(funcionarios ?? [])
+  const maoDeObraAtual = totaisFolha.custoEmpresa - totaisFolha.vtInformado - totaisFolha.vrInformado
+  const vtAtual = totaisFolha.vtInformado
+  const vrAtual = totaisFolha.vrInformado
+
+  const maoDeObra = isEditing ? medicao.mao_de_obra : maoDeObraAtual
+  const valeTransporte = isEditing ? medicao.vale_transporte : vtAtual
+  const valeRefeicao = isEditing ? medicao.vale_refeicao : vrAtual
 
   const form = useForm<MedicaoInput>({
     resolver: zodResolver(medicaoSchema),
     defaultValues: emptyValues,
+  })
+
+  const material = form.watch("material")
+
+  const resumo = calcularResumoMedicao({
+    maoDeObra,
+    valeTransporte,
+    valeRefeicao,
+    material: material || 0,
+    issAliquota: contrato?.iss_aliquota ?? 5,
   })
 
   useEffect(() => {
@@ -79,12 +131,30 @@ export function MedicaoFormDialog({
               percentual_executado: medicao.percentual_executado,
               data: medicao.data ?? "",
               status: medicao.status,
+              mao_de_obra: medicao.mao_de_obra,
+              vale_transporte: medicao.vale_transporte,
+              vale_refeicao: medicao.vale_refeicao,
+              material: medicao.material,
             }
-          : { ...emptyValues, numero: proximoNumero ?? 1 }
+          : {
+              ...emptyValues,
+              numero: proximoNumero ?? 1,
+              mao_de_obra: maoDeObraAtual,
+              vale_transporte: vtAtual,
+              vale_refeicao: vrAtual,
+            }
       )
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, medicao, proximoNumero])
+
+  useEffect(() => {
+    form.setValue("mao_de_obra", maoDeObra)
+    form.setValue("vale_transporte", valeTransporte)
+    form.setValue("vale_refeicao", valeRefeicao)
+    form.setValue("valor", resumo.valorAFaturar)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [maoDeObra, valeTransporte, valeRefeicao, resumo.valorAFaturar])
 
   async function onSubmit(values: MedicaoInput) {
     try {
@@ -106,7 +176,7 @@ export function MedicaoFormDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Editar medição" : "Nova medição"}</DialogTitle>
           <DialogDescription>
@@ -115,6 +185,57 @@ export function MedicaoFormDialog({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
+            <div className="rounded-lg border bg-muted/30 p-4">
+              <p className="mb-3 text-sm font-semibold">Resumo da medição</p>
+              <div className="flex flex-col gap-1.5">
+                <LinhaResumo
+                  label={isEditing ? "Mão de obra (gravado)" : "Mão de obra (Folha de Pagamento)"}
+                  valor={maoDeObra}
+                />
+                <LinhaResumo
+                  label={isEditing ? "Vale Transporte (gravado)" : "Vale Transporte (Folha de Pagamento)"}
+                  valor={valeTransporte}
+                />
+                <LinhaResumo
+                  label={isEditing ? "Vale Refeição (gravado)" : "Vale Refeição (Folha de Pagamento)"}
+                  valor={valeRefeicao}
+                />
+                <FormField
+                  control={form.control}
+                  name="material"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between gap-4 space-y-0">
+                      <FormLabel className="text-sm text-muted-foreground">Material</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          className="h-7 w-32 text-right"
+                          value={field.value}
+                          onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <Separator className="my-1" />
+                <LinhaResumo label="Valor a Faturar" valor={resumo.valorAFaturar} destaque />
+                <Separator className="my-1" />
+                <LinhaResumo label="Retenção INSS (11%)" valor={resumo.retencaoInss} />
+                <LinhaResumo label="IRRF (1,20%)" valor={resumo.irrf} />
+                <LinhaResumo label="PIS (0,65%)" valor={resumo.pis} />
+                <LinhaResumo label="COFINS (3%)" valor={resumo.cofins} />
+                <LinhaResumo label="CSLL (1%)" valor={resumo.csll} />
+                <LinhaResumo
+                  label={`ISS (${(contrato?.iss_aliquota ?? 5).toString().replace(".", ",")}%)`}
+                  valor={resumo.iss}
+                />
+                <Separator className="my-1" />
+                <LinhaResumo label="Retenção total" valor={resumo.retencaoTotal} destaque />
+                <LinhaResumo label="Valor líquido" valor={resumo.valorLiquido} destaque />
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -153,14 +274,9 @@ export function MedicaoFormDialog({
                 name="valor"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Valor</FormLabel>
+                    <FormLabel>Valor a Faturar</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={field.value}
-                        onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
-                      />
+                      <Input type="text" readOnly disabled value={formatCurrencyBRL(field.value)} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

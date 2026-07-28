@@ -52,6 +52,7 @@ const emptyValues: ContratoInput = {
   situacao: "em_andamento",
   fiscal_id: "",
   gestor_id: "",
+  iss_aliquota: 5,
 }
 
 export function ContratoFormDialog({
@@ -94,6 +95,7 @@ export function ContratoFormDialog({
               situacao: contrato.situacao,
               fiscal_id: contrato.fiscal_id ?? "",
               gestor_id: contrato.gestor_id ?? "",
+              iss_aliquota: contrato.iss_aliquota,
             }
           : emptyValues
       )
@@ -265,6 +267,26 @@ export function ContratoFormDialog({
               />
             </div>
             <div className="grid grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="iss_aliquota"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Alíquota de ISS (%)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min={0}
+                        max={100}
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="data_assinatura"
