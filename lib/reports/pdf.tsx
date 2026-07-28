@@ -102,3 +102,104 @@ export function FinanceiroPdfDocument({
     </Document>
   )
 }
+
+type FuncionarioFolhaRow = {
+  nome: string
+  funcao: string
+  salarioBase: number
+  liquido: number
+  totalEncargos: number
+  custoEmpresa: number
+}
+
+type FuncaoResumoRow = {
+  funcao: string
+  quantidade: number
+  salarioBase: number
+  liquido: number
+  totalEncargos: number
+  custoEmpresa: number
+}
+
+export function FolhaPagamentoPdfDocument({
+  mesReferencia,
+  funcionarios,
+  porFuncao,
+  totais,
+}: {
+  mesReferencia: string
+  funcionarios: FuncionarioFolhaRow[]
+  porFuncao: FuncaoResumoRow[]
+  totais: {
+    quantidade: number
+    salarioBase: number
+    liquido: number
+    totalEncargos: number
+    custoEmpresa: number
+  }
+}) {
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        <Text style={styles.title}>Folha de Pagamento</Text>
+        <Text style={styles.subtitle}>
+          Referência: {mesReferencia} · Gerado em {formatDate(new Date().toISOString())}
+        </Text>
+
+        <View style={{ marginBottom: 16, flexDirection: "row", gap: 16 }}>
+          <Text>Funcionários: {totais.quantidade}</Text>
+          <Text>Salário Base: {formatCurrencyBRL(totais.salarioBase)}</Text>
+          <Text>Líquido: {formatCurrencyBRL(totais.liquido)}</Text>
+          <Text>Encargos: {formatCurrencyBRL(totais.totalEncargos)}</Text>
+          <Text>Custo Total: {formatCurrencyBRL(totais.custoEmpresa)}</Text>
+        </View>
+
+        <Text style={[styles.title, { fontSize: 12, marginBottom: 8 }]}>Resumo por função</Text>
+        <View style={styles.table}>
+          <View style={styles.headerRow}>
+            <Text style={[styles.cell, styles.headerCell, { flex: 2 }]}>Função</Text>
+            <Text style={[styles.cell, styles.headerCell]}>Qtd.</Text>
+            <Text style={[styles.cell, styles.headerCell]}>Salário Base</Text>
+            <Text style={[styles.cell, styles.headerCell]}>Líquido</Text>
+            <Text style={[styles.cell, styles.headerCell]}>Encargos</Text>
+            <Text style={[styles.cell, styles.headerCell]}>Custo Total</Text>
+          </View>
+          {porFuncao.map((f, i) => (
+            <View style={styles.row} key={i}>
+              <Text style={[styles.cell, { flex: 2 }]}>{f.funcao}</Text>
+              <Text style={styles.cell}>{f.quantidade}</Text>
+              <Text style={styles.cell}>{formatCurrencyBRL(f.salarioBase)}</Text>
+              <Text style={styles.cell}>{formatCurrencyBRL(f.liquido)}</Text>
+              <Text style={styles.cell}>{formatCurrencyBRL(f.totalEncargos)}</Text>
+              <Text style={styles.cell}>{formatCurrencyBRL(f.custoEmpresa)}</Text>
+            </View>
+          ))}
+        </View>
+
+        <Text style={[styles.title, { fontSize: 12, marginTop: 20, marginBottom: 8 }]}>
+          Funcionários
+        </Text>
+        <View style={styles.table}>
+          <View style={styles.headerRow}>
+            <Text style={[styles.cell, styles.headerCell, { flex: 2 }]}>Nome</Text>
+            <Text style={[styles.cell, styles.headerCell]}>Função</Text>
+            <Text style={[styles.cell, styles.headerCell]}>Salário Base</Text>
+            <Text style={[styles.cell, styles.headerCell]}>Líquido</Text>
+            <Text style={[styles.cell, styles.headerCell]}>Encargos</Text>
+            <Text style={[styles.cell, styles.headerCell]}>Custo Total</Text>
+          </View>
+          {funcionarios.map((f, i) => (
+            <View style={styles.row} key={i}>
+              <Text style={[styles.cell, { flex: 2 }]}>{f.nome}</Text>
+              <Text style={styles.cell}>{f.funcao}</Text>
+              <Text style={styles.cell}>{formatCurrencyBRL(f.salarioBase)}</Text>
+              <Text style={styles.cell}>{formatCurrencyBRL(f.liquido)}</Text>
+              <Text style={styles.cell}>{formatCurrencyBRL(f.totalEncargos)}</Text>
+              <Text style={styles.cell}>{formatCurrencyBRL(f.custoEmpresa)}</Text>
+            </View>
+          ))}
+        </View>
+      </Page>
+    </Document>
+  )
+}

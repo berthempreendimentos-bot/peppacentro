@@ -46,3 +46,8 @@ export function formatDateShort(value: string | null | undefined) {
     timeZone: "UTC",
   }).format(new Date(value))
 }
+
+export function formatMesAno(date: Date = new Date()) {
+  const texto = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(date)
+  return texto.charAt(0).toUpperCase() + texto.slice(1)
+}
