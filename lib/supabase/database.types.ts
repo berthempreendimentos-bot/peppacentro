@@ -390,6 +390,7 @@ export interface Database {
           vale_transporte: number
           vale_refeicao: number
           material: number
+          valor_contrato: number
           created_by: string | null
           created_at: string
           updated_at: string

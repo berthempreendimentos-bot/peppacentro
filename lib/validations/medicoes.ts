@@ -19,6 +19,7 @@ export const medicaoSchema = z.object({
   vale_transporte: z.number().min(0),
   vale_refeicao: z.number().min(0),
   material: z.number().min(0),
+  valor_contrato: z.number().min(0),
 })
 
 export type MedicaoInput = z.infer<typeof medicaoSchema>

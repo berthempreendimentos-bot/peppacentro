@@ -57,6 +57,7 @@ const emptyValues: MedicaoInput = {
   vale_transporte: 0,
   vale_refeicao: 0,
   material: 0,
+  valor_contrato: 0,
 }
 
 function LinhaResumo({
@@ -139,6 +140,7 @@ export function MedicaoFormDialog({
               vale_transporte: medicao.vale_transporte,
               vale_refeicao: medicao.vale_refeicao,
               material: medicao.material,
+              valor_contrato: medicao.valor_contrato,
             }
           : {
               ...emptyValues,
@@ -146,6 +148,7 @@ export function MedicaoFormDialog({
               mao_de_obra: maoDeObraAtual,
               vale_transporte: vtAtual,
               vale_refeicao: vrAtual,
+              valor_contrato: contrato?.valor_atual ?? 0,
             }
       )
     }
@@ -191,7 +194,22 @@ export function MedicaoFormDialog({
             <div className="rounded-lg border bg-muted/30 p-4">
               <p className="mb-3 text-sm font-semibold">Resumo da medição</p>
               <div className="flex flex-col gap-1.5">
-                <LinhaResumo label="Valor do Contrato" valor={contrato?.valor_atual ?? 0} destaque />
+                <FormField
+                  control={form.control}
+                  name="valor_contrato"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between gap-4 space-y-0">
+                      <FormLabel className="text-sm font-semibold">Valor do Contrato</FormLabel>
+                      <FormControl>
+                        <CurrencyInput
+                          className="h-7 w-36 text-right font-semibold"
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
                 <Separator className="my-1" />
                 <FormField
                   control={form.control}
