@@ -18,6 +18,7 @@ import { useTributos } from "@/hooks/use-tributos"
 import { calcularResumoMedicao } from "@/lib/calculo-medicao"
 import { formatCurrencyBRL } from "@/lib/format"
 import { Button } from "@/components/ui/button"
+import { CurrencyInput } from "@/components/ui/currency-input"
 import { Input } from "@/components/ui/input"
 import {
   Dialog,
@@ -190,6 +191,8 @@ export function MedicaoFormDialog({
             <div className="rounded-lg border bg-muted/30 p-4">
               <p className="mb-3 text-sm font-semibold">Resumo da medição</p>
               <div className="flex flex-col gap-1.5">
+                <LinhaResumo label="Valor do Contrato" valor={contrato?.valor_atual ?? 0} destaque />
+                <Separator className="my-1" />
                 <FormField
                   control={form.control}
                   name="mao_de_obra"
@@ -197,12 +200,10 @@ export function MedicaoFormDialog({
                     <FormItem className="flex flex-row items-center justify-between gap-4 space-y-0">
                       <FormLabel className="text-sm text-muted-foreground">Mão de obra</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          className="h-7 w-32 text-right"
+                        <CurrencyInput
+                          className="h-7 w-36 text-right"
                           value={field.value}
-                          onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
+                          onChange={field.onChange}
                         />
                       </FormControl>
                     </FormItem>
@@ -223,12 +224,10 @@ export function MedicaoFormDialog({
                     <FormItem className="flex flex-row items-center justify-between gap-4 space-y-0">
                       <FormLabel className="text-sm text-muted-foreground">Material</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          className="h-7 w-32 text-right"
+                        <CurrencyInput
+                          className="h-7 w-36 text-right"
                           value={field.value}
-                          onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
+                          onChange={field.onChange}
                         />
                       </FormControl>
                     </FormItem>
