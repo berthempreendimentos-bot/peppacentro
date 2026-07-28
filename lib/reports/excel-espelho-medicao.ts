@@ -79,7 +79,7 @@ export async function buildEspelhoMedicaoWorkbook({
 }) {
   const workbook = new ExcelJS.Workbook()
   const sheet = workbook.addWorksheet("Espelho de Medição")
-  sheet.columns = [{ width: 28 }, { width: 24 }, { width: 4 }, { width: 24 }, { width: 20 }]
+  sheet.columns = [{ width: 24 }, { width: 16 }, { width: 60 }, { width: 20 }, { width: 20 }]
 
   const rowTitulo = sheet.addRow([clienteNome])
   sheet.mergeCells(rowTitulo.number, 1, rowTitulo.number, 5)
@@ -130,18 +130,32 @@ export async function buildEspelhoMedicaoWorkbook({
     `Alimentação (Vale Refeição) e Vale Transporte discriminados abaixo. Base de cálculo para retenção do INSS: Mão de Obra × 11%.`
 
   const rowObjeto = sheet.addRow(["UND", 1, objetoCompleto, 0, 0])
+  rowObjeto.getCell(1).alignment = { vertical: "top", horizontal: "center" }
+  rowObjeto.getCell(2).alignment = { vertical: "top", horizontal: "center" }
   rowObjeto.getCell(3).alignment = { wrapText: true, vertical: "top" }
-  rowObjeto.height = 60
+  rowObjeto.getCell(4).alignment = { vertical: "top" }
+  rowObjeto.getCell(5).alignment = { vertical: "top" }
+  rowObjeto.height = 135
   aplicarBordaLinha(rowObjeto, 5)
 
   sheet.addRow([])
-  const rowValorContrato = sheet.addRow(["VALOR DO CONTRATO", valorContrato])
-  rowValorContrato.getCell(1).font = { bold: true }
-  rowValorContrato.getCell(2).font = { bold: true }
-  rowValorContrato.getCell(2).numFmt = FORMATO_MOEDA
-  rowValorContrato.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_DESTAQUE } }
-  rowValorContrato.getCell(2).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_DESTAQUE } }
-  aplicarBordaLinha(rowValorContrato, 2)
+
+  function linhaDestaque(label: string, valor: number) {
+    const row = sheet.addRow([label, "", "", valor, ""])
+    sheet.mergeCells(row.number, 1, row.number, 3)
+    sheet.mergeCells(row.number, 4, row.number, 5)
+    row.getCell(1).font = { bold: true, size: 11 }
+    row.getCell(4).font = { bold: true, size: 11 }
+    row.getCell(4).numFmt = FORMATO_MOEDA
+    row.getCell(4).alignment = { horizontal: "right" }
+    row.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_DESTAQUE } }
+    row.getCell(4).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_DESTAQUE } }
+    row.height = 20
+    aplicarBordaLinha(row, 5)
+    return row
+  }
+
+  linhaDestaque("VALOR DO CONTRATO", valorContrato)
 
   sheet.addRow([])
   linhaSecao(sheet, "COMPOSIÇÃO DO VALOR A FATURAR", 5)
@@ -158,24 +172,18 @@ export async function buildEspelhoMedicaoWorkbook({
     }
   })
 
-  const valorAFaturar =
-    maoDeObra + valeTransporte + valeRefeicao + material
-  const rowValorAFaturar = sheet.addRow(["VALOR A FATURAR", valorAFaturar])
-  rowValorAFaturar.getCell(1).font = { bold: true, size: 12 }
-  rowValorAFaturar.getCell(2).font = { bold: true, size: 12 }
+  const valorAFaturar = maoDeObra + valeTransporte + valeRefeicao + material
+  const rowValorAFaturar = linhaDestaque("VALOR A FATURAR", valorAFaturar)
   formula(
-    rowValorAFaturar.getCell(2),
+    rowValorAFaturar.getCell(4),
     `SUM(B${rowMaoDeObra.number}:B${rowMaterial.number})`,
     valorAFaturar
   )
-  rowValorAFaturar.getCell(2).numFmt = FORMATO_MOEDA
-  rowValorAFaturar.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_DESTAQUE } }
-  rowValorAFaturar.getCell(2).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_DESTAQUE } }
 
   // Preenche a fórmula do preço/valor da linha do objeto, agora que a
   // linha de Valor a Faturar já existe.
-  formula(rowObjeto.getCell(4), `B${rowValorAFaturar.number}`, valorAFaturar)
-  formula(rowObjeto.getCell(5), `B${rowValorAFaturar.number}`, valorAFaturar)
+  formula(rowObjeto.getCell(4), `D${rowValorAFaturar.number}`, valorAFaturar)
+  formula(rowObjeto.getCell(5), `D${rowValorAFaturar.number}`, valorAFaturar)
   rowObjeto.getCell(4).numFmt = FORMATO_MOEDA
   rowObjeto.getCell(5).numFmt = FORMATO_MOEDA
 
@@ -219,7 +227,7 @@ export async function buildEspelhoMedicaoWorkbook({
   linhaSecao(sheet, "RESUMO FINAL", 5)
 
   const rowValorServicos = sheet.addRow(["VALOR DOS SERVIÇOS", valorAFaturar])
-  formula(rowValorServicos.getCell(2), `B${rowValorAFaturar.number}`, valorAFaturar)
+  formula(rowValorServicos.getCell(2), `D${rowValorAFaturar.number}`, valorAFaturar)
   rowValorServicos.getCell(2).numFmt = FORMATO_MOEDA
   aplicarBordaLinha(rowValorServicos, 2)
 
