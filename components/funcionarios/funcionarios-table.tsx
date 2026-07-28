@@ -14,6 +14,8 @@ import { formatCpfCnpj, formatCurrencyBRL, formatDate } from "@/lib/format"
 import { cn, getErrorMessage } from "@/lib/utils"
 import { FuncionarioFormDialog } from "@/components/funcionarios/funcionario-form-dialog"
 import { ImportarFuncionariosDialog } from "@/components/funcionarios/importar-funcionarios-dialog"
+import { ConfiguracaoTributosDialog } from "@/components/funcionarios/configuracao-tributos-dialog"
+import { useTributos } from "@/hooks/use-tributos"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -48,12 +50,13 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
   const deleteFuncionario = useDeleteFuncionario(contratoId)
   const [paraExcluir, setParaExcluir] = useState<Funcionario | null>(null)
   const [search, setSearch] = useState("")
+  const { taxas } = useTributos()
 
   const filtrados = (funcionarios ?? []).filter((f) =>
     `${f.nome} ${f.cpf ?? ""} ${f.funcao ?? ""}`.toLowerCase().includes(search.toLowerCase())
   )
 
-  const totais = somarTotais(filtrados)
+  const totais = somarTotais(filtrados, taxas)
 
   async function handleDelete() {
     if (!paraExcluir) return
@@ -77,6 +80,7 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
           className="max-w-[260px]"
         />
         <div className="ml-auto flex shrink-0 gap-2">
+          <ConfiguracaoTributosDialog />
           <ImportarFuncionariosDialog
             contratoId={contratoId}
             trigger={
@@ -112,10 +116,10 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
             <TableHead className="sticky top-0 z-20 bg-background text-right">INSS Empregado</TableHead>
             <TableHead className="sticky top-0 z-20 bg-background text-right">Desc. VA (10%)</TableHead>
             <TableHead className="sticky top-0 z-20 bg-background text-right">Líquido do empregado</TableHead>
-            <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">FGTS 8%</TableHead>
-            <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">INSS Patronal 20%</TableHead>
-            <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">RAT 3%</TableHead>
-            <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">Terceiros 5,8%</TableHead>
+            <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">FGTS {(taxas.fgts * 100).toFixed(1).replace(".0", "")}%</TableHead>
+            <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">INSS Patronal {(taxas.inssPatronal * 100).toFixed(1).replace(".0", "")}%</TableHead>
+            <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">RAT {(taxas.rat * 100).toFixed(1).replace(".0", "")}%</TableHead>
+            <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">Terceiros {(taxas.terceiros * 100).toFixed(1).replace(".0", "")}%</TableHead>
             <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">Total Encargos</TableHead>
             <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">Custo Empresa</TableHead>
             <TableHead className="sticky top-0 z-20 w-10 bg-background" />
@@ -141,7 +145,7 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
               </TableRow>
             )}
             {filtrados.map((funcionario, index) => {
-              const encargos = calcularEncargos(funcionario)
+              const encargos = calcularEncargos(funcionario, taxas)
               const linhaBg = index % 2 === 1 ? "bg-secondary" : "bg-background"
               return (
                 <TableRow key={funcionario.id} className={linhaBg}>

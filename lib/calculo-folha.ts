@@ -68,7 +68,16 @@ export type FuncionarioBase = {
   grau_insalubridade: GrauInsalubridade
 }
 
-export function calcularEncargos(funcionario: FuncionarioBase) {
+export type TaxasTributos = {
+  fgts: number
+  inssPatronal: number
+  rat: number
+  terceiros: number
+}
+
+export function calcularEncargos(funcionario: FuncionarioBase, taxas?: TaxasTributos) {
+  const t = taxas ?? { fgts: TAXA_FGTS, inssPatronal: TAXA_INSS_PATRONAL, rat: TAXA_RAT, terceiros: TAXA_TERCEIROS }
+
   const periculosidadeValor = funcionario.recebe_periculosidade
     ? funcionario.salario_base * TAXA_PERICULOSIDADE
     : 0
@@ -80,10 +89,10 @@ export function calcularEncargos(funcionario: FuncionarioBase) {
   const inssAliquotaMarginal = obterAliquotaInssMarginal(baseInss)
 
   const baseEncargos = funcionario.salario_base + periculosidadeValor
-  const fgts = baseEncargos * TAXA_FGTS
-  const inssPatronal = baseEncargos * TAXA_INSS_PATRONAL
-  const rat = baseEncargos * TAXA_RAT
-  const terceiros = baseEncargos * TAXA_TERCEIROS
+  const fgts = baseEncargos * t.fgts
+  const inssPatronal = baseEncargos * t.inssPatronal
+  const rat = baseEncargos * t.rat
+  const terceiros = baseEncargos * t.terceiros
 
   const liquido = funcionario.salario_base - descVt - inssEmpregadoValor - descVa
 
@@ -133,9 +142,9 @@ const TOTAIS_VAZIOS = {
 
 export type TotaisFolha = typeof TOTAIS_VAZIOS
 
-export function somarTotais(funcionarios: FuncionarioBase[]): TotaisFolha {
+export function somarTotais(funcionarios: FuncionarioBase[], taxas?: TaxasTributos): TotaisFolha {
   return funcionarios.reduce((acc, funcionario) => {
-    const encargos = calcularEncargos(funcionario)
+    const encargos = calcularEncargos(funcionario, taxas)
     return {
       quantidade: acc.quantidade + 1,
       salarioBase: acc.salarioBase + funcionario.salario_base,
