@@ -9,7 +9,7 @@ import {
   useDeleteFuncionario,
   type Funcionario,
 } from "@/lib/queries/funcionarios"
-import { calcularEncargos, somarTotais } from "@/lib/calculo-folha"
+import { calcularEncargos, somarTotais, TAXA_INSALUBRIDADE } from "@/lib/calculo-folha"
 import { formatCpfCnpj, formatCurrencyBRL, formatDate } from "@/lib/format"
 import { cn, getErrorMessage } from "@/lib/utils"
 import { FuncionarioFormDialog } from "@/components/funcionarios/funcionario-form-dialog"
@@ -108,6 +108,7 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
             <TableHead className="sticky top-0 z-20 bg-background text-right">VR Informado</TableHead>
             <TableHead className="sticky top-0 z-20 bg-background text-right">Desc. VT (6%)</TableHead>
             <TableHead className="sticky top-0 z-20 bg-background text-right">30% Periculosidade</TableHead>
+            <TableHead className="sticky top-0 z-20 bg-background text-right">Insalubridade</TableHead>
             <TableHead className="sticky top-0 z-20 bg-background text-right">INSS Empregado</TableHead>
             <TableHead className="sticky top-0 z-20 bg-background text-right">Desc. VA (10%)</TableHead>
             <TableHead className="sticky top-0 z-20 bg-background text-right">Líquido do empregado</TableHead>
@@ -124,7 +125,7 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
             {isLoading &&
               Array.from({ length: 3 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={19}>
+                  <TableCell colSpan={20}>
                     <Skeleton className="h-6 w-full" />
                   </TableCell>
                 </TableRow>
@@ -132,7 +133,7 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
             {!isLoading && filtrados.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={19}
+                  colSpan={20}
                   className="py-8 text-center text-muted-foreground"
                 >
                   Nenhum funcionário encontrado.
@@ -172,6 +173,14 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
                   </TableCell>
                   <TableCell className="text-right whitespace-nowrap">
                     {formatCurrencyBRL(encargos.periculosidadeValor)}
+                  </TableCell>
+                  <TableCell className="text-right whitespace-nowrap">
+                    {formatCurrencyBRL(encargos.insalubridadeValor)}
+                    {funcionario.grau_insalubridade !== "nenhum" && (
+                      <span className="ml-1 text-xs text-muted-foreground">
+                        ({(TAXA_INSALUBRIDADE[funcionario.grau_insalubridade] * 100).toFixed(0)}%)
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell className="text-right whitespace-nowrap">
                     {formatCurrencyBRL(encargos.inssEmpregadoValor)}
@@ -256,6 +265,9 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
                 </TableCell>
                 <TableCell className="text-right font-semibold whitespace-nowrap">
                   {formatCurrencyBRL(totais.periculosidadeValor)}
+                </TableCell>
+                <TableCell className="text-right font-semibold whitespace-nowrap">
+                  {formatCurrencyBRL(totais.insalubridadeValor)}
                 </TableCell>
                 <TableCell className="text-right font-semibold whitespace-nowrap">
                   {formatCurrencyBRL(totais.inssEmpregadoValor)}
