@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { MoreHorizontal, Pencil, Plus, Trash2, Upload } from "lucide-react"
+import { MoreHorizontal, Pencil, Percent, Plus, Trash2, Upload } from "lucide-react"
 import { toast } from "sonner"
 
 import {
@@ -12,6 +12,7 @@ import {
 import { calcularEncargos } from "@/lib/calculo-folha"
 import { formatCpfCnpj, formatCurrencyBRL, formatDate } from "@/lib/format"
 import { cn, getErrorMessage } from "@/lib/utils"
+import { AlterarInssDialog } from "@/components/funcionarios/alterar-inss-dialog"
 import { FuncionarioFormDialog } from "@/components/funcionarios/funcionario-form-dialog"
 import { ImportarFuncionariosDialog } from "@/components/funcionarios/importar-funcionarios-dialog"
 import { Button } from "@/components/ui/button"
@@ -112,6 +113,14 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
           className="max-w-[260px]"
         />
         <div className="ml-auto flex shrink-0 gap-2">
+          <AlterarInssDialog
+            contratoId={contratoId}
+            trigger={
+              <Button variant="outline">
+                <Percent /> Alterar INSS
+              </Button>
+            }
+          />
           <ImportarFuncionariosDialog
             contratoId={contratoId}
             trigger={

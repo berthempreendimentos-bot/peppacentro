@@ -111,6 +111,21 @@ export function useImportFuncionarios(contratoId: string) {
   })
 }
 
+export function useUpdateInssEmMassa(contratoId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (inssPercentual: number) => {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from("funcionarios")
+        .update({ inss_percentual: inssPercentual })
+        .eq("contrato_id", contratoId)
+      if (error) throw error
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY(contratoId) }),
+  })
+}
+
 export function useDeleteFuncionario(contratoId: string) {
   const queryClient = useQueryClient()
   return useMutation({
