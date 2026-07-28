@@ -46,6 +46,7 @@ export function useCreateFuncionario(contratoId: string) {
         vt_informado: input.vt_informado,
         vr_informado: input.vr_informado,
         recebe_periculosidade: input.recebe_periculosidade,
+        grau_insalubridade: input.grau_insalubridade,
         created_by: user?.id,
       })
       if (error) throw error
@@ -70,6 +71,7 @@ export function useUpdateFuncionario(contratoId: string) {
           vt_informado: input.vt_informado,
           vr_informado: input.vr_informado,
           recebe_periculosidade: input.recebe_periculosidade,
+          grau_insalubridade: input.grau_insalubridade,
         })
         .eq("id", id)
       if (error) throw error
@@ -99,6 +101,7 @@ export function useImportFuncionarios(contratoId: string) {
           vt_informado: f.vtInformado,
           vr_informado: f.vrInformado,
           recebe_periculosidade: false,
+          grau_insalubridade: "nenhum" as const,
           created_by: user?.id,
         }))
       )

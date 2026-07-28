@@ -1,3 +1,5 @@
+import type { GrauInsalubridade } from "@/lib/supabase/database.types"
+
 export const TAXA_DESC_VT = 0.06
 export const TAXA_PERICULOSIDADE = 0.3
 export const TAXA_DESC_VA = 0.1
@@ -5,6 +7,25 @@ export const TAXA_FGTS = 0.08
 export const TAXA_INSS_PATRONAL = 0.2
 export const TAXA_RAT = 0.03
 export const TAXA_TERCEIROS = 0.058
+
+// Insalubridade é calculada sobre o salário mínimo (não sobre o salário do
+// funcionário), em 3 graus possíveis — diferente da periculosidade.
+export const SALARIO_MINIMO = 1610.0
+export const TAXA_INSALUBRIDADE: Record<GrauInsalubridade, number> = {
+  nenhum: 0,
+  minimo: 0.1,
+  medio: 0.2,
+  maximo: 0.4,
+}
+
+// Percentuais da "Conta-Depósito Vinculada" (Módulo 4.2 / IN 5-2017),
+// aplicados diretamente sobre a Remuneração Total do funcionário.
+export const TAXA_DECIMO_TERCEIRO = 0.0833
+export const TAXA_FERIAS_ADICIONAL = 0.121
+export const TAXA_INCIDENCIA_SUBMODULO_22 = 0.0782
+export const TAXA_MULTA_FGTS = 0.04
+export const TAXA_TOTAL_RETENCAO_MENSAL =
+  TAXA_DECIMO_TERCEIRO + TAXA_FERIAS_ADICIONAL + TAXA_INCIDENCIA_SUBMODULO_22 + TAXA_MULTA_FGTS
 
 // Tabela progressiva do INSS (empregado CLT): cada faixa é tributada só na
 // parte do salário que cai dentro dela, até o teto da Previdência Social.
@@ -44,12 +65,14 @@ export type FuncionarioBase = {
   vt_informado: number
   vr_informado: number
   recebe_periculosidade: boolean
+  grau_insalubridade: GrauInsalubridade
 }
 
 export function calcularEncargos(funcionario: FuncionarioBase) {
   const periculosidadeValor = funcionario.recebe_periculosidade
     ? funcionario.salario_base * TAXA_PERICULOSIDADE
     : 0
+  const insalubridadeValor = TAXA_INSALUBRIDADE[funcionario.grau_insalubridade] * SALARIO_MINIMO
   const descVt = funcionario.vt_informado > 0 ? funcionario.salario_base * TAXA_DESC_VT : 0
   const descVa = funcionario.vr_informado * TAXA_DESC_VA
   const baseInss = funcionario.salario_base + periculosidadeValor
@@ -68,8 +91,12 @@ export function calcularEncargos(funcionario: FuncionarioBase) {
   const custoEmpresa =
     funcionario.salario_base + funcionario.vt_informado + funcionario.vr_informado + totalEncargos
 
+  const remuneracaoTotal = funcionario.salario_base + periculosidadeValor + insalubridadeValor
+
   return {
     periculosidadeValor,
+    insalubridadeValor,
+    remuneracaoTotal,
     descVt,
     descVa,
     inssEmpregadoValor,
@@ -91,6 +118,8 @@ const TOTAIS_VAZIOS = {
   vrInformado: 0,
   descVt: 0,
   periculosidadeValor: 0,
+  insalubridadeValor: 0,
+  remuneracaoTotal: 0,
   inssEmpregadoValor: 0,
   descVa: 0,
   liquido: 0,
@@ -114,6 +143,8 @@ export function somarTotais(funcionarios: FuncionarioBase[]): TotaisFolha {
       vrInformado: acc.vrInformado + funcionario.vr_informado,
       descVt: acc.descVt + encargos.descVt,
       periculosidadeValor: acc.periculosidadeValor + encargos.periculosidadeValor,
+      insalubridadeValor: acc.insalubridadeValor + encargos.insalubridadeValor,
+      remuneracaoTotal: acc.remuneracaoTotal + encargos.remuneracaoTotal,
       inssEmpregadoValor: acc.inssEmpregadoValor + encargos.inssEmpregadoValor,
       descVa: acc.descVa + encargos.descVa,
       liquido: acc.liquido + encargos.liquido,
@@ -125,4 +156,20 @@ export function somarTotais(funcionarios: FuncionarioBase[]): TotaisFolha {
       custoEmpresa: acc.custoEmpresa + encargos.custoEmpresa,
     }
   }, TOTAIS_VAZIOS)
+}
+
+export function calcularContaDepositoVinculada(remuneracaoTotal: number) {
+  const decimoTerceiro = remuneracaoTotal * TAXA_DECIMO_TERCEIRO
+  const feriasAdicional = remuneracaoTotal * TAXA_FERIAS_ADICIONAL
+  const incidenciaSubmodulo22 = remuneracaoTotal * TAXA_INCIDENCIA_SUBMODULO_22
+  const multaFgts = remuneracaoTotal * TAXA_MULTA_FGTS
+  const totalRetencaoMensal = decimoTerceiro + feriasAdicional + incidenciaSubmodulo22 + multaFgts
+
+  return {
+    decimoTerceiro,
+    feriasAdicional,
+    incidenciaSubmodulo22,
+    multaFgts,
+    totalRetencaoMensal,
+  }
 }

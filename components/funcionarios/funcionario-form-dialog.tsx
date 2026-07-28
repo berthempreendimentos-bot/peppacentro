@@ -36,6 +36,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 const emptyValues: FuncionarioInput = {
   nome: "",
@@ -46,6 +53,14 @@ const emptyValues: FuncionarioInput = {
   vt_informado: 0,
   vr_informado: 0,
   recebe_periculosidade: false,
+  grau_insalubridade: "nenhum",
+}
+
+const grauInsalubridadeLabels: Record<FuncionarioInput["grau_insalubridade"], string> = {
+  nenhum: "Nenhum",
+  minimo: "Mínimo (10%)",
+  medio: "Médio (20%)",
+  maximo: "Máximo (40%)",
 }
 
 export function FuncionarioFormDialog({
@@ -80,6 +95,7 @@ export function FuncionarioFormDialog({
               vt_informado: funcionario.vt_informado,
               vr_informado: funcionario.vr_informado,
               recebe_periculosidade: funcionario.recebe_periculosidade,
+              grau_insalubridade: funcionario.grau_insalubridade,
             }
           : emptyValues
       )
@@ -222,6 +238,30 @@ export function FuncionarioFormDialog({
                   <FormLabel className="font-normal">
                     Recebe adicional de periculosidade (30%)
                   </FormLabel>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="grau_insalubridade"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Grau de Insalubridade</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {Object.entries(grauInsalubridadeLabels).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
                 </FormItem>
               )}
             />

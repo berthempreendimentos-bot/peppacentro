@@ -1,5 +1,7 @@
 import { z } from "zod"
 
+export const grauInsalubridadeValues = ["nenhum", "minimo", "medio", "maximo"] as const
+
 export const funcionarioSchema = z.object({
   nome: z.string().min(2, "Informe o nome"),
   cpf: z.string().optional(),
@@ -9,6 +11,7 @@ export const funcionarioSchema = z.object({
   vt_informado: z.number().min(0, "Informe um valor válido"),
   vr_informado: z.number().min(0, "Informe um valor válido"),
   recebe_periculosidade: z.boolean(),
+  grau_insalubridade: z.enum(grauInsalubridadeValues),
 })
 
 export type FuncionarioInput = z.infer<typeof funcionarioSchema>

@@ -1,6 +1,11 @@
 import ExcelJS from "exceljs"
 
-import { calcularEncargos, somarTotais, type FuncionarioBase } from "@/lib/calculo-folha"
+import {
+  calcularContaDepositoVinculada,
+  calcularEncargos,
+  somarTotais,
+  type FuncionarioBase,
+} from "@/lib/calculo-folha"
 import { formatCpfCnpj, formatDate } from "@/lib/format"
 
 const COR_TITULO = "FF1A1B22"
@@ -377,6 +382,105 @@ export function buildFuncionariosSheet(
   return sheet
 }
 
+export function buildContaDepositoVinculadaSheet(
+  workbook: ExcelJS.Workbook,
+  {
+    contratoTitulo,
+    mesReferencia,
+    funcionarios,
+  }: { contratoTitulo: string; mesReferencia: string; funcionarios: FuncionarioComId[] }
+) {
+  const sheet = workbook.addWorksheet("Conta-Depósito Vinculada")
+  const colunas = [
+    { header: "Nome", width: 28 },
+    { header: "Remuneração Total", width: 16 },
+    { header: "13º Salário (8,33%)", width: 15 },
+    { header: "Férias e Adicional de Férias (12,10%)", width: 20 },
+    {
+      header: "Incidência do submódulo 2.2 sobre férias, adicional de férias e 13º salário (7,82%)",
+      width: 22,
+    },
+    { header: "Multa do FGTS incidente sobre a remuneração, férias, 1/3 e 13º salário (4,00%)", width: 20 },
+    { header: "Total de Retenção Mensal (32,25%)", width: 18 },
+    { header: "Retenção de Todos os Postos", width: 18 },
+  ]
+  sheet.columns = colunas.map((c) => ({ width: c.width }))
+  adicionarTitulo(sheet, colunas.length, contratoTitulo, mesReferencia)
+  sheet.addRow([])
+
+  const headerRow = sheet.addRow(colunas.map((c) => c.header))
+  headerRow.eachCell((cell) => {
+    cell.font = { bold: true, color: { argb: COR_CABECALHO_TEXTO } }
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_CABECALHO_TABELA } }
+    cell.alignment = { wrapText: true, vertical: "middle", horizontal: "center" }
+  })
+  headerRow.height = 45
+  sheet.views = [{ state: "frozen", ySplit: headerRow.number }]
+
+  const colunasMoeda = [2, 3, 4, 5, 6, 7, 8]
+  let totalRemuneracao = 0
+  let totalDecimoTerceiro = 0
+  let totalFeriasAdicional = 0
+  let totalIncidencia = 0
+  let totalMulta = 0
+  let totalRetencaoMensal = 0
+  let totalRetencaoPostos = 0
+
+  funcionarios.forEach((f, i) => {
+    const encargos = calcularEncargos(f)
+    const conta = calcularContaDepositoVinculada(encargos.remuneracaoTotal)
+
+    totalRemuneracao += encargos.remuneracaoTotal
+    totalDecimoTerceiro += conta.decimoTerceiro
+    totalFeriasAdicional += conta.feriasAdicional
+    totalIncidencia += conta.incidenciaSubmodulo22
+    totalMulta += conta.multaFgts
+    totalRetencaoMensal += conta.totalRetencaoMensal
+    totalRetencaoPostos += conta.totalRetencaoMensal
+
+    const row = sheet.addRow([
+      f.nome,
+      encargos.remuneracaoTotal,
+      conta.decimoTerceiro,
+      conta.feriasAdicional,
+      conta.incidenciaSubmodulo22,
+      conta.multaFgts,
+      conta.totalRetencaoMensal,
+      conta.totalRetencaoMensal,
+    ])
+    colunasMoeda.forEach((col) => {
+      row.getCell(col).numFmt = FORMATO_MOEDA
+    })
+    aplicarBordaLinha(row, colunas.length)
+    if (i % 2 === 1) {
+      row.eachCell((cell) => {
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_LINHA_PAR } }
+      })
+    }
+  })
+
+  const rowTotal = sheet.addRow([
+    "Total",
+    totalRemuneracao,
+    totalDecimoTerceiro,
+    totalFeriasAdicional,
+    totalIncidencia,
+    totalMulta,
+    totalRetencaoMensal,
+    totalRetencaoPostos,
+  ])
+  rowTotal.eachCell((cell) => {
+    cell.font = { bold: true }
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_TOTAL } }
+  })
+  colunasMoeda.forEach((col) => {
+    rowTotal.getCell(col).numFmt = FORMATO_MOEDA
+  })
+  aplicarBordaLinha(rowTotal, colunas.length)
+
+  return sheet
+}
+
 export async function buildFolhaPagamentoWorkbook(params: {
   contratoTitulo: string
   mesReferencia: string
@@ -386,5 +490,6 @@ export async function buildFolhaPagamentoWorkbook(params: {
   buildFolhaResumoSheet(workbook, params)
   buildPorFuncaoSheet(workbook, params)
   buildFuncionariosSheet(workbook, params)
+  buildContaDepositoVinculadaSheet(workbook, params)
   return workbook.xlsx.writeBuffer()
 }

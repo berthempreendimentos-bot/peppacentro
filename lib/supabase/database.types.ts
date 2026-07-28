@@ -41,6 +41,7 @@ export type DocumentoCategoria =
   | "apolice"
   | "outro"
 export type CotacaoStatus = "aberta" | "fechada" | "cancelada"
+export type GrauInsalubridade = "nenhum" | "minimo" | "medio" | "maximo"
 
 type Relationship = {
   foreignKeyName: string
@@ -259,6 +260,7 @@ export interface Database {
           vr_informado: number
           recebe_periculosidade: boolean
           inss_percentual: number
+          grau_insalubridade: GrauInsalubridade
           created_by: string | null
           created_at: string
           updated_at: string
