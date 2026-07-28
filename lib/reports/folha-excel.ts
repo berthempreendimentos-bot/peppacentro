@@ -14,7 +14,7 @@ const COR_CABECALHO_TEXTO = "FFFFFFFF"
 const COR_LINHA_PAR = "FFF7F6FB"
 const COR_BORDA = "FFD0C6AB"
 
-const FORMATO_MOEDA = '"R$" #,##0.00'
+const FORMATO_MOEDA = '_-"R$" * #,##0.00_-;-"R$" * #,##0.00_-;_-"R$" * "-"??_-;_-@_-'
 
 const bordaFina = {
   top: { style: "thin" as const, color: { argb: COR_BORDA } },
