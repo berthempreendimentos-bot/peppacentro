@@ -9,6 +9,7 @@ import {
   useDeletePosto,
   useDeleteEpi,
   useDeleteFerramenta,
+  useDeletePostoCustoItem,
   useImportarEpis,
   useUpdatePostoQuantidade,
   type PostoServico,
@@ -127,6 +128,7 @@ function PostoDetalhe({
 }) {
   const deleteEpi = useDeleteEpi(contratoId)
   const deleteFerramenta = useDeleteFerramenta(contratoId)
+  const deleteItem = useDeletePostoCustoItem(contratoId)
   const importarEpis = useImportarEpis(contratoId, posto.id)
   const subtotal = somaModulos(posto)
   const [moduloAberto, setModuloAberto] = useState<number | null>(null)
@@ -191,9 +193,24 @@ function PostoDetalhe({
                       className="flex items-center justify-between gap-4 text-xs"
                     >
                       <span className="text-muted-foreground">{item.descricao}</span>
-                      <span className="shrink-0 font-mono">
-                        {formatCurrencyBRL(item.valor)}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="shrink-0 font-mono">
+                          {formatCurrencyBRL(item.valor)}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                          onClick={() =>
+                            deleteItem.mutate(item.id, {
+                              onSuccess: () => toast.success("Item removido"),
+                            })
+                          }
+                          title="Remover item"
+                        >
+                          <Trash2 className="size-3" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>

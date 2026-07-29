@@ -338,3 +338,71 @@ export function useDeleteFerramenta(contratoId: string) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY(contratoId) }),
   })
 }
+
+export function useDeletePostoCustoItem(contratoId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const supabase = createClient()
+      
+      const { data: item, error: fetchError } = await supabase
+        .from("posto_custo_itens")
+        .select("valor, modulo, posto_servico_id")
+        .eq("id", id)
+        .single()
+      
+      if (fetchError) throw fetchError
+
+      const { error: deleteError } = await supabase.from("posto_custo_itens").delete().eq("id", id)
+      if (deleteError) throw deleteError
+
+      if (item) {
+        const { data: posto, error: postoError } = await supabase
+          .from("postos_servico")
+          .select("*")
+          .eq("id", item.posto_servico_id)
+          .single()
+          
+        if (postoError) throw postoError
+
+        if (posto) {
+          const moduloMap: Record<number, keyof PostoServico> = {
+            1: "modulo_1_remuneracao",
+            2: "modulo_2_encargos_beneficios",
+            3: "modulo_3_provisao_rescisao",
+            4: "modulo_4_reposicao",
+            5: "modulo_5_insumos",
+            6: "modulo_6_indiretos_tributos_lucro",
+          }
+          
+          const coluna = moduloMap[item.modulo]
+          if (coluna) {
+            const valorAtual = Number(posto[coluna]) || 0
+            const novoValor = valorAtual - item.valor
+            
+            const somaModulos = 
+              (coluna === "modulo_1_remuneracao" ? novoValor : Number(posto.modulo_1_remuneracao)) +
+              (coluna === "modulo_2_encargos_beneficios" ? novoValor : Number(posto.modulo_2_encargos_beneficios)) +
+              (coluna === "modulo_3_provisao_rescisao" ? novoValor : Number(posto.modulo_3_provisao_rescisao)) +
+              (coluna === "modulo_4_reposicao" ? novoValor : Number(posto.modulo_4_reposicao)) +
+              (coluna === "modulo_5_insumos" ? novoValor : Number(posto.modulo_5_insumos)) +
+              (coluna === "modulo_6_indiretos_tributos_lucro" ? novoValor : Number(posto.modulo_6_indiretos_tributos_lucro))
+              
+            const novoTotal = somaModulos * (posto.quantidade || 1)
+            
+            const { error: updateError } = await supabase
+              .from("postos_servico")
+              .update({
+                [coluna]: novoValor,
+                valor_total: novoTotal
+              })
+              .eq("id", item.posto_servico_id)
+              
+            if (updateError) throw updateError
+          }
+        }
+      }
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY(contratoId) }),
+  })
+}
