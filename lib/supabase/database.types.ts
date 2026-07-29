@@ -254,6 +254,7 @@ export interface Database {
           id: string
           contrato_id: string
           nome: string
+          matricula: string | null
           cpf: string | null
           funcao: string | null
           data_admissao: string | null
@@ -261,6 +262,9 @@ export interface Database {
           vt_informado: number
           vr_informado: number
           recebe_periculosidade: boolean
+          faltas: number
+          reembolso: number
+          reembolso_creche: number
           inss_percentual: number
           grau_insalubridade: GrauInsalubridade
           created_by: string | null
@@ -270,6 +274,10 @@ export interface Database {
         Insert: Partial<Database["public"]["Tables"]["funcionarios"]["Row"]> & {
           contrato_id: string
           nome: string
+          matricula?: string | null
+          faltas?: number
+          reembolso?: number
+          reembolso_creche?: number
         }
         Update: Partial<Database["public"]["Tables"]["funcionarios"]["Row"]>
         Relationships: [
@@ -278,6 +286,35 @@ export interface Database {
             columns: ["contrato_id"]
             isOneToOne: false
             referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ocorrencias_funcionarios: {
+        Row: {
+          id: string
+          funcionario_id: string
+          tipo: "falta" | "reembolso"
+          valor: number
+          descricao: string
+          mes_referencia: string
+          created_at: string
+          created_by: string | null
+        }
+        Insert: Partial<Database["public"]["Tables"]["ocorrencias_funcionarios"]["Row"]> & {
+          funcionario_id: string
+          tipo: "falta" | "reembolso"
+          valor: number
+          descricao: string
+          mes_referencia?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["ocorrencias_funcionarios"]["Row"]>
+        Relationships: [
+          {
+            foreignKeyName: "ocorrencias_funcionarios_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
             referencedColumns: ["id"]
           },
         ]

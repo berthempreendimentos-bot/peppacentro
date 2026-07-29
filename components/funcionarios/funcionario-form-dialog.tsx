@@ -46,12 +46,14 @@ import {
 
 const emptyValues: FuncionarioInput = {
   nome: "",
+  matricula: "",
   cpf: "",
   funcao: "",
   data_admissao: "",
   salario_base: 0,
   vt_informado: 0,
   vr_informado: 0,
+  reembolso_creche: 0,
   recebe_periculosidade: false,
   grau_insalubridade: "nenhum",
 }
@@ -88,6 +90,7 @@ export function FuncionarioFormDialog({
         funcionario
           ? {
               nome: funcionario.nome,
+              matricula: funcionario.matricula ?? "",
               cpf: funcionario.cpf ?? "",
               funcao: funcionario.funcao ?? "",
               data_admissao: funcionario.data_admissao ?? "",
@@ -146,6 +149,19 @@ export function FuncionarioFormDialog({
               )}
             />
             <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="matricula"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Matrícula</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Número de matrícula" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="cpf"
@@ -227,6 +243,19 @@ export function FuncionarioFormDialog({
                 )}
               />
             </div>
+            <FormField
+              control={form.control}
+              name="reembolso_creche"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Reembolso - Creche</FormLabel>
+                  <FormControl>
+                    <CurrencyInput value={field.value} onChange={field.onChange} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="recebe_periculosidade"

@@ -100,11 +100,11 @@ export function ImportarFuncionariosDialog({
       }}
     >
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[95vw] xl:max-w-7xl">
         <DialogHeader>
           <DialogTitle>Importar funcionários de uma planilha</DialogTitle>
           <DialogDescription>
-            Colunas reconhecidas: Nome, CPF, Cargo, Admissão, Salário Base, VT Informado e VR
+            Colunas reconhecidas: Nome, Matrícula, CPF, Cargo, Admissão, Salário Base, VT Informado e VR
             Informado.
           </DialogDescription>
         </DialogHeader>
@@ -141,12 +141,14 @@ export function ImportarFuncionariosDialog({
                   <TableRow>
                     <TableHead className="w-10" />
                     <TableHead>Nome</TableHead>
+                    <TableHead>Matrícula</TableHead>
                     <TableHead>CPF</TableHead>
                     <TableHead>Cargo</TableHead>
                     <TableHead>Admissão</TableHead>
                     <TableHead className="w-32">Salário Base</TableHead>
                     <TableHead className="w-28">VT Informado</TableHead>
                     <TableHead className="w-28">VR Informado</TableHead>
+                    <TableHead className="w-28">Reemb. Creche</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -164,6 +166,14 @@ export function ImportarFuncionariosDialog({
                         <Input
                           value={f.nome}
                           onChange={(e) => updateFuncionario(f.linha, { nome: e.target.value })}
+                          disabled={!f.incluir}
+                          className="h-8"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          value={f.matricula}
+                          onChange={(e) => updateFuncionario(f.linha, { matricula: e.target.value })}
                           disabled={!f.incluir}
                           className="h-8"
                         />
@@ -215,6 +225,14 @@ export function ImportarFuncionariosDialog({
                         <CurrencyInput
                           value={f.vrInformado}
                           onChange={(valor) => updateFuncionario(f.linha, { vrInformado: valor })}
+                          disabled={!f.incluir}
+                          className="h-8"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <CurrencyInput
+                          value={f.reembolsoCreche ?? 0}
+                          onChange={(valor) => updateFuncionario(f.linha, { reembolsoCreche: valor })}
                           disabled={!f.incluir}
                           className="h-8"
                         />

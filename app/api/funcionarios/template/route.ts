@@ -12,6 +12,7 @@ export async function GET() {
       "Salário Base": 2000,
       "VT Informado": 220,
       "VR Informado": 500,
+      "Reembolso Creche": 150,
     },
   ]
 

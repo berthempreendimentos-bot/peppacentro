@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { MoreHorizontal, Pencil, Plus, Trash2, Upload } from "lucide-react"
+import { Download, MoreHorizontal, Pencil, Plus, Trash2, Upload } from "lucide-react"
 import { toast } from "sonner"
 
 import {
@@ -89,6 +89,11 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
               </Button>
             }
           />
+          <Button variant="outline" asChild>
+            <a href={`/api/funcionarios/${contratoId}/export`} download>
+              <Download /> Exportar
+            </a>
+          </Button>
           <FuncionarioFormDialog
             contratoId={contratoId}
             trigger={
@@ -104,6 +109,7 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
         <TableHeader>
           <TableRow>
             <TableHead className="sticky top-0 left-0 z-30 border-r bg-background">Nome</TableHead>
+            <TableHead className="sticky top-0 z-20 bg-background">Matrícula</TableHead>
             <TableHead className="sticky top-0 z-20 bg-background">CPF</TableHead>
             <TableHead className="sticky top-0 z-20 bg-background">Função</TableHead>
             <TableHead className="sticky top-0 z-20 bg-background">Admissão</TableHead>
@@ -129,7 +135,7 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
             {isLoading &&
               Array.from({ length: 3 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={20}>
+                  <TableCell colSpan={21}>
                     <Skeleton className="h-6 w-full" />
                   </TableCell>
                 </TableRow>
@@ -137,7 +143,7 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
             {!isLoading && filtrados.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={20}
+                  colSpan={21}
                   className="py-8 text-center text-muted-foreground"
                 >
                   Nenhum funcionário encontrado.
@@ -153,6 +159,9 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
                     className={cn("sticky left-0 z-10 border-r font-medium whitespace-nowrap", linhaBg)}
                   >
                     {funcionario.nome}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {funcionario.matricula || "—"}
                   </TableCell>
                   <TableCell className="whitespace-nowrap">
                     {formatCpfCnpj(funcionario.cpf) || "—"}
@@ -252,6 +261,7 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
                 <TableCell className="sticky left-0 z-10 border-r bg-muted font-semibold whitespace-nowrap">
                   Total
                 </TableCell>
+                <TableCell />
                 <TableCell />
                 <TableCell />
                 <TableCell />

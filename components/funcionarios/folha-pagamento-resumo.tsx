@@ -8,12 +8,14 @@ import {
   Landmark,
   ShieldCheck,
   Users,
+  Calculator,
 } from "lucide-react"
 
 import { useFuncionarios } from "@/lib/queries/funcionarios"
 import { calcularEncargos, somarTotais } from "@/lib/calculo-folha"
 import { useTributos, taxasParaQueryString } from "@/hooks/use-tributos"
 import { formatCurrencyBRL, formatMesAno } from "@/lib/format"
+import { LancarFaltasDialog } from "@/components/funcionarios/lancar-faltas-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -102,6 +104,14 @@ export function FolhaPagamentoResumo({ contratoId }: { contratoId: string }) {
           Referência: <span className="text-foreground">{formatMesAno()}</span>
         </p>
         <div className="flex gap-2">
+          <LancarFaltasDialog
+            contratoId={contratoId}
+            trigger={
+              <Button variant="secondary" size="sm">
+                <Calculator className="mr-2 size-4" /> Lançamentos
+              </Button>
+            }
+          />
           <Button variant="outline" size="sm" asChild>
             <a href={`/api/funcionarios/${contratoId}/folha-excel?${taxasParaQueryString(taxas)}`}>
               <FileSpreadsheet /> Excel

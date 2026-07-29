@@ -9,7 +9,7 @@ import type { Database } from "@/lib/supabase/database.types"
 
 export type Funcionario = Database["public"]["Tables"]["funcionarios"]["Row"]
 
-const QUERY_KEY = (contratoId: string) => ["funcionarios", contratoId] as const
+export const QUERY_KEY = (contratoId: string) => ["funcionarios", contratoId] as const
 
 export function useFuncionarios(contratoId: string) {
   return useQuery({
@@ -42,6 +42,10 @@ export function useCreateFuncionario(contratoId: string) {
         cpf: input.cpf || null,
         funcao: input.funcao || null,
         data_admissao: input.data_admissao || null,
+        matricula: input.matricula || null,
+        faltas: input.faltas || 0,
+        reembolso: input.reembolso || 0,
+        reembolso_creche: input.reembolso_creche || 0,
         salario_base: input.salario_base,
         vt_informado: input.vt_informado,
         vr_informado: input.vr_informado,
@@ -67,6 +71,10 @@ export function useUpdateFuncionario(contratoId: string) {
           cpf: input.cpf || null,
           funcao: input.funcao || null,
           data_admissao: input.data_admissao || null,
+          matricula: input.matricula || null,
+          faltas: input.faltas || 0,
+          reembolso: input.reembolso || 0,
+          reembolso_creche: input.reembolso_creche || 0,
           salario_base: input.salario_base,
           vt_informado: input.vt_informado,
           vr_informado: input.vr_informado,
@@ -90,20 +98,23 @@ export function useImportFuncionarios(contratoId: string) {
       const {
         data: { user },
       } = await supabase.auth.getUser()
-      const { error } = await supabase.from("funcionarios").insert(
+      const { error } = await supabase.from("funcionarios").upsert(
         selecionados.map((f) => ({
           contrato_id: contratoId,
           nome: f.nome,
+          matricula: f.matricula || null,
           cpf: f.cpf || null,
           funcao: f.funcao || null,
           data_admissao: f.dataAdmissao || null,
           salario_base: f.salarioBase,
           vt_informado: f.vtInformado,
           vr_informado: f.vrInformado,
+          reembolso_creche: f.reembolsoCreche || 0,
           recebe_periculosidade: false,
           grau_insalubridade: "nenhum" as const,
           created_by: user?.id,
-        }))
+        })),
+        { onConflict: "unique_contrato_cpf" }
       )
       if (error) throw error
     },
@@ -118,6 +129,28 @@ export function useDeleteFuncionario(contratoId: string) {
       const supabase = createClient()
       const { error } = await supabase.from("funcionarios").delete().eq("id", id)
       if (error) throw error
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY(contratoId) }),
+  })
+}
+
+export function useUpdateFaltasReembolsoEmLote(contratoId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (atualizacoes: { id: string; faltas: number; reembolso: number }[]) => {
+      const supabase = createClient()
+      const { error } = await supabase.rpc("update_faltas_reembolso_em_lote", {
+        atualizacoes,
+      })
+      if (error) {
+        // Fallback for sequential updates if the RPC doesn't exist
+        for (const auth of atualizacoes) {
+          await supabase
+            .from("funcionarios")
+            .update({ faltas: auth.faltas, reembolso: auth.reembolso })
+            .eq("id", auth.id)
+        }
+      }
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY(contratoId) }),
   })
