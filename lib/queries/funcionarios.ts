@@ -114,7 +114,7 @@ export function useImportFuncionarios(contratoId: string) {
           grau_insalubridade: "nenhum" as const,
           created_by: user?.id,
         })),
-        { onConflict: "unique_contrato_cpf" }
+        { onConflict: "contrato_id,cpf" }
       )
       if (error) throw error
     },
