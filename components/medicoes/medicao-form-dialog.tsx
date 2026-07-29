@@ -18,6 +18,7 @@ import {
 } from "@/lib/queries/medicoes"
 import { useFuncionarios } from "@/lib/queries/funcionarios"
 import { useContrato } from "@/lib/queries/contratos"
+import { calcularDuracaoContrato } from "@/lib/contrato-duracao"
 import { calcularContaDepositoVinculada, somarTotais } from "@/lib/calculo-folha"
 import { useTributos, taxasParaQueryString } from "@/hooks/use-tributos"
 import { calcularResumoMedicao } from "@/lib/calculo-medicao"
@@ -121,6 +122,16 @@ export function MedicaoFormDialog({
   const valeTransporte = isEditing ? medicao.vale_transporte : vtAtual
   const valeRefeicao = isEditing ? medicao.vale_refeicao : vrAtual
 
+  // Valor do Contrato no resumo é o valor MENSAL estimado (valor_atual do
+  // contrato dividido pela duração em meses), não o valor total — e não é
+  // editável aqui, é sempre calculado a partir do cadastro do contrato.
+  const duracaoContrato = calcularDuracaoContrato(
+    contrato?.data_inicio ?? null,
+    contrato?.data_fim ?? null
+  )
+  const valorContratoMensalAtual = contrato ? contrato.valor_atual / duracaoContrato.total : 0
+  const valorContrato = isEditing ? medicao.valor_contrato : valorContratoMensalAtual
+
   // Líquido dos empregados, FGTS e valor vinculado (Conta-Depósito Vinculada)
   // são gravados na medição para poder lançar em Contas a Pagar depois, sem
   // depender da folha atual no momento do lançamento.
@@ -172,7 +183,7 @@ export function MedicaoFormDialog({
               mao_de_obra: maoDeObraAtual,
               vale_transporte: vtAtual,
               vale_refeicao: vrAtual,
-              valor_contrato: contrato?.valor_atual ?? 0,
+              valor_contrato: valorContratoMensalAtual,
               liquido_empregados: totaisFolha.liquido,
               fgts: totaisFolha.fgts,
               valor_vinculado: contaVinculadaAtual,
@@ -190,8 +201,18 @@ export function MedicaoFormDialog({
     form.setValue("fgts", fgts)
     form.setValue("valor_vinculado", valorVinculado)
     form.setValue("valor_liquido", resumo.valorLiquido)
+    form.setValue("valor_contrato", valorContrato)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [valeTransporte, valeRefeicao, resumo.valorAFaturar, resumo.valorLiquido, liquidoEmpregados, fgts, valorVinculado])
+  }, [
+    valeTransporte,
+    valeRefeicao,
+    resumo.valorAFaturar,
+    resumo.valorLiquido,
+    liquidoEmpregados,
+    fgts,
+    valorVinculado,
+    valorContrato,
+  ])
 
   async function fecharFolhaSeNecessario(medicaoId: string) {
     try {
@@ -246,21 +267,10 @@ export function MedicaoFormDialog({
             <div className="rounded-lg border bg-muted/30 p-4">
               <p className="mb-3 text-sm font-semibold">Resumo da medição</p>
               <div className="flex flex-col gap-1.5">
-                <FormField
-                  control={form.control}
-                  name="valor_contrato"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between gap-4 space-y-0">
-                      <FormLabel className="text-sm font-semibold">Valor do Contrato</FormLabel>
-                      <FormControl>
-                        <CurrencyInput
-                          className="h-7 w-36 text-right font-semibold"
-                          value={field.value}
-                          onChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
+                <LinhaResumo
+                  label={`Valor do Contrato (mensal${duracaoContrato.estimado ? ", estimado" : ""})`}
+                  valor={valorContrato}
+                  destaque
                 />
                 <Separator className="my-1" />
                 <FormField

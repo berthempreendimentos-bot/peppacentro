@@ -6,6 +6,7 @@ import { Pencil, Trash2, Wallet } from "lucide-react"
 import { toast } from "sonner"
 
 import { useContratos, useDeleteContrato, type Contrato } from "@/lib/queries/contratos"
+import { calcularDuracaoContrato } from "@/lib/contrato-duracao"
 import { formatCurrencyBRL } from "@/lib/format"
 import { ContratoFormDialog } from "@/components/contratos/contrato-form-dialog"
 import { Input } from "@/components/ui/input"
@@ -57,32 +58,6 @@ const situacaoColor: Record<string, string> = {
 
 const situacaoBadgeClassName: Record<string, string> = {
   inicializacao: "bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400",
-}
-
-const DURACAO_PADRAO_MESES = 12
-
-function calcularDuracao(dataInicio: string | null, dataFim: string | null) {
-  if (!dataInicio || !dataFim) {
-    return { atual: null, total: DURACAO_PADRAO_MESES, estimado: true }
-  }
-
-  const inicio = new Date(dataInicio)
-  const fim = new Date(dataFim)
-  const hoje = new Date()
-
-  const total = Math.max(
-    1,
-    (fim.getFullYear() - inicio.getFullYear()) * 12 + (fim.getMonth() - inicio.getMonth()) + 1
-  )
-  const atual = Math.min(
-    Math.max(
-      (hoje.getFullYear() - inicio.getFullYear()) * 12 + (hoje.getMonth() - inicio.getMonth()) + 1,
-      1
-    ),
-    total
-  )
-
-  return { atual, total, estimado: false }
 }
 
 export function ContratosTable() {
@@ -154,7 +129,7 @@ export function ContratosTable() {
         )}
         {filtrados.map((contrato) => {
           const numPostos = contrato.postos_servico?.reduce((sum, p) => sum + (p.quantidade || 0), 0) ?? 0
-          const duracao = calcularDuracao(contrato.data_inicio, contrato.data_fim)
+          const duracao = calcularDuracaoContrato(contrato.data_inicio, contrato.data_fim)
           const valorMensal = contrato.valor_atual / duracao.total
           const borderColor = situacaoColor[contrato.situacao] || "border-l-border"
 
