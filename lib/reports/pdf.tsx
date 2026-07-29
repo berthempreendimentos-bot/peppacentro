@@ -326,16 +326,16 @@ export function FolhaPagamentoPdfDocument({
             <Text style={stylesFolha.tabelaCell}>{formatCurrencyBRL(conta.multaFgts)}</Text>
           </View>
           <View style={stylesFolha.tabelaRow}>
-            <Text style={[stylesFolha.tabelaCell, { flex: 2, fontFamily: "Helvetica-Bold" }]}>
-              Total de Retenção Mensal (32,25%)
-            </Text>
-            <Text style={[stylesFolha.tabelaCell, { fontFamily: "Helvetica-Bold" }]}>
-              {formatCurrencyBRL(conta.totalRetencaoMensal)}
-            </Text>
-          </View>
-          <View style={[stylesFolha.tabelaRow, stylesFolha.tabelaRowPar]}>
             <Text style={[stylesFolha.tabelaCell, { flex: 2 }]}>Reembolso Creche</Text>
             <Text style={stylesFolha.tabelaCell}>{formatCurrencyBRL(totais.reembolso_creche)}</Text>
+          </View>
+          <View style={[stylesFolha.tabelaRow, stylesFolha.tabelaRowPar]}>
+            <Text style={[stylesFolha.tabelaCell, { flex: 2, fontFamily: "Helvetica-Bold" }]}>
+              Total de Retenção Mensal
+            </Text>
+            <Text style={[stylesFolha.tabelaCell, { fontFamily: "Helvetica-Bold" }]}>
+              {formatCurrencyBRL(conta.totalRetencaoMensal + totais.reembolso_creche)}
+            </Text>
           </View>
         </View>
       </Page>

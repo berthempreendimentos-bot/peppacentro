@@ -553,9 +553,8 @@ export function buildContaDepositoVinculadaSheet(
       width: 22,
     },
     { header: "Multa do FGTS incidente sobre a remuneração, férias, 1/3 e 13º salário (4,00%)", width: 20 },
-    { header: "Total de Retenção Mensal (32,25%)", width: 18 },
-    { header: "Retenção de Todos os Postos", width: 18 },
     { header: "Reembolso Creche", width: 16 },
+    { header: "Total de Retenção Mensal", width: 18 },
   ]
   sheet.columns = colunas.map((c) => ({ width: c.width }))
   adicionarTitulo(sheet, colunas.length, contratoTitulo, mesReferencia)
@@ -570,29 +569,28 @@ export function buildContaDepositoVinculadaSheet(
   headerRow.height = 45
   sheet.views = [{ state: "frozen", ySplit: headerRow.number }]
 
-  const colunasMoeda = [2, 3, 4, 5, 6, 7, 8, 9]
+  const colunasMoeda = [2, 3, 4, 5, 6, 7, 8]
   let totalRemuneracao = 0
   let totalDecimoTerceiro = 0
   let totalFeriasAdicional = 0
   let totalIncidencia = 0
   let totalMulta = 0
-  let totalRetencaoMensal = 0
-  let totalRetencaoPostos = 0
   let totalReembolsoCreche = 0
+  let totalRetencaoMensal = 0
 
   funcionarios.forEach((f, i) => {
     const encargos = calcularEncargos(f, taxas)
     const conta = calcularContaDepositoVinculada(encargos.remuneracaoTotal)
+    const reembolsoCreche = f.reembolso_creche ?? 0
+    const totalComReembolso = conta.totalRetencaoMensal + reembolsoCreche
 
     totalRemuneracao += encargos.remuneracaoTotal
     totalDecimoTerceiro += conta.decimoTerceiro
     totalFeriasAdicional += conta.feriasAdicional
     totalIncidencia += conta.incidenciaSubmodulo22
     totalMulta += conta.multaFgts
-    totalRetencaoMensal += conta.totalRetencaoMensal
-    totalRetencaoPostos += conta.totalRetencaoMensal
-    const reembolsoCreche = f.reembolso_creche ?? 0
     totalReembolsoCreche += reembolsoCreche
+    totalRetencaoMensal += totalComReembolso
 
     const row = sheet.addRow([
       f.nome,
@@ -601,9 +599,8 @@ export function buildContaDepositoVinculadaSheet(
       conta.feriasAdicional,
       conta.incidenciaSubmodulo22,
       conta.multaFgts,
-      conta.totalRetencaoMensal,
-      conta.totalRetencaoMensal,
       reembolsoCreche,
+      totalComReembolso,
     ])
 
     const r = row.number
@@ -611,8 +608,7 @@ export function buildContaDepositoVinculadaSheet(
     formula(row.getCell(4), `B${r}*${TAXA_FERIAS_ADICIONAL}`, conta.feriasAdicional)
     formula(row.getCell(5), `B${r}*${TAXA_INCIDENCIA_SUBMODULO_22}`, conta.incidenciaSubmodulo22)
     formula(row.getCell(6), `B${r}*${TAXA_MULTA_FGTS}`, conta.multaFgts)
-    formula(row.getCell(7), `SUM(C${r}:F${r})`, conta.totalRetencaoMensal)
-    formula(row.getCell(8), `G${r}`, conta.totalRetencaoMensal)
+    formula(row.getCell(8), `SUM(C${r}:G${r})`, totalComReembolso)
 
     colunasMoeda.forEach((col) => {
       row.getCell(col).numFmt = FORMATO_MOEDA
@@ -632,9 +628,8 @@ export function buildContaDepositoVinculadaSheet(
     totalFeriasAdicional,
     totalIncidencia,
     totalMulta,
-    totalRetencaoMensal,
-    totalRetencaoPostos,
     totalReembolsoCreche,
+    totalRetencaoMensal,
   ])
   rowTotal.eachCell((cell) => {
     cell.font = { bold: true }
@@ -649,9 +644,8 @@ export function buildContaDepositoVinculadaSheet(
     formula(rowTotal.getCell(4), `SUM(D${primeiraLinha}:D${ultimaLinha})`, totalFeriasAdicional)
     formula(rowTotal.getCell(5), `SUM(E${primeiraLinha}:E${ultimaLinha})`, totalIncidencia)
     formula(rowTotal.getCell(6), `SUM(F${primeiraLinha}:F${ultimaLinha})`, totalMulta)
-    formula(rowTotal.getCell(7), `SUM(G${primeiraLinha}:G${ultimaLinha})`, totalRetencaoMensal)
-    formula(rowTotal.getCell(8), `SUM(H${primeiraLinha}:H${ultimaLinha})`, totalRetencaoPostos)
-    formula(rowTotal.getCell(9), `SUM(I${primeiraLinha}:I${ultimaLinha})`, totalReembolsoCreche)
+    formula(rowTotal.getCell(7), `SUM(G${primeiraLinha}:G${ultimaLinha})`, totalReembolsoCreche)
+    formula(rowTotal.getCell(8), `SUM(H${primeiraLinha}:H${ultimaLinha})`, totalRetencaoMensal)
   }
 
   colunasMoeda.forEach((col) => {
