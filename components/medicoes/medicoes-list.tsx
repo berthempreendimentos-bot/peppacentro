@@ -1,13 +1,22 @@
 "use client"
 
 import { useState } from "react"
-import { FileSpreadsheet, FileText, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react"
+import {
+  Banknote,
+  FileSpreadsheet,
+  FileText,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react"
 import { toast } from "sonner"
 
 import { useMedicoes, useDeleteMedicao, type Medicao } from "@/lib/queries/medicoes"
 import { medicaoStatusOptions } from "@/lib/validations/medicoes"
 import { formatCurrencyBRL, formatDate, formatDateShort } from "@/lib/format"
 import { MedicaoFormDialog } from "@/components/medicoes/medicao-form-dialog"
+import { LancarFinanceiroMedicaoDialog } from "@/components/medicoes/lancar-financeiro-medicao-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -49,6 +58,7 @@ export function MedicoesList({ contratoId }: { contratoId: string }) {
   const { data: medicoes, isLoading } = useMedicoes(contratoId)
   const deleteMedicao = useDeleteMedicao(contratoId)
   const [paraExcluir, setParaExcluir] = useState<Medicao | null>(null)
+  const [paraLancar, setParaLancar] = useState<Medicao | null>(null)
 
   const proximoNumero = medicoes && medicoes.length > 0 ? medicoes[0].numero + 1 : 1
 
@@ -70,6 +80,7 @@ export function MedicoesList({ contratoId }: { contratoId: string }) {
         <MedicaoFormDialog
           contratoId={contratoId}
           proximoNumero={proximoNumero}
+          onCreated={(medicao) => setParaLancar(medicao)}
           trigger={
             <Button>
               <Plus /> Nova Medição
@@ -90,20 +101,21 @@ export function MedicoesList({ contratoId }: { contratoId: string }) {
               <TableHead className="w-10" />
               <TableHead className="w-10" />
               <TableHead className="w-10" />
+              <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading &&
               Array.from({ length: 3 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={9}>
+                  <TableCell colSpan={10}>
                     <Skeleton className="h-6 w-full" />
                   </TableCell>
                 </TableRow>
               ))}
             {!isLoading && medicoes?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={10} className="py-8 text-center text-muted-foreground">
                   Nenhuma medição cadastrada.
                 </TableCell>
               </TableRow>
@@ -132,6 +144,16 @@ export function MedicoesList({ contratoId }: { contratoId: string }) {
                     <a href={`/api/medicoes/${medicao.id}/pdf`}>
                       <FileText className="size-4" />
                     </a>
+                  </Button>
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    title="Lançar no financeiro (Contas a Receber/Pagar)"
+                    onClick={() => setParaLancar(medicao)}
+                  >
+                    <Banknote className="size-4" />
                   </Button>
                 </TableCell>
                 <TableCell>
@@ -184,6 +206,13 @@ export function MedicoesList({ contratoId }: { contratoId: string }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <LancarFinanceiroMedicaoDialog
+        medicao={paraLancar}
+        contratoId={contratoId}
+        open={!!paraLancar}
+        onOpenChange={(open) => !open && setParaLancar(null)}
+      />
     </div>
   )
 }

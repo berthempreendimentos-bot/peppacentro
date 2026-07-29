@@ -429,6 +429,10 @@ export interface Database {
           vale_refeicao: number
           material: number
           valor_contrato: number
+          liquido_empregados: number
+          fgts: number
+          valor_vinculado: number
+          valor_liquido: number
           created_by: string | null
           created_at: string
           updated_at: string

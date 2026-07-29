@@ -13,7 +13,7 @@ import {
 import { useCreateMedicao, useUpdateMedicao, type Medicao } from "@/lib/queries/medicoes"
 import { useFuncionarios } from "@/lib/queries/funcionarios"
 import { useContrato } from "@/lib/queries/contratos"
-import { somarTotais } from "@/lib/calculo-folha"
+import { calcularContaDepositoVinculada, somarTotais } from "@/lib/calculo-folha"
 import { useTributos } from "@/hooks/use-tributos"
 import { calcularResumoMedicao } from "@/lib/calculo-medicao"
 import { formatCurrencyBRL } from "@/lib/format"
@@ -58,6 +58,10 @@ const emptyValues: MedicaoInput = {
   vale_refeicao: 0,
   material: 0,
   valor_contrato: 0,
+  liquido_empregados: 0,
+  fgts: 0,
+  valor_vinculado: 0,
+  valor_liquido: 0,
 }
 
 function LinhaResumo({
@@ -82,11 +86,13 @@ export function MedicaoFormDialog({
   contratoId,
   medicao,
   proximoNumero,
+  onCreated,
 }: {
   trigger: React.ReactNode
   contratoId: string
   medicao?: Medicao
   proximoNumero?: number
+  onCreated?: (medicao: Medicao) => void
 }) {
   const [open, setOpen] = useState(false)
   const createMedicao = useCreateMedicao(contratoId)
@@ -108,6 +114,14 @@ export function MedicaoFormDialog({
 
   const valeTransporte = isEditing ? medicao.vale_transporte : vtAtual
   const valeRefeicao = isEditing ? medicao.vale_refeicao : vrAtual
+
+  // Líquido dos empregados, FGTS e valor vinculado (Conta-Depósito Vinculada)
+  // são gravados na medição para poder lançar em Contas a Pagar depois, sem
+  // depender da folha atual no momento do lançamento.
+  const contaVinculadaAtual = calcularContaDepositoVinculada(totaisFolha.remuneracaoTotal).totalRetencaoMensal
+  const liquidoEmpregados = isEditing ? medicao.liquido_empregados : totaisFolha.liquido
+  const fgts = isEditing ? medicao.fgts : totaisFolha.fgts
+  const valorVinculado = isEditing ? medicao.valor_vinculado : contaVinculadaAtual
 
   const form = useForm<MedicaoInput>({
     resolver: zodResolver(medicaoSchema),
@@ -141,6 +155,10 @@ export function MedicaoFormDialog({
               vale_refeicao: medicao.vale_refeicao,
               material: medicao.material,
               valor_contrato: medicao.valor_contrato,
+              liquido_empregados: medicao.liquido_empregados,
+              fgts: medicao.fgts,
+              valor_vinculado: medicao.valor_vinculado,
+              valor_liquido: medicao.valor_liquido,
             }
           : {
               ...emptyValues,
@@ -149,6 +167,9 @@ export function MedicaoFormDialog({
               vale_transporte: vtAtual,
               vale_refeicao: vrAtual,
               valor_contrato: contrato?.valor_atual ?? 0,
+              liquido_empregados: totaisFolha.liquido,
+              fgts: totaisFolha.fgts,
+              valor_vinculado: contaVinculadaAtual,
             }
       )
     }
@@ -159,8 +180,12 @@ export function MedicaoFormDialog({
     form.setValue("vale_transporte", valeTransporte)
     form.setValue("vale_refeicao", valeRefeicao)
     form.setValue("valor", resumo.valorAFaturar)
+    form.setValue("liquido_empregados", liquidoEmpregados)
+    form.setValue("fgts", fgts)
+    form.setValue("valor_vinculado", valorVinculado)
+    form.setValue("valor_liquido", resumo.valorLiquido)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [valeTransporte, valeRefeicao, resumo.valorAFaturar])
+  }, [valeTransporte, valeRefeicao, resumo.valorAFaturar, resumo.valorLiquido, liquidoEmpregados, fgts, valorVinculado])
 
   async function onSubmit(values: MedicaoInput) {
     try {
@@ -168,8 +193,9 @@ export function MedicaoFormDialog({
         await updateMedicao.mutateAsync({ id: medicao.id, input: values })
         toast.success("Medição atualizada")
       } else {
-        await createMedicao.mutateAsync(values)
+        const criada = await createMedicao.mutateAsync(values)
         toast.success("Medição cadastrada")
+        if (criada) onCreated?.(criada)
       }
       setOpen(false)
     } catch (error) {

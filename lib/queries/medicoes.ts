@@ -74,12 +74,17 @@ export function useCreateMedicao(contratoId: string) {
       const supabase = createClient()
       const lancamentoId = await criarLancamentoVinculado(supabase, contratoId, input)
 
-      const { error } = await supabase.from("medicoes").insert({
-        ...normalize(input),
-        contrato_id: contratoId,
-        lancamento_id: lancamentoId,
-      })
+      const { data, error } = await supabase
+        .from("medicoes")
+        .insert({
+          ...normalize(input),
+          contrato_id: contratoId,
+          lancamento_id: lancamentoId,
+        })
+        .select()
+        .single()
       if (error) throw error
+      return data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["medicoes", contratoId] })
