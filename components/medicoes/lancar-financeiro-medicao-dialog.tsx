@@ -5,6 +5,11 @@ import { toast } from "sonner"
 
 import { useCreateLancamento } from "@/lib/queries/lancamentos"
 import type { Medicao } from "@/lib/queries/medicoes"
+import { useContrato } from "@/lib/queries/contratos"
+import { useFuncionarios } from "@/lib/queries/funcionarios"
+import { calcularContaDepositoVinculada, somarTotais } from "@/lib/calculo-folha"
+import { useTributos } from "@/hooks/use-tributos"
+import { calcularResumoMedicao } from "@/lib/calculo-medicao"
 import { formatCurrencyBRL } from "@/lib/format"
 import { getErrorMessage } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -47,17 +52,37 @@ export function LancarFinanceiroMedicaoDialog({
   onOpenChange: (open: boolean) => void
 }) {
   const createLancamento = useCreateLancamento(contratoId)
+  const { data: contrato } = useContrato(contratoId)
+  const { data: funcionarios } = useFuncionarios(contratoId)
+  const { taxas } = useTributos()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   if (!medicao) return null
 
-  const valorReceber = medicao.valor_liquido
-  const valorPagar =
-    medicao.liquido_empregados +
-    medicao.fgts +
-    medicao.vale_transporte +
-    medicao.vale_refeicao +
-    medicao.valor_vinculado
+  // Recalcula ao vivo (mesma fórmula do espelho: Valor dos Serviços menos as
+  // deduções) em vez de confiar só no valor_liquido gravado, para funcionar
+  // corretamente também em medições criadas antes desse campo existir.
+  const resumo = calcularResumoMedicao({
+    maoDeObra: medicao.mao_de_obra,
+    valeTransporte: medicao.vale_transporte,
+    valeRefeicao: medicao.vale_refeicao,
+    material: medicao.material,
+    issAliquota: contrato?.iss_aliquota ?? 5,
+  })
+  const valorReceber = resumo.valorLiquido
+
+  // Líquido dos empregados/FGTS/Valor Vinculado gravados na medição podem
+  // estar zerados em medições criadas antes desses campos existirem —
+  // nesse caso, recalcula ao vivo da Folha de Pagamento atual como fallback.
+  const temSnapshot = medicao.liquido_empregados > 0 || medicao.fgts > 0 || medicao.valor_vinculado > 0
+  const totaisFolha = somarTotais(funcionarios ?? [], taxas)
+  const liquidoEmpregados = temSnapshot ? medicao.liquido_empregados : totaisFolha.liquido
+  const fgts = temSnapshot ? medicao.fgts : totaisFolha.fgts
+  const valorVinculado = temSnapshot
+    ? medicao.valor_vinculado
+    : calcularContaDepositoVinculada(totaisFolha.remuneracaoTotal).totalRetencaoMensal
+
+  const valorPagar = liquidoEmpregados + fgts + medicao.vale_transporte + medicao.vale_refeicao + valorVinculado
 
   async function handleConfirmar() {
     if (!medicao) return
