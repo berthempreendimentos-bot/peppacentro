@@ -54,6 +54,8 @@ const emptyValues: FuncionarioInput = {
   vt_informado: 0,
   vr_informado: 0,
   reembolso_creche: 0,
+  faltas: 0,
+  reembolso: 0,
   recebe_periculosidade: false,
   grau_insalubridade: "nenhum",
 }
@@ -97,6 +99,9 @@ export function FuncionarioFormDialog({
               salario_base: funcionario.salario_base,
               vt_informado: funcionario.vt_informado,
               vr_informado: funcionario.vr_informado,
+              reembolso_creche: funcionario.reembolso_creche ?? 0,
+              faltas: funcionario.faltas ?? 0,
+              reembolso: funcionario.reembolso ?? 0,
               recebe_periculosidade: funcionario.recebe_periculosidade,
               grau_insalubridade: funcionario.grau_insalubridade,
             }
