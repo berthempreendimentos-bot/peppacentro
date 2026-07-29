@@ -394,8 +394,8 @@ export function useDeletePostoCustoItem(contratoId: string) {
               .from("postos_servico")
               .update({
                 [coluna]: novoValor,
-                valor_total: novoTotal
-              })
+                valor_total: novoTotal,
+              } as Partial<Database["public"]["Tables"]["postos_servico"]["Update"]>)
               .eq("id", item.posto_servico_id)
               
             if (updateError) throw updateError
