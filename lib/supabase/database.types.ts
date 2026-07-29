@@ -894,6 +894,10 @@ export interface Database {
           lucro: number
         }[]
       }
+      update_faltas_reembolso_em_lote: {
+        Args: { atualizacoes: { id: string; faltas: number; reembolso: number }[] }
+        Returns: void
+      }
     }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>

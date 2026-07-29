@@ -11,10 +11,10 @@ export const funcionarioSchema = z.object({
   salario_base: z.number().min(0, "Informe um valor válido"),
   vt_informado: z.number().min(0, "Informe um valor válido"),
   vr_informado: z.number().min(0, "Informe um valor válido"),
-  faltas: z.number().min(0).optional().default(0),
-  reembolso: z.number().min(0).optional().default(0),
-  reembolso_creche: z.number().min(0).optional().default(0),
-  recebe_periculosidade: z.boolean().default(false),
+  faltas: z.number().min(0),
+  reembolso: z.number().min(0),
+  reembolso_creche: z.number().min(0),
+  recebe_periculosidade: z.boolean(),
   grau_insalubridade: z.enum(grauInsalubridadeValues),
 })
 
