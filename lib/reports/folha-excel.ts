@@ -555,6 +555,7 @@ export function buildContaDepositoVinculadaSheet(
     { header: "Multa do FGTS incidente sobre a remuneração, férias, 1/3 e 13º salário (4,00%)", width: 20 },
     { header: "Total de Retenção Mensal (32,25%)", width: 18 },
     { header: "Retenção de Todos os Postos", width: 18 },
+    { header: "Reembolso Creche", width: 16 },
   ]
   sheet.columns = colunas.map((c) => ({ width: c.width }))
   adicionarTitulo(sheet, colunas.length, contratoTitulo, mesReferencia)
@@ -569,7 +570,7 @@ export function buildContaDepositoVinculadaSheet(
   headerRow.height = 45
   sheet.views = [{ state: "frozen", ySplit: headerRow.number }]
 
-  const colunasMoeda = [2, 3, 4, 5, 6, 7, 8]
+  const colunasMoeda = [2, 3, 4, 5, 6, 7, 8, 9]
   let totalRemuneracao = 0
   let totalDecimoTerceiro = 0
   let totalFeriasAdicional = 0
@@ -577,6 +578,7 @@ export function buildContaDepositoVinculadaSheet(
   let totalMulta = 0
   let totalRetencaoMensal = 0
   let totalRetencaoPostos = 0
+  let totalReembolsoCreche = 0
 
   funcionarios.forEach((f, i) => {
     const encargos = calcularEncargos(f, taxas)
@@ -589,6 +591,8 @@ export function buildContaDepositoVinculadaSheet(
     totalMulta += conta.multaFgts
     totalRetencaoMensal += conta.totalRetencaoMensal
     totalRetencaoPostos += conta.totalRetencaoMensal
+    const reembolsoCreche = f.reembolso_creche ?? 0
+    totalReembolsoCreche += reembolsoCreche
 
     const row = sheet.addRow([
       f.nome,
@@ -599,6 +603,7 @@ export function buildContaDepositoVinculadaSheet(
       conta.multaFgts,
       conta.totalRetencaoMensal,
       conta.totalRetencaoMensal,
+      reembolsoCreche,
     ])
 
     const r = row.number
@@ -629,6 +634,7 @@ export function buildContaDepositoVinculadaSheet(
     totalMulta,
     totalRetencaoMensal,
     totalRetencaoPostos,
+    totalReembolsoCreche,
   ])
   rowTotal.eachCell((cell) => {
     cell.font = { bold: true }
@@ -645,6 +651,7 @@ export function buildContaDepositoVinculadaSheet(
     formula(rowTotal.getCell(6), `SUM(F${primeiraLinha}:F${ultimaLinha})`, totalMulta)
     formula(rowTotal.getCell(7), `SUM(G${primeiraLinha}:G${ultimaLinha})`, totalRetencaoMensal)
     formula(rowTotal.getCell(8), `SUM(H${primeiraLinha}:H${ultimaLinha})`, totalRetencaoPostos)
+    formula(rowTotal.getCell(9), `SUM(I${primeiraLinha}:I${ultimaLinha})`, totalReembolsoCreche)
   }
 
   colunasMoeda.forEach((col) => {

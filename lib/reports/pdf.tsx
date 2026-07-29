@@ -197,6 +197,7 @@ export function FolhaPagamentoPdfDocument({
     totalEncargos: number
     custoEmpresa: number
     remuneracaoTotal: number
+    reembolso_creche: number
   }
 }) {
   const conta = calcularContaDepositoVinculada(totais.remuneracaoTotal)
@@ -331,6 +332,10 @@ export function FolhaPagamentoPdfDocument({
             <Text style={[stylesFolha.tabelaCell, { fontFamily: "Helvetica-Bold" }]}>
               {formatCurrencyBRL(conta.totalRetencaoMensal)}
             </Text>
+          </View>
+          <View style={[stylesFolha.tabelaRow, stylesFolha.tabelaRowPar]}>
+            <Text style={[stylesFolha.tabelaCell, { flex: 2 }]}>Reembolso Creche</Text>
+            <Text style={stylesFolha.tabelaCell}>{formatCurrencyBRL(totais.reembolso_creche)}</Text>
           </View>
         </View>
       </Page>
