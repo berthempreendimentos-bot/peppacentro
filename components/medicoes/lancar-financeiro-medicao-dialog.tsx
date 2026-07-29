@@ -82,7 +82,7 @@ export function LancarFinanceiroMedicaoDialog({
     ? medicao.valor_vinculado
     : calcularContaDepositoVinculada(totaisFolha.remuneracaoTotal).totalRetencaoMensal
 
-  const valorPagar = liquidoEmpregados + fgts + medicao.vale_transporte + medicao.vale_refeicao + valorVinculado
+  const valorPagar = liquidoEmpregados + fgts + valorVinculado
 
   async function handleConfirmar() {
     if (!medicao) return
@@ -102,7 +102,7 @@ export function LancarFinanceiroMedicaoDialog({
       await createLancamento.mutateAsync({
         input: {
           tipo: "despesa",
-          descricao: `Medição nº ${medicao.numero} — Folha + FGTS + VT + VA + Vinculado`,
+          descricao: `Medição nº ${medicao.numero} — Folha + FGTS + Vinculado`,
           valor: valorPagar,
           data: dataLancamento,
           mes_referencia: medicao.competencia.slice(0, 7),
@@ -136,7 +136,7 @@ export function LancarFinanceiroMedicaoDialog({
           />
           <LinhaValor
             titulo="Contas a Pagar"
-            descricao="Líquido dos empregados + FGTS + Vale Transporte + Vale Alimentação + Valor Vinculado"
+            descricao="Líquido dos empregados + FGTS + Valor Vinculado"
             valor={valorPagar}
           />
         </div>
