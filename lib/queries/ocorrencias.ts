@@ -29,6 +29,33 @@ export function useOcorrencias(funcionarioId: string | null, mesReferencia: stri
   })
 }
 
+export type OcorrenciaComFuncionario = Ocorrencia & { funcionarios: { nome: string } | null }
+
+export const OCORRENCIAS_DO_MES_QUERY_KEY = (contratoId: string, mesReferencia: string) => [
+  "ocorrencias",
+  "contrato",
+  contratoId,
+  mesReferencia,
+]
+
+export function useOcorrenciasDoMes(contratoId: string, mesReferencia: string) {
+  return useQuery({
+    queryKey: OCORRENCIAS_DO_MES_QUERY_KEY(contratoId, mesReferencia),
+    queryFn: async () => {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from("ocorrencias_funcionarios")
+        .select("*, funcionarios!inner(nome, contrato_id)")
+        .eq("funcionarios.contrato_id", contratoId)
+        .eq("mes_referencia", mesReferencia)
+        .order("created_at", { ascending: false })
+      if (error) throw error
+      return data as OcorrenciaComFuncionario[]
+    },
+    enabled: !!contratoId && !!mesReferencia,
+  })
+}
+
 export function useCreateOcorrencia(funcionarioId: string, contratoId: string, mesReferencia: string) {
   const queryClient = useQueryClient()
   return useMutation({
@@ -51,6 +78,7 @@ export function useCreateOcorrencia(funcionarioId: string, contratoId: string, m
     onSuccess: () => {
       // Invalidate the occurrences list
       queryClient.invalidateQueries({ queryKey: OCORRENCIAS_QUERY_KEY(funcionarioId, mesReferencia) })
+      queryClient.invalidateQueries({ queryKey: OCORRENCIAS_DO_MES_QUERY_KEY(contratoId, mesReferencia) })
       // Invalidate the employees list to reflect the updated totals (done by DB trigger)
       queryClient.invalidateQueries({ queryKey: FUNCIONARIOS_QUERY_KEY(contratoId) })
     },
@@ -67,6 +95,22 @@ export function useDeleteOcorrencia(funcionarioId: string, contratoId: string, m
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: OCORRENCIAS_QUERY_KEY(funcionarioId, mesReferencia) })
+      queryClient.invalidateQueries({ queryKey: OCORRENCIAS_DO_MES_QUERY_KEY(contratoId, mesReferencia) })
+      queryClient.invalidateQueries({ queryKey: FUNCIONARIOS_QUERY_KEY(contratoId) })
+    },
+  })
+}
+
+export function useDeleteOcorrenciaDoMes(contratoId: string, mesReferencia: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const supabase = createClient()
+      const { error } = await supabase.from("ocorrencias_funcionarios").delete().eq("id", id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: OCORRENCIAS_DO_MES_QUERY_KEY(contratoId, mesReferencia) })
       queryClient.invalidateQueries({ queryKey: FUNCIONARIOS_QUERY_KEY(contratoId) })
     },
   })
