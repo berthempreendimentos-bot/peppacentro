@@ -100,11 +100,34 @@ export function useUpdateMedicao(contratoId: string) {
   return useMutation({
     mutationFn: async ({ id, input }: { id: string; input: MedicaoInput }) => {
       const supabase = createClient()
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("medicoes")
         .update(normalize(input))
         .eq("id", id)
+        .select()
+        .single()
       if (error) throw error
+      return data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["medicoes", contratoId] }),
+  })
+}
+
+// Ao fechar a medição (status aprovada/paga), salva um snapshot da Folha
+// de Pagamento do mês em Storage para download posterior, mesmo que a
+// folha dos funcionários mude depois.
+export function useFecharFolhaMedicao(contratoId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ medicaoId, taxasQuery }: { medicaoId: string; taxasQuery: string }) => {
+      const res = await fetch(`/api/medicoes/${medicaoId}/fechar-folha?${taxasQuery}`, {
+        method: "POST",
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
+        throw new Error(body?.error || "Não foi possível salvar a folha de pagamento")
+      }
+      return res.json() as Promise<{ documentoId: string }>
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["medicoes", contratoId] }),
   })

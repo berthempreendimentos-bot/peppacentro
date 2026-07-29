@@ -39,6 +39,7 @@ export type DocumentoCategoria =
   | "planilha"
   | "aditivo"
   | "apolice"
+  | "folha_pagamento"
   | "outro"
 export type CotacaoStatus = "aberta" | "fechada" | "cancelada"
 export type GrauInsalubridade = "nenhum" | "minimo" | "medio" | "maximo"
@@ -433,6 +434,7 @@ export interface Database {
           fgts: number
           valor_vinculado: number
           valor_liquido: number
+          folha_documento_id: string | null
           created_by: string | null
           created_at: string
           updated_at: string

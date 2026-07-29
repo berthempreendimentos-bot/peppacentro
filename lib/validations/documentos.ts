@@ -14,6 +14,7 @@ export const documentoCategoriaOptions = [
   { value: "foto", label: "Foto" },
   { value: "relatorio", label: "Relatório" },
   { value: "aditivo", label: "Aditivo" },
+  { value: "folha_pagamento", label: "Folha de Pagamento" },
   { value: "outro", label: "Outro" },
 ] as const
 

@@ -10,11 +10,16 @@ import {
   medicaoStatusOptions,
   type MedicaoInput,
 } from "@/lib/validations/medicoes"
-import { useCreateMedicao, useUpdateMedicao, type Medicao } from "@/lib/queries/medicoes"
+import {
+  useCreateMedicao,
+  useUpdateMedicao,
+  useFecharFolhaMedicao,
+  type Medicao,
+} from "@/lib/queries/medicoes"
 import { useFuncionarios } from "@/lib/queries/funcionarios"
 import { useContrato } from "@/lib/queries/contratos"
 import { calcularContaDepositoVinculada, somarTotais } from "@/lib/calculo-folha"
-import { useTributos } from "@/hooks/use-tributos"
+import { useTributos, taxasParaQueryString } from "@/hooks/use-tributos"
 import { calcularResumoMedicao } from "@/lib/calculo-medicao"
 import { formatCurrencyBRL } from "@/lib/format"
 import { Button } from "@/components/ui/button"
@@ -97,6 +102,7 @@ export function MedicaoFormDialog({
   const [open, setOpen] = useState(false)
   const createMedicao = useCreateMedicao(contratoId)
   const updateMedicao = useUpdateMedicao(contratoId)
+  const fecharFolha = useFecharFolhaMedicao(contratoId)
   const { data: funcionarios } = useFuncionarios(contratoId)
   const { data: contrato } = useContrato(contratoId)
   const { taxas } = useTributos()
@@ -187,15 +193,35 @@ export function MedicaoFormDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [valeTransporte, valeRefeicao, resumo.valorAFaturar, resumo.valorLiquido, liquidoEmpregados, fgts, valorVinculado])
 
+  async function fecharFolhaSeNecessario(medicaoId: string) {
+    try {
+      await fecharFolha.mutateAsync({ medicaoId, taxasQuery: taxasParaQueryString(taxas) })
+      toast.success("Folha de Pagamento do mês salva para download")
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Não foi possível salvar a folha de pagamento"
+      )
+    }
+  }
+
   async function onSubmit(values: MedicaoInput) {
+    const estaFechando = values.status === "aprovada" || values.status === "paga"
     try {
       if (isEditing) {
-        await updateMedicao.mutateAsync({ id: medicao.id, input: values })
+        const atualizada = await updateMedicao.mutateAsync({ id: medicao.id, input: values })
         toast.success("Medição atualizada")
+        // Só salva a folha na primeira vez que a medição é fechada, para não
+        // gerar um snapshot novo a cada edição de uma medição já aprovada/paga.
+        if (estaFechando && !medicao.folha_documento_id && atualizada) {
+          await fecharFolhaSeNecessario(atualizada.id)
+        }
       } else {
         const criada = await createMedicao.mutateAsync(values)
         toast.success("Medição cadastrada")
-        if (criada) onCreated?.(criada)
+        if (criada) {
+          onCreated?.(criada)
+          if (estaFechando) await fecharFolhaSeNecessario(criada.id)
+        }
       }
       setOpen(false)
     } catch (error) {

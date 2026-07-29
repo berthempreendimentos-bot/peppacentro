@@ -8,11 +8,13 @@ import {
   MoreHorizontal,
   Pencil,
   Plus,
+  Receipt,
   Trash2,
 } from "lucide-react"
 import { toast } from "sonner"
 
 import { useMedicoes, useDeleteMedicao, type Medicao } from "@/lib/queries/medicoes"
+import { createClient } from "@/lib/supabase/client"
 import { medicaoStatusOptions } from "@/lib/validations/medicoes"
 import { formatCurrencyBRL, formatDate, formatDateShort } from "@/lib/format"
 import { MedicaoFormDialog } from "@/components/medicoes/medicao-form-dialog"
@@ -62,6 +64,27 @@ export function MedicoesList({ contratoId }: { contratoId: string }) {
 
   const proximoNumero = medicoes && medicoes.length > 0 ? medicoes[0].numero + 1 : 1
 
+  async function handleBaixarFolhaFechada(documentoId: string) {
+    try {
+      const supabase = createClient()
+      const { data: documento, error } = await supabase
+        .from("documentos")
+        .select("storage_path")
+        .eq("id", documentoId)
+        .single()
+      if (error) throw error
+      const { data: signed, error: signedError } = await supabase.storage
+        .from("contratos")
+        .createSignedUrl(documento.storage_path, 60)
+      if (signedError) throw signedError
+      window.open(signed.signedUrl, "_blank")
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Não foi possível baixar a folha de pagamento"
+      )
+    }
+  }
+
   async function handleDelete() {
     if (!paraExcluir) return
     try {
@@ -102,20 +125,21 @@ export function MedicoesList({ contratoId }: { contratoId: string }) {
               <TableHead className="w-10" />
               <TableHead className="w-10" />
               <TableHead className="w-10" />
+              <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading &&
               Array.from({ length: 3 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={10}>
+                  <TableCell colSpan={11}>
                     <Skeleton className="h-6 w-full" />
                   </TableCell>
                 </TableRow>
               ))}
             {!isLoading && medicoes?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={10} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={11} className="py-8 text-center text-muted-foreground">
                   Nenhuma medição cadastrada.
                 </TableCell>
               </TableRow>
@@ -155,6 +179,18 @@ export function MedicoesList({ contratoId }: { contratoId: string }) {
                   >
                     <Banknote className="size-4" />
                   </Button>
+                </TableCell>
+                <TableCell>
+                  {medicao.folha_documento_id && (
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      title="Baixar Folha de Pagamento do mês (salva ao fechar a medição)"
+                      onClick={() => handleBaixarFolhaFechada(medicao.folha_documento_id!)}
+                    >
+                      <Receipt className="size-4" />
+                    </Button>
+                  )}
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
