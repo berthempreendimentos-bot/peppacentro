@@ -67,57 +67,55 @@ export function ConfiguracaoTributosDialog() {
             Altere as porcentagens usadas no cálculo da folha. Estes valores ficarão salvos no seu navegador atual.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="fgts" className="text-right">
-              FGTS (%)
-            </Label>
+        <div className="grid grid-cols-2 gap-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="fgts">FGTS (%)</Label>
             <Input
               id="fgts"
               type="number"
               step="0.01"
               value={toDisplay(localTaxas.fgts)}
               onChange={(e) => handleChange("fgts", e.target.value)}
-              className="col-span-3"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="inssPatronal" className="text-right">
-              INSS Patronal (%)
-            </Label>
+          <div className="space-y-2">
+            <Label htmlFor="inssPatronal">INSS Patronal (%)</Label>
             <Input
               id="inssPatronal"
               type="number"
               step="0.01"
               value={toDisplay(localTaxas.inssPatronal)}
               onChange={(e) => handleChange("inssPatronal", e.target.value)}
-              className="col-span-3"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="rat" className="text-right">
-              RAT (%)
-            </Label>
+          <div className="space-y-2">
+            <Label htmlFor="rat">RAT (%)</Label>
             <Input
               id="rat"
               type="number"
               step="0.01"
               value={toDisplay(localTaxas.rat)}
               onChange={(e) => handleChange("rat", e.target.value)}
-              className="col-span-3"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="terceiros" className="text-right">
-              Terceiros (%)
-            </Label>
+          <div className="space-y-2">
+            <Label htmlFor="terceiros">Terceiros (%)</Label>
             <Input
               id="terceiros"
               type="number"
               step="0.01"
               value={toDisplay(localTaxas.terceiros)}
               onChange={(e) => handleChange("terceiros", e.target.value)}
-              className="col-span-3"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="descVa">Desc. VA (%)</Label>
+            <Input
+              id="descVa"
+              type="number"
+              step="0.01"
+              value={toDisplay(localTaxas.descVa)}
+              onChange={(e) => handleChange("descVa", e.target.value)}
             />
           </div>
         </div>

@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react"
-import { TAXA_FGTS, TAXA_INSS_PATRONAL, TAXA_RAT, TAXA_TERCEIROS } from "@/lib/calculo-folha"
+import { TAXA_FGTS, TAXA_INSS_PATRONAL, TAXA_RAT, TAXA_TERCEIROS, TAXA_DESC_VA } from "@/lib/calculo-folha"
 
 export type TaxasTributos = {
   fgts: number
   inssPatronal: number
   rat: number
   terceiros: number
+  descVa: number
 }
 
 const DEFAULT_TAXAS: TaxasTributos = {
@@ -13,6 +14,7 @@ const DEFAULT_TAXAS: TaxasTributos = {
   inssPatronal: TAXA_INSS_PATRONAL,
   rat: TAXA_RAT,
   terceiros: TAXA_TERCEIROS,
+  descVa: TAXA_DESC_VA,
 }
 
 export function useTributos() {
@@ -53,5 +55,6 @@ export function taxasParaQueryString(taxas: TaxasTributos): string {
     inssPatronal: String(taxas.inssPatronal),
     rat: String(taxas.rat),
     terceiros: String(taxas.terceiros),
+    descVa: String(taxas.descVa),
   }).toString()
 }

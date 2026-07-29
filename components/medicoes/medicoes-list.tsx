@@ -12,6 +12,7 @@ import {
   Trash2,
 } from "lucide-react"
 import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 
 import { useMedicoes, useDeleteMedicao, type Medicao } from "@/lib/queries/medicoes"
 import { createClient } from "@/lib/supabase/client"
@@ -19,6 +20,7 @@ import { medicaoStatusOptions } from "@/lib/validations/medicoes"
 import { formatCurrencyBRL, formatDate, formatDateShort } from "@/lib/format"
 import { MedicaoFormDialog } from "@/components/medicoes/medicao-form-dialog"
 import { LancarFinanceiroMedicaoDialog } from "@/components/medicoes/lancar-financeiro-medicao-dialog"
+import { useTributos, taxasParaQueryString } from "@/hooks/use-tributos"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -61,6 +63,7 @@ export function MedicoesList({ contratoId }: { contratoId: string }) {
   const deleteMedicao = useDeleteMedicao(contratoId)
   const [paraExcluir, setParaExcluir] = useState<Medicao | null>(null)
   const [paraLancar, setParaLancar] = useState<Medicao | null>(null)
+  const { taxas } = useTributos()
 
   const proximoNumero = medicoes && medicoes.length > 0 ? medicoes[0].numero + 1 : 1
 
@@ -75,9 +78,16 @@ export function MedicoesList({ contratoId }: { contratoId: string }) {
       if (error) throw error
       const { data: signed, error: signedError } = await supabase.storage
         .from("contratos")
-        .createSignedUrl(documento.storage_path, 60)
+        .createSignedUrl(documento.storage_path, 60, { download: true })
       if (signedError) throw signedError
-      window.open(signed.signedUrl, "_blank")
+      
+      const link = document.createElement('a')
+      link.href = signed.signedUrl
+      link.setAttribute('download', '')
+      link.target = '_blank' // fallback se não for download direto
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Não foi possível baixar a folha de pagamento"
@@ -159,14 +169,14 @@ export function MedicoesList({ contratoId }: { contratoId: string }) {
                 <TableCell>
                   <Button variant="ghost" size="icon-sm" title="Baixar Espelho de Medição (Excel)" asChild>
                     <a href={`/api/medicoes/${medicao.id}/excel`}>
-                      <FileSpreadsheet className="size-4" />
+                      <FileSpreadsheet className="size-4 text-green-600" />
                     </a>
                   </Button>
                 </TableCell>
                 <TableCell>
                   <Button variant="ghost" size="icon-sm" title="Baixar Espelho de Medição (PDF)" asChild>
                     <a href={`/api/medicoes/${medicao.id}/pdf`}>
-                      <FileText className="size-4" />
+                      <FileText className="size-4 text-red-500" />
                     </a>
                   </Button>
                 </TableCell>
@@ -177,18 +187,29 @@ export function MedicoesList({ contratoId }: { contratoId: string }) {
                     title="Lançar no financeiro (Contas a Receber/Pagar)"
                     onClick={() => setParaLancar(medicao)}
                   >
-                    <Banknote className="size-4" />
+                    <Banknote className="size-4 text-amber-500" />
                   </Button>
                 </TableCell>
                 <TableCell>
-                  {medicao.folha_documento_id && (
+                  {medicao.folha_documento_id ? (
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      title="Baixar Folha de Pagamento do mês (salva ao fechar a medição)"
+                      title="Baixar Folha de Pagamento do mês (fechada/salva)"
                       onClick={() => handleBaixarFolhaFechada(medicao.folha_documento_id!)}
                     >
-                      <Receipt className="size-4" />
+                      <Receipt className="size-4 text-blue-500" />
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      title="Baixar prévia da Folha de Pagamento do mês (ainda não fechada)"
+                      asChild
+                    >
+                      <a href={`/api/medicoes/${medicao.id}/folha-excel?${taxasParaQueryString(taxas)}`}>
+                        <Receipt className="size-4 text-slate-500" />
+                      </a>
                     </Button>
                   )}
                 </TableCell>

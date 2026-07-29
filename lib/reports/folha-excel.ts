@@ -90,7 +90,7 @@ function formatarPercentual(fracao: number): string {
 }
 
 function resolverTaxas(taxas?: TaxasTributos): TaxasTributos {
-  return taxas ?? { fgts: TAXA_FGTS, inssPatronal: TAXA_INSS_PATRONAL, rat: TAXA_RAT, terceiros: TAXA_TERCEIROS }
+  return taxas ?? { fgts: TAXA_FGTS, inssPatronal: TAXA_INSS_PATRONAL, rat: TAXA_RAT, terceiros: TAXA_TERCEIROS, descVa: TAXA_DESC_VA }
 }
 
 function formula(cell: ExcelJS.Cell, expressao: string, resultado: number) {
@@ -146,7 +146,7 @@ export function buildFolhaResumoSheet(
   const descontos: [string, number][] = [
     ["Faltas", totais.faltas ?? 0],
     ["Desconto VT (6%)", totais.descVt],
-    ["Desconto VA (10%)", totais.descVa],
+    [`Desconto VA (${formatarPercentual(taxasEfetivas.descVa)})`, totais.descVa],
     ["Desconto INSS Empregado", totais.inssEmpregadoValor],
   ]
 
@@ -446,7 +446,7 @@ export function buildFuncionariosSheet(
     { header: "Desc. VT (6%)", width: 13 },
     { header: "30% Periculosidade", width: 15 },
     { header: "INSS Empregado", width: 14 },
-    { header: "Desc. VA (10%)", width: 13 },
+    { header: `Desc. VA (${formatarPercentual(taxasEfetivas.descVa)})`, width: 13 },
     { header: "Líquido do Empregado", width: 16 },
     { header: `FGTS ${formatarPercentual(taxasEfetivas.fgts)}`, width: 12 },
     { header: `INSS Patronal ${formatarPercentual(taxasEfetivas.inssPatronal)}`, width: 15 },

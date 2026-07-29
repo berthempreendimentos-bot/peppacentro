@@ -120,7 +120,7 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
             <TableHead className="sticky top-0 z-20 bg-background text-right">30% Periculosidade</TableHead>
             <TableHead className="sticky top-0 z-20 bg-background text-right">Insalubridade</TableHead>
             <TableHead className="sticky top-0 z-20 bg-background text-right">INSS Empregado</TableHead>
-            <TableHead className="sticky top-0 z-20 bg-background text-right">Desc. VA (10%)</TableHead>
+            <TableHead className="sticky top-0 z-20 bg-background text-right">Desc. VA ({(taxas.descVa * 100).toFixed(1).replace(".0", "")}%)</TableHead>
             <TableHead className="sticky top-0 z-20 bg-background text-right">Líquido do empregado</TableHead>
             <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">FGTS {(taxas.fgts * 100).toFixed(1).replace(".0", "")}%</TableHead>
             <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">INSS Patronal {(taxas.inssPatronal * 100).toFixed(1).replace(".0", "")}%</TableHead>

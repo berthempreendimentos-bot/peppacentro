@@ -76,10 +76,11 @@ export type TaxasTributos = {
   inssPatronal: number
   rat: number
   terceiros: number
+  descVa: number
 }
 
 export function calcularEncargos(funcionario: FuncionarioBase, taxas?: TaxasTributos) {
-  const t = taxas ?? { fgts: TAXA_FGTS, inssPatronal: TAXA_INSS_PATRONAL, rat: TAXA_RAT, terceiros: TAXA_TERCEIROS }
+  const t = taxas ?? { fgts: TAXA_FGTS, inssPatronal: TAXA_INSS_PATRONAL, rat: TAXA_RAT, terceiros: TAXA_TERCEIROS, descVa: TAXA_DESC_VA }
   
   const faltas = funcionario.faltas ?? 0
   const reembolso = funcionario.reembolso ?? 0
@@ -91,7 +92,7 @@ export function calcularEncargos(funcionario: FuncionarioBase, taxas?: TaxasTrib
     : 0
   const insalubridadeValor = TAXA_INSALUBRIDADE[funcionario.grau_insalubridade] * SALARIO_MINIMO
   const descVt = funcionario.vt_informado > 0 ? salarioLiquidoBase * TAXA_DESC_VT : 0
-  const descVa = funcionario.vr_informado * TAXA_DESC_VA
+  const descVa = funcionario.vr_informado * t.descVa
   const baseInss = salarioLiquidoBase + periculosidadeValor
   const inssEmpregadoValor = calcularInssEmpregado(baseInss)
   const inssAliquotaMarginal = obterAliquotaInssMarginal(baseInss)

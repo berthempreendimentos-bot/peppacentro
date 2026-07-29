@@ -18,10 +18,11 @@ export function lerTaxasDaUrl(searchParams: URLSearchParams): TaxasTributos | un
   const inssPatronal = lerNumero(searchParams, "inssPatronal")
   const rat = lerNumero(searchParams, "rat")
   const terceiros = lerNumero(searchParams, "terceiros")
+  const descVa = lerNumero(searchParams, "descVa")
 
-  if (fgts === null || inssPatronal === null || rat === null || terceiros === null) {
+  if (fgts === null || inssPatronal === null || rat === null || terceiros === null || descVa === null) {
     return undefined
   }
 
-  return { fgts, inssPatronal, rat, terceiros }
+  return { fgts, inssPatronal, rat, terceiros, descVa }
 }

@@ -49,13 +49,13 @@ export function PlanilhaCustoTab({ contratoId }: { contratoId: string }) {
     if (!postos || !ferramentas || !servicos) return
 
     updateValor(
-      { id: contratoId, valor: totalAnual },
+      { id: contratoId, valor: totalMensal },
       {
         onError: () => toast.error("Erro ao atualizar o valor do contrato automaticamente.")
       }
     )
   }, [
-    totalAnual,
+    totalMensal,
     contratoId,
     carregandoPostos,
     carregandoFerramentas,
