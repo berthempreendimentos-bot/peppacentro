@@ -5,12 +5,15 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 
+import { Loader2 } from "lucide-react"
+
 import { fornecedorSchema, type FornecedorInput } from "@/lib/validations/fornecedores"
 import {
   useCreateFornecedor,
   useUpdateFornecedor,
   type Fornecedor,
 } from "@/lib/queries/fornecedores"
+import type { EmpresaCnpj } from "@/lib/cnpj"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -49,6 +52,7 @@ export function FornecedorFormDialog({
   fornecedor?: Fornecedor
 }) {
   const [open, setOpen] = useState(false)
+  const [buscandoCnpj, setBuscandoCnpj] = useState(false)
   const createFornecedor = useCreateFornecedor()
   const updateFornecedor = useUpdateFornecedor()
   const isEditing = !!fornecedor
@@ -75,6 +79,32 @@ export function FornecedorFormDialog({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, fornecedor])
+
+  async function handleCnpjBlur(valor: string) {
+    const digitos = valor.replace(/\D/g, "")
+    if (digitos.length !== 14 || isEditing) return
+
+    setBuscandoCnpj(true)
+    try {
+      const res = await fetch(`/api/cnpj?cnpj=${digitos}`)
+      if (!res.ok) {
+        toast.error("CNPJ não encontrado na Receita Federal")
+        return
+      }
+      const { empresa }: { empresa: EmpresaCnpj } = await res.json()
+      if (!form.getValues("nome")) {
+        form.setValue("nome", empresa.nomeFantasia || empresa.razaoSocial)
+      }
+      if (!form.getValues("endereco")) {
+        form.setValue("endereco", empresa.endereco ?? "")
+      }
+      toast.success("Dados da empresa preenchidos automaticamente")
+    } catch {
+      toast.error("Não foi possível consultar o CNPJ")
+    } finally {
+      setBuscandoCnpj(false)
+    }
+  }
 
   async function onSubmit(values: FornecedorInput) {
     try {
@@ -125,7 +155,19 @@ export function FornecedorFormDialog({
                 <FormItem>
                   <FormLabel>CPF/CNPJ</FormLabel>
                   <FormControl>
-                    <Input placeholder="Somente números" {...field} />
+                    <div className="relative">
+                      <Input
+                        placeholder="Somente números"
+                        {...field}
+                        onBlur={(e) => {
+                          field.onBlur()
+                          handleCnpjBlur(e.target.value)
+                        }}
+                      />
+                      {buscandoCnpj && (
+                        <Loader2 className="absolute top-1/2 right-2 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+                      )}
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
