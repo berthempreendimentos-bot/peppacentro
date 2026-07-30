@@ -5,8 +5,11 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 
+import { Loader2 } from "lucide-react"
+
 import { clienteSchema, type ClienteInput } from "@/lib/validations/clientes"
 import { useCreateCliente, useUpdateCliente, type Cliente } from "@/lib/queries/clientes"
+import type { EmpresaCnpj } from "@/lib/cnpj"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -55,6 +58,7 @@ export function ClienteFormDialog({
   cliente?: Cliente
 }) {
   const [open, setOpen] = useState(false)
+  const [buscandoCnpj, setBuscandoCnpj] = useState(false)
   const createCliente = useCreateCliente()
   const updateCliente = useUpdateCliente()
   const isEditing = !!cliente
@@ -84,6 +88,33 @@ export function ClienteFormDialog({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, cliente])
+
+  async function handleCnpjBlur(valor: string) {
+    const digitos = valor.replace(/\D/g, "")
+    if (digitos.length !== 14 || isEditing) return
+
+    setBuscandoCnpj(true)
+    try {
+      const res = await fetch(`/api/cnpj?cnpj=${digitos}`)
+      if (!res.ok) {
+        toast.error("CNPJ não encontrado na Receita Federal")
+        return
+      }
+      const { empresa }: { empresa: EmpresaCnpj } = await res.json()
+      form.setValue("tipo_pessoa", "PJ")
+      if (!form.getValues("nome")) {
+        form.setValue("nome", empresa.nomeFantasia || empresa.razaoSocial)
+      }
+      if (!form.getValues("endereco")) {
+        form.setValue("endereco", empresa.endereco ?? "")
+      }
+      toast.success("Dados da empresa preenchidos automaticamente")
+    } catch {
+      toast.error("Não foi possível consultar o CNPJ")
+    } finally {
+      setBuscandoCnpj(false)
+    }
+  }
 
   async function onSubmit(values: ClienteInput) {
     try {
@@ -118,6 +149,31 @@ export function ClienteFormDialog({
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
             <FormField
               control={form.control}
+              name="cpf_cnpj"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>CPF/CNPJ</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input
+                        placeholder="Somente números"
+                        {...field}
+                        onBlur={(e) => {
+                          field.onBlur()
+                          handleCnpjBlur(e.target.value)
+                        }}
+                      />
+                      {buscandoCnpj && (
+                        <Loader2 className="absolute top-1/2 right-2 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+                      )}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="tipo_pessoa"
               render={({ field }) => (
                 <FormItem>
@@ -145,19 +201,6 @@ export function ClienteFormDialog({
                   <FormLabel>Nome</FormLabel>
                   <FormControl>
                     <Input placeholder="Razão social ou nome completo" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="cpf_cnpj"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>CPF/CNPJ</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Somente números" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
