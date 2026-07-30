@@ -59,7 +59,7 @@ export function useOcorrenciasDoMes(contratoId: string, mesReferencia: string) {
 export function useCreateOcorrencia(funcionarioId: string, contratoId: string, mesReferencia: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (input: { tipo: "falta" | "reembolso"; valor: number; descricao: string }) => {
+    mutationFn: async (input: { tipo: "falta" | "reembolso" | "aso"; valor: number; descricao: string }) => {
       const supabase = createClient()
       const {
         data: { user },
@@ -95,6 +95,35 @@ export function useDeleteOcorrencia(funcionarioId: string, contratoId: string, m
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: OCORRENCIAS_QUERY_KEY(funcionarioId, mesReferencia) })
+      queryClient.invalidateQueries({ queryKey: OCORRENCIAS_DO_MES_QUERY_KEY(contratoId, mesReferencia) })
+      queryClient.invalidateQueries({ queryKey: FUNCIONARIOS_QUERY_KEY(contratoId) })
+    },
+  })
+}
+
+export function useImportOcorrenciasAso(contratoId: string, mesReferencia: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (itens: { funcionarioId: string; valor: number }[]) => {
+      if (itens.length === 0) return
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      const { error } = await supabase.from("ocorrencias_funcionarios").insert(
+        itens.map((item) => ({
+          funcionario_id: item.funcionarioId,
+          tipo: "aso" as const,
+          valor: item.valor,
+          descricao: "Atestado de Saúde Ocupacional (ASO)",
+          mes_referencia: mesReferencia,
+          created_by: user?.id,
+        }))
+      )
+      if (error) throw error
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: OCORRENCIAS_DO_MES_QUERY_KEY(contratoId, mesReferencia) })
       queryClient.invalidateQueries({ queryKey: FUNCIONARIOS_QUERY_KEY(contratoId) })
     },

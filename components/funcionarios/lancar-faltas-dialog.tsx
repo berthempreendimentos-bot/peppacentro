@@ -8,12 +8,13 @@ import {
   useDeleteOcorrenciaDoMes,
   useOcorrenciasDoMes,
 } from "@/lib/queries/ocorrencias"
+import { ImportarAsoDialog } from "@/components/funcionarios/importar-aso-dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CurrencyInput } from "@/components/ui/currency-input"
 import { Textarea } from "@/components/ui/textarea"
 import { formatCurrencyBRL } from "@/lib/format"
-import { Check, ChevronsUpDown, Trash2 } from "lucide-react"
+import { Check, ChevronsUpDown, Trash2, Upload } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -52,6 +53,18 @@ import {
 } from "@/components/ui/command"
 import { cn } from "@/lib/utils"
 
+const TIPO_LABEL: Record<"falta" | "reembolso" | "aso", string> = {
+  falta: "Falta",
+  reembolso: "Reembolso",
+  aso: "ASO",
+}
+
+const TIPO_CLASS: Record<"falta" | "reembolso" | "aso", string> = {
+  falta: "bg-destructive/10 text-destructive",
+  reembolso: "bg-primary/10 text-primary",
+  aso: "bg-amber-500/10 text-amber-600",
+}
+
 function getMesAtual() {
   const d = new Date()
   const m = (d.getMonth() + 1).toString().padStart(2, "0")
@@ -72,7 +85,7 @@ export function LancarFaltasDialog({
   const [comboboxOpen, setComboboxOpen] = useState(false)
   const [selectedFuncionarioId, setSelectedFuncionarioId] = useState<string>("")
   const [mesReferencia, setMesReferencia] = useState(getMesAtual())
-  const [tipo, setTipo] = useState<"falta" | "reembolso">("falta")
+  const [tipo, setTipo] = useState<"falta" | "reembolso" | "aso">("falta")
   const [valor, setValor] = useState(0)
   const [descricao, setDescricao] = useState("")
 
@@ -199,13 +212,17 @@ export function LancarFaltasDialog({
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium">Tipo</label>
-                <Select value={tipo} onValueChange={(v: "falta" | "reembolso") => setTipo(v)}>
+                <Select
+                  value={tipo}
+                  onValueChange={(v: "falta" | "reembolso" | "aso") => setTipo(v)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="falta">Falta (Desconto)</SelectItem>
                     <SelectItem value="reembolso">Reembolso (Acréscimo)</SelectItem>
+                    <SelectItem value="aso">Reembolso de ASO (Acréscimo)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -225,13 +242,23 @@ export function LancarFaltasDialog({
               />
             </div>
 
-            <Button
-              className="mt-2"
-              onClick={handleAdd}
-              disabled={createOcorrencia.isPending || !selectedFuncionarioId}
-            >
-              {createOcorrencia.isPending ? "Adicionando..." : "Adicionar Lançamento"}
-            </Button>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Button
+                onClick={handleAdd}
+                disabled={createOcorrencia.isPending || !selectedFuncionarioId}
+              >
+                {createOcorrencia.isPending ? "Adicionando..." : "Adicionar Lançamento"}
+              </Button>
+              <ImportarAsoDialog
+                contratoId={contratoId}
+                mesReferencia={mesReferencia}
+                trigger={
+                  <Button variant="outline">
+                    <Upload className="size-4" /> Importar ASO
+                  </Button>
+                }
+              />
+            </div>
           </div>
 
           {/* Lançamentos de todos os funcionários neste mês de referência */}
@@ -275,13 +302,9 @@ export function LancarFaltasDialog({
                         </TableCell>
                         <TableCell>
                           <span
-                            className={`rounded px-2 py-1 text-xs font-semibold ${
-                              oc.tipo === "falta"
-                                ? "bg-destructive/10 text-destructive"
-                                : "bg-primary/10 text-primary"
-                            }`}
+                            className={`rounded px-2 py-1 text-xs font-semibold ${TIPO_CLASS[oc.tipo]}`}
                           >
-                            {oc.tipo === "falta" ? "Falta" : "Reembolso"}
+                            {TIPO_LABEL[oc.tipo]}
                           </span>
                         </TableCell>
                         <TableCell className="max-w-[200px] truncate" title={oc.descricao}>

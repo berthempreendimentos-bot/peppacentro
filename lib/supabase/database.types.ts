@@ -295,7 +295,7 @@ export interface Database {
         Row: {
           id: string
           funcionario_id: string
-          tipo: "falta" | "reembolso"
+          tipo: "falta" | "reembolso" | "aso"
           valor: number
           descricao: string
           mes_referencia: string
@@ -304,7 +304,7 @@ export interface Database {
         }
         Insert: Partial<Database["public"]["Tables"]["ocorrencias_funcionarios"]["Row"]> & {
           funcionario_id: string
-          tipo: "falta" | "reembolso"
+          tipo: "falta" | "reembolso" | "aso"
           valor: number
           descricao: string
           mes_referencia?: string
