@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 
-import { Loader2 } from "lucide-react"
+import { Loader2, Search } from "lucide-react"
 
 import { fornecedorSchema, type FornecedorInput } from "@/lib/validations/fornecedores"
 import {
@@ -80,9 +80,13 @@ export function FornecedorFormDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, fornecedor])
 
-  async function handleCnpjBlur(valor: string) {
+  async function buscarDadosCnpj(valor: string, { forcar = false }: { forcar?: boolean } = {}) {
     const digitos = valor.replace(/\D/g, "")
-    if (digitos.length !== 14 || isEditing) return
+    if (digitos.length !== 14) {
+      if (forcar) toast.error("Informe um CNPJ com 14 dígitos")
+      return
+    }
+    if (!forcar && isEditing) return
 
     setBuscandoCnpj(true)
     try {
@@ -92,13 +96,13 @@ export function FornecedorFormDialog({
         return
       }
       const { empresa }: { empresa: EmpresaCnpj } = await res.json()
-      if (!form.getValues("nome")) {
+      if (forcar || !form.getValues("nome")) {
         form.setValue("nome", empresa.nomeFantasia || empresa.razaoSocial)
       }
-      if (!form.getValues("endereco")) {
+      if (forcar || !form.getValues("endereco")) {
         form.setValue("endereco", empresa.endereco ?? "")
       }
-      toast.success("Dados da empresa preenchidos automaticamente")
+      toast.success("Dados da empresa carregados no cadastro")
     } catch {
       toast.error("Não foi possível consultar o CNPJ")
     } finally {
@@ -137,37 +141,49 @@ export function FornecedorFormDialog({
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
             <FormField
               control={form.control}
-              name="nome"
+              name="cpf_cnpj"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nome</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Razão social ou nome completo" {...field} />
-                  </FormControl>
+                  <FormLabel>CPF/CNPJ</FormLabel>
+                  <div className="flex gap-2">
+                    <FormControl>
+                      <div className="relative flex-1">
+                        <Input
+                          placeholder="Somente números"
+                          {...field}
+                          onBlur={(e) => {
+                            field.onBlur()
+                            buscarDadosCnpj(e.target.value)
+                          }}
+                        />
+                        {buscandoCnpj && (
+                          <Loader2 className="absolute top-1/2 right-2 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+                        )}
+                      </div>
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      title="Buscar dados do CNPJ"
+                      disabled={buscandoCnpj}
+                      onClick={() => buscarDadosCnpj(field.value ?? "", { forcar: true })}
+                    >
+                      <Search className="size-4" />
+                    </Button>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <FormField
               control={form.control}
-              name="cpf_cnpj"
+              name="nome"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>CPF/CNPJ</FormLabel>
+                  <FormLabel>Nome</FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <Input
-                        placeholder="Somente números"
-                        {...field}
-                        onBlur={(e) => {
-                          field.onBlur()
-                          handleCnpjBlur(e.target.value)
-                        }}
-                      />
-                      {buscandoCnpj && (
-                        <Loader2 className="absolute top-1/2 right-2 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
-                      )}
-                    </div>
+                    <Input placeholder="Razão social ou nome completo" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
