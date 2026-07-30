@@ -502,7 +502,7 @@ export function buildFuncionariosSheet(
     const r = row.number
     const baseStr = `MAX(0,E${r}-F${r})`
     formula(row.getCell(10), `IF(H${r}>0,${baseStr}*${TAXA_DESC_VT},0)`, e.descVt)
-    formula(row.getCell(13), `I${r}*${TAXA_DESC_VA}`, e.descVa)
+    formula(row.getCell(13), `I${r}*${taxasEfetivas.descVa}`, e.descVa)
     formula(row.getCell(14), `${baseStr}-J${r}-L${r}-M${r}+G${r}`, e.liquido)
     formula(row.getCell(15), `(${baseStr}+K${r})*${taxasEfetivas.fgts}`, e.fgts)
     formula(row.getCell(16), `(${baseStr}+K${r})*${taxasEfetivas.inssPatronal}`, e.inssPatronal)
