@@ -396,7 +396,13 @@ export function LancamentoFormDialog({
                   <FormLabel>Categoria</FormLabel>
                   <Select
                     value={field.value || "none"}
-                    onValueChange={(v) => field.onChange(v === "none" ? "" : v)}
+                    onValueChange={(v) => {
+                      if (v === "new") {
+                        setOpenNovaCat(true)
+                      } else {
+                        field.onChange(v === "none" ? "" : v)
+                      }
+                    }}
                   >
                     <FormControl>
                       <SelectTrigger className="w-full">
@@ -410,20 +416,9 @@ export function LancamentoFormDialog({
                           {c.nome}
                         </SelectItem>
                       ))}
-                      <div className="p-2 pb-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="w-full justify-start text-primary"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            setOpenNovaCat(true)
-                          }}
-                        >
-                          + Criar nova
-                        </Button>
-                      </div>
+                      <SelectItem value="new" className="text-primary font-medium cursor-pointer">
+                        + Criar nova
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -439,7 +434,13 @@ export function LancamentoFormDialog({
                     <FormLabel>Fornecedor</FormLabel>
                     <Select
                       value={field.value || "none"}
-                      onValueChange={(v) => field.onChange(v === "none" ? "" : v)}
+                      onValueChange={(v) => {
+                        if (v === "new") {
+                          setOpenNovoForn(true)
+                        } else {
+                          field.onChange(v === "none" ? "" : v)
+                        }
+                      }}
                     >
                       <FormControl>
                         <SelectTrigger className="w-full">
@@ -453,20 +454,9 @@ export function LancamentoFormDialog({
                             {f.nome}
                           </SelectItem>
                         ))}
-                        <div className="p-2 pb-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-start text-primary"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              setOpenNovoForn(true)
-                            }}
-                          >
-                            + Criar novo
-                          </Button>
-                        </div>
+                        <SelectItem value="new" className="text-primary font-medium cursor-pointer">
+                          + Criar novo
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -481,7 +471,13 @@ export function LancamentoFormDialog({
                     <FormLabel>Centro de custo</FormLabel>
                     <Select
                       value={field.value || "none"}
-                      onValueChange={(v) => field.onChange(v === "none" ? "" : v)}
+                      onValueChange={(v) => {
+                        if (v === "new") {
+                          setOpenNovoCentro(true)
+                        } else {
+                          field.onChange(v === "none" ? "" : v)
+                        }
+                      }}
                     >
                       <FormControl>
                         <SelectTrigger className="w-full">
@@ -495,20 +491,9 @@ export function LancamentoFormDialog({
                             {cc.nome}
                           </SelectItem>
                         ))}
-                        <div className="p-2 pb-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-start text-primary"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              setOpenNovoCentro(true)
-                            }}
-                          >
-                            + Criar novo
-                          </Button>
-                        </div>
+                        <SelectItem value="new" className="text-primary font-medium cursor-pointer">
+                          + Criar novo
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
