@@ -110,7 +110,7 @@ export function useImportFuncionarios(contratoId: string) {
   return useMutation({
     mutationFn: async (funcionarios: FuncionarioImportado[]) => {
       const selecionados = funcionarios.filter((f) => f.incluir)
-      if (selecionados.length === 0) return { importados: 0, duplicados: 0, total: 0 }
+      if (selecionados.length === 0) return { importados: 0, atualizados: 0, total: 0 }
       const supabase = createClient()
       const {
         data: { user },
@@ -121,49 +121,80 @@ export function useImportFuncionarios(contratoId: string) {
         .select("id, nome, cpf")
         .eq("contrato_id", contratoId)
 
-      const existentesMap = new Map()
-      if (existentes) {
-        existentes.forEach((e) => {
-          existentesMap.set(e.nome.toLowerCase().trim(), true)
-          if (e.cpf) existentesMap.set(e.cpf, true)
-        })
-      }
+      const idPorNome = new Map<string, string>()
+      const idPorCpf = new Map<string, string>()
+      existentes?.forEach((e) => {
+        idPorNome.set(e.nome.toLowerCase().trim(), e.id)
+        if (e.cpf) idPorCpf.set(e.cpf, e.id)
+      })
 
-      const selecionadosUnicos = []
+      // Linhas que batem com um funcionário já cadastrado (por nome ou CPF)
+      // atualizam os dados existentes em vez de criar duplicado. Linhas
+      // repetidas dentro da própria planilha (sem correspondente no banco)
+      // são reservadas na primeira ocorrência para não virar dois cadastros.
+      const reservadoNome = new Set<string>()
+      const reservadoCpf = new Set<string>()
+      const novos: FuncionarioImportado[] = []
+      const atualizacoes: { id: string; f: FuncionarioImportado }[] = []
+
       for (const f of selecionados) {
         const nomeKey = f.nome.toLowerCase().trim()
-        if (existentesMap.has(nomeKey) || (f.cpf && existentesMap.has(f.cpf))) {
+        const idExistente = (f.cpf && idPorCpf.get(f.cpf)) || idPorNome.get(nomeKey)
+        if (idExistente) {
+          atualizacoes.push({ id: idExistente, f })
           continue
         }
-        existentesMap.set(nomeKey, true)
-        if (f.cpf) existentesMap.set(f.cpf, true)
-        selecionadosUnicos.push(f)
+        if (reservadoNome.has(nomeKey) || (f.cpf && reservadoCpf.has(f.cpf))) {
+          continue
+        }
+        reservadoNome.add(nomeKey)
+        if (f.cpf) reservadoCpf.add(f.cpf)
+        novos.push(f)
       }
 
-      const duplicados = selecionados.length - selecionadosUnicos.length
-      if (selecionadosUnicos.length === 0) {
-        return { importados: 0, duplicados, total: selecionados.length }
+      if (novos.length > 0) {
+        const { error } = await supabase.from("funcionarios").insert(
+          novos.map((f) => ({
+            contrato_id: contratoId,
+            nome: f.nome,
+            matricula: f.matricula || null,
+            cpf: f.cpf || null,
+            funcao: f.funcao || null,
+            data_admissao: f.dataAdmissao || null,
+            salario_base: f.salarioBase,
+            vt_informado: f.vtInformado,
+            vr_informado: f.vrInformado,
+            reembolso_creche: f.reembolsoCreche || 0,
+            recebe_periculosidade: false,
+            grau_insalubridade: "nenhum" as const,
+            created_by: user?.id,
+          }))
+        )
+        if (error) throw error
       }
 
-      const { error } = await supabase.from("funcionarios").insert(
-        selecionadosUnicos.map((f) => ({
-          contrato_id: contratoId,
-          nome: f.nome,
-          matricula: f.matricula || null,
-          cpf: f.cpf || null,
-          funcao: f.funcao || null,
-          data_admissao: f.dataAdmissao || null,
-          salario_base: f.salarioBase,
-          vt_informado: f.vtInformado,
-          vr_informado: f.vrInformado,
-          reembolso_creche: f.reembolsoCreche || 0,
-          recebe_periculosidade: false,
-          grau_insalubridade: "nenhum" as const,
-          created_by: user?.id,
-        }))
-      )
-      if (error) throw error
-      return { importados: selecionadosUnicos.length, duplicados, total: selecionados.length }
+      if (atualizacoes.length > 0) {
+        const resultados = await Promise.all(
+          atualizacoes.map(({ id, f }) =>
+            supabase
+              .from("funcionarios")
+              .update({
+                matricula: f.matricula || null,
+                funcao: f.funcao || null,
+                data_admissao: f.dataAdmissao || null,
+                salario_base: f.salarioBase,
+                vt_informado: f.vtInformado,
+                vr_informado: f.vrInformado,
+                reembolso_creche: f.reembolsoCreche || 0,
+              })
+              .eq("id", id)
+          )
+        )
+        const erroAtualizacao = resultados.find((r) => r.error)?.error
+        if (erroAtualizacao) throw erroAtualizacao
+      }
+
+      return { importados: novos.length, atualizados: atualizacoes.length, total: selecionados.length }
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY(contratoId) }),
   })

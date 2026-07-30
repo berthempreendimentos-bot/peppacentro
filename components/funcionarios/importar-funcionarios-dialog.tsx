@@ -83,9 +83,9 @@ export function ImportarFuncionariosDialog({
   async function handleConfirmar() {
     try {
       const resultado = await importarFuncionarios.mutateAsync(funcionarios)
-      if (resultado && resultado.duplicados > 0) {
+      if (resultado && resultado.atualizados > 0) {
         toast.success(
-          `${resultado.importados} funcionário(s) importado(s) — ${resultado.duplicados} já cadastrado(s) foram ignorados`
+          `${resultado.importados} funcionário(s) novo(s) importado(s) — ${resultado.atualizados} já cadastrado(s) tiveram os dados atualizados`
         )
       } else {
         toast.success(`${resultado?.importados ?? 0} funcionário(s) importado(s) com sucesso`)
