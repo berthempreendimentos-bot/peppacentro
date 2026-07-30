@@ -67,12 +67,18 @@ export function ContratosTable() {
   const [situacaoFiltro, setSituacaoFiltro] = useState("todos")
   const [paraExcluir, setParaExcluir] = useState<Contrato | null>(null)
 
-  const filtrados = (contratos ?? []).filter((c) => {
-    if (situacaoFiltro !== "todos" && c.situacao !== situacaoFiltro) return false
-    return `${c.numero} ${c.objeto} ${c.clientes?.nome ?? ""}`
-      .toLowerCase()
-      .includes(search.toLowerCase())
-  })
+  const filtrados = (contratos ?? [])
+    .filter((c) => {
+      if (situacaoFiltro !== "todos" && c.situacao !== situacaoFiltro) return false
+      return `${c.numero} ${c.objeto} ${c.clientes?.nome ?? ""}`
+        .toLowerCase()
+        .includes(search.toLowerCase())
+    })
+    .sort((a, b) => {
+      if (a.situacao === "em_andamento" && b.situacao !== "em_andamento") return -1
+      if (b.situacao === "em_andamento" && a.situacao !== "em_andamento") return 1
+      return 0
+    })
 
   async function handleDelete() {
     if (!paraExcluir) return
