@@ -82,17 +82,23 @@ export type TaxasTributos = {
 export function calcularEncargos(funcionario: FuncionarioBase, taxas?: TaxasTributos) {
   const t = taxas ?? { fgts: TAXA_FGTS, inssPatronal: TAXA_INSS_PATRONAL, rat: TAXA_RAT, terceiros: TAXA_TERCEIROS, descVa: TAXA_DESC_VA }
   
+  const salarioBase = funcionario.salario_base ?? 0
+  const vtInformado = funcionario.vt_informado ?? 0
+  const vrInformado = funcionario.vr_informado ?? 0
   const faltas = funcionario.faltas ?? 0
   const reembolso = funcionario.reembolso ?? 0
   const reembolsoCreche = funcionario.reembolso_creche ?? 0
-  const salarioLiquidoBase = Math.max(0, funcionario.salario_base - faltas)
+  const recebePericulosidade = funcionario.recebe_periculosidade ?? false
+  const grauInsalubridade = funcionario.grau_insalubridade ?? "nenhum"
+  
+  const salarioLiquidoBase = Math.max(0, salarioBase - faltas)
 
-  const periculosidadeValor = funcionario.recebe_periculosidade
+  const periculosidadeValor = recebePericulosidade
     ? salarioLiquidoBase * TAXA_PERICULOSIDADE
     : 0
-  const insalubridadeValor = TAXA_INSALUBRIDADE[funcionario.grau_insalubridade] * SALARIO_MINIMO
-  const descVt = funcionario.vt_informado > 0 ? salarioLiquidoBase * TAXA_DESC_VT : 0
-  const descVa = funcionario.vr_informado * t.descVa
+  const insalubridadeValor = (TAXA_INSALUBRIDADE[grauInsalubridade] ?? 0) * SALARIO_MINIMO
+  const descVt = vtInformado > 0 ? salarioLiquidoBase * TAXA_DESC_VT : 0
+  const descVa = vrInformado * t.descVa
   const baseInss = salarioLiquidoBase + periculosidadeValor
   const inssEmpregadoValor = calcularInssEmpregado(baseInss)
   const inssAliquotaMarginal = obterAliquotaInssMarginal(baseInss)
@@ -107,7 +113,7 @@ export function calcularEncargos(funcionario: FuncionarioBase, taxas?: TaxasTrib
 
   const totalEncargos = fgts + inssPatronal + rat + terceiros
   const custoEmpresa =
-    salarioLiquidoBase + funcionario.vt_informado + funcionario.vr_informado + totalEncargos + reembolso + reembolsoCreche
+    salarioLiquidoBase + vtInformado + vrInformado + totalEncargos + reembolso + reembolsoCreche
 
   const remuneracaoTotal = salarioLiquidoBase + periculosidadeValor + insalubridadeValor
 
@@ -159,12 +165,12 @@ export function somarTotais(funcionarios: FuncionarioBase[], taxas?: TaxasTribut
     const encargos = calcularEncargos(funcionario, taxas)
     return {
       quantidade: acc.quantidade + 1,
-      salarioBase: acc.salarioBase + funcionario.salario_base,
+      salarioBase: acc.salarioBase + (funcionario.salario_base ?? 0),
       faltas: acc.faltas + (funcionario.faltas ?? 0),
       reembolso: acc.reembolso + (funcionario.reembolso ?? 0),
       reembolso_creche: acc.reembolso_creche + (funcionario.reembolso_creche ?? 0),
-      vtInformado: acc.vtInformado + funcionario.vt_informado,
-      vrInformado: acc.vrInformado + funcionario.vr_informado,
+      vtInformado: acc.vtInformado + (funcionario.vt_informado ?? 0),
+      vrInformado: acc.vrInformado + (funcionario.vr_informado ?? 0),
       descVt: acc.descVt + encargos.descVt,
       periculosidadeValor: acc.periculosidadeValor + encargos.periculosidadeValor,
       insalubridadeValor: acc.insalubridadeValor + encargos.insalubridadeValor,

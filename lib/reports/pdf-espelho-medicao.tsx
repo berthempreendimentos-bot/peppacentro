@@ -185,13 +185,15 @@ export function EspelhoMedicaoPdfDocument({
     `Alimentação (Vale Refeição) aplicado: ${formatCurrencyBRL(valeRefeicao)}. Vale Transporte: ${formatCurrencyBRL(valeTransporte)}. ` +
     `Base de cálculo para retenção do INSS: ${formatCurrencyBRL(maoDeObra)} × 11% = ${formatCurrencyBRL(retencaoInss)}.`
 
+  const taxaIrrf = material > 0 ? 0.012 : 0.048
+
   const breakdown: [string, number][] = [
     ["MÃO DE OBRA", maoDeObra],
     ["VALE TRANSPORTE", valeTransporte],
     ["VALE REFEIÇÃO", valeRefeicao],
     ["MATERIAL", material],
     ["RETENÇÃO INSS (11%)", retencaoInss],
-    ["IRRF (1,20%)", irrf],
+    [`IRRF (${(taxaIrrf * 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}%)`, irrf],
     ["PIS (0,65%)", pis],
     ["COFINS (3%)", cofins],
     ["CSLL (1,00%)", csll],

@@ -1,6 +1,6 @@
 import ExcelJS from "exceljs"
 
-import { TAXA_COFINS, TAXA_CSLL, TAXA_IRRF, TAXA_PIS, TAXA_RETENCAO_INSS } from "@/lib/calculo-medicao"
+import { TAXA_COFINS, TAXA_CSLL, TAXA_IRRF, TAXA_IRRF_SEM_MATERIAL, TAXA_PIS, TAXA_RETENCAO_INSS } from "@/lib/calculo-medicao"
 import { formatCpfCnpj, formatDate } from "@/lib/format"
 import { valorPorExtenso } from "@/lib/numero-por-extenso"
 
@@ -192,7 +192,8 @@ export async function buildEspelhoMedicaoWorkbook({
 
   const baseRetencaoRef = `B${rowMaoDeObra.number}`
   const retencaoInss = maoDeObra * TAXA_RETENCAO_INSS
-  const irrf = maoDeObra * TAXA_IRRF
+  const taxaIrrfAplicada = material > 0 ? TAXA_IRRF : TAXA_IRRF_SEM_MATERIAL
+  const irrf = maoDeObra * taxaIrrfAplicada
   const pis = maoDeObra * TAXA_PIS
   const cofins = maoDeObra * TAXA_COFINS
   const csll = maoDeObra * TAXA_CSLL
@@ -200,8 +201,8 @@ export async function buildEspelhoMedicaoWorkbook({
 
   const rowInss = sheet.addRow(["RETENÇÃO INSS (11%)", retencaoInss])
   formula(rowInss.getCell(2), `${baseRetencaoRef}*${TAXA_RETENCAO_INSS}`, retencaoInss)
-  const rowIrrf = sheet.addRow(["IRRF (1,20%)", irrf])
-  formula(rowIrrf.getCell(2), `${baseRetencaoRef}*${TAXA_IRRF}`, irrf)
+  const rowIrrf = sheet.addRow([`IRRF (${(taxaIrrfAplicada * 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}%)`, irrf])
+  formula(rowIrrf.getCell(2), `${baseRetencaoRef}*${taxaIrrfAplicada}`, irrf)
   const rowPis = sheet.addRow(["PIS (0,65%)", pis])
   formula(rowPis.getCell(2), `${baseRetencaoRef}*${TAXA_PIS}`, pis)
   const rowCofins = sheet.addRow(["COFINS (3%)", cofins])

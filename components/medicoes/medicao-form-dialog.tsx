@@ -317,7 +317,7 @@ export function MedicaoFormDialog({
                 <LinhaResumo label="Valor a Faturar" valor={resumo.valorAFaturar} destaque />
                 <Separator className="my-1" />
                 <LinhaResumo label="Retenção INSS (11%)" valor={resumo.retencaoInss} />
-                <LinhaResumo label="IRRF (1,20%)" valor={resumo.irrf} />
+                <LinhaResumo label={`IRRF (${(resumo.taxaIrrfAplicada * 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}%)`} valor={resumo.irrf} />
                 <LinhaResumo label="PIS (0,65%)" valor={resumo.pis} />
                 <LinhaResumo label="COFINS (3%)" valor={resumo.cofins} />
                 <LinhaResumo label="CSLL (1%)" valor={resumo.csll} />
