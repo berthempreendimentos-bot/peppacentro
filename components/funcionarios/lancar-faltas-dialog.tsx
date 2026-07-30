@@ -6,10 +6,12 @@ import { useFuncionarios } from "@/lib/queries/funcionarios"
 import {
   useCreateOcorrencia,
   useDeleteOcorrenciaDoMes,
+  useDeleteOcorrenciasEmLote,
   useOcorrenciasDoMes,
 } from "@/lib/queries/ocorrencias"
 import { ImportarAsoDialog } from "@/components/funcionarios/importar-aso-dialog"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { CurrencyInput } from "@/components/ui/currency-input"
 import { Textarea } from "@/components/ui/textarea"
@@ -95,6 +97,8 @@ export function LancarFaltasDialog({
   )
   const createOcorrencia = useCreateOcorrencia(selectedFuncionarioId, contratoId, mesReferencia)
   const deleteOcorrencia = useDeleteOcorrenciaDoMes(contratoId, mesReferencia)
+  const deleteOcorrenciasEmLote = useDeleteOcorrenciasEmLote(contratoId, mesReferencia)
+  const [selecionados, setSelecionados] = useState<string[]>([])
 
   async function handleAdd() {
     if (!selectedFuncionarioId) {
@@ -134,6 +138,27 @@ export function LancarFaltasDialog({
         toast.error("Erro ao excluir a ocorrência.")
         console.error(error)
       }
+    }
+  }
+
+  function toggleSelecionado(id: string, checked: boolean) {
+    setSelecionados((prev) => (checked ? [...prev, id] : prev.filter((i) => i !== id)))
+  }
+
+  function toggleSelecionarTodos(checked: boolean) {
+    setSelecionados(checked ? (ocorrenciasDoMes?.map((oc) => oc.id) ?? []) : [])
+  }
+
+  async function handleDeleteSelecionados() {
+    if (selecionados.length === 0) return
+    if (!confirm(`Deseja realmente excluir ${selecionados.length} lançamento(s)?`)) return
+    try {
+      await deleteOcorrenciasEmLote.mutateAsync(selecionados)
+      toast.success("Lançamentos excluídos com sucesso.")
+      setSelecionados([])
+    } catch (error) {
+      toast.error("Erro ao excluir os lançamentos.")
+      console.error(error)
     }
   }
 
@@ -204,7 +229,10 @@ export function LancarFaltasDialog({
                 <Input
                   type="month"
                   value={mesReferencia}
-                  onChange={(e) => setMesReferencia(e.target.value)}
+                  onChange={(e) => {
+                    setMesReferencia(e.target.value)
+                    setSelecionados([])
+                  }}
                 />
               </div>
             </div>
@@ -263,13 +291,38 @@ export function LancarFaltasDialog({
 
           {/* Lançamentos de todos os funcionários neste mês de referência */}
           <div className="mt-4 flex flex-col gap-2">
-            <h4 className="text-sm font-semibold">
-              Lançamentos deste mês ({mesReferencia})
-            </h4>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h4 className="text-sm font-semibold">
+                Lançamentos deste mês ({mesReferencia})
+              </h4>
+              {selecionados.length > 0 && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDeleteSelecionados}
+                  disabled={deleteOcorrenciasEmLote.isPending}
+                >
+                  <Trash2 className="size-4" />
+                  {deleteOcorrenciasEmLote.isPending
+                    ? "Excluindo..."
+                    : `Excluir selecionados (${selecionados.length})`}
+                </Button>
+              )}
+            </div>
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={
+                          !!ocorrenciasDoMes?.length &&
+                          selecionados.length === ocorrenciasDoMes.length
+                        }
+                        onCheckedChange={(checked) => toggleSelecionarTodos(!!checked)}
+                        disabled={!ocorrenciasDoMes?.length}
+                      />
+                    </TableHead>
                     <TableHead>Funcionário</TableHead>
                     <TableHead>Data</TableHead>
                     <TableHead>Tipo</TableHead>
@@ -281,19 +334,25 @@ export function LancarFaltasDialog({
                 <TableBody>
                   {loadingOcorrencias ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">
                         Carregando...
                       </TableCell>
                     </TableRow>
                   ) : ocorrenciasDoMes?.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">
                         Nenhum lançamento registrado neste mês.
                       </TableCell>
                     </TableRow>
                   ) : (
                     ocorrenciasDoMes?.map((oc) => (
                       <TableRow key={oc.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selecionados.includes(oc.id)}
+                            onCheckedChange={(checked) => toggleSelecionado(oc.id, !!checked)}
+                          />
+                        </TableCell>
                         <TableCell className="max-w-[160px] truncate whitespace-nowrap">
                           {oc.funcionarios?.nome ?? "—"}
                         </TableCell>

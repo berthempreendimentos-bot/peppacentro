@@ -144,3 +144,19 @@ export function useDeleteOcorrenciaDoMes(contratoId: string, mesReferencia: stri
     },
   })
 }
+
+export function useDeleteOcorrenciasEmLote(contratoId: string, mesReferencia: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (ids.length === 0) return
+      const supabase = createClient()
+      const { error } = await supabase.from("ocorrencias_funcionarios").delete().in("id", ids)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: OCORRENCIAS_DO_MES_QUERY_KEY(contratoId, mesReferencia) })
+      queryClient.invalidateQueries({ queryKey: FUNCIONARIOS_QUERY_KEY(contratoId) })
+    },
+  })
+}
