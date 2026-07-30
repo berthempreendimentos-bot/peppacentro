@@ -109,11 +109,11 @@ export function calcularEncargos(funcionario: FuncionarioBase, taxas?: TaxasTrib
   const rat = baseEncargos * t.rat
   const terceiros = baseEncargos * t.terceiros
 
-  const liquido = salarioLiquidoBase - descVt - inssEmpregadoValor - descVa + reembolso + reembolsoCreche
+  const reembolsoTotal = reembolso + reembolsoCreche
+  const liquido = salarioLiquidoBase - descVt - inssEmpregadoValor - descVa
 
   const totalEncargos = fgts + inssPatronal + rat + terceiros
-  const custoEmpresa =
-    salarioLiquidoBase + vtInformado + vrInformado + totalEncargos + reembolso + reembolsoCreche
+  const custoEmpresa = liquido + totalEncargos + reembolsoTotal
 
   const remuneracaoTotal = salarioLiquidoBase + periculosidadeValor + insalubridadeValor
 
@@ -130,6 +130,7 @@ export function calcularEncargos(funcionario: FuncionarioBase, taxas?: TaxasTrib
     rat,
     terceiros,
     liquido,
+    reembolsoTotal,
     totalEncargos,
     custoEmpresa,
   }

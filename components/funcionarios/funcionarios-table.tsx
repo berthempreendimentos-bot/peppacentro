@@ -127,6 +127,7 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
             <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">RAT {(taxas.rat * 100).toFixed(1).replace(".0", "")}%</TableHead>
             <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">Terceiros {(taxas.terceiros * 100).toFixed(1).replace(".0", "")}%</TableHead>
             <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">Total Encargos</TableHead>
+            <TableHead className="sticky top-0 z-20 bg-background text-right">Reembolso</TableHead>
             <TableHead className="bg-primary-tint-solid sticky top-0 z-20 text-right">Custo Empresa</TableHead>
             <TableHead className="sticky top-0 z-20 w-10 bg-background" />
           </TableRow>
@@ -135,7 +136,7 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
             {isLoading &&
               Array.from({ length: 3 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={21}>
+                  <TableCell colSpan={22}>
                     <Skeleton className="h-6 w-full" />
                   </TableCell>
                 </TableRow>
@@ -143,7 +144,7 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
             {!isLoading && filtrados.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={21}
+                  colSpan={22}
                   className="py-8 text-center text-muted-foreground"
                 >
                   Nenhum funcionário encontrado.
@@ -221,6 +222,9 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
                   </TableCell>
                   <TableCell className="bg-primary/5 text-right font-medium whitespace-nowrap">
                     {formatCurrencyBRL(encargos.totalEncargos)}
+                  </TableCell>
+                  <TableCell className="text-right whitespace-nowrap">
+                    {formatCurrencyBRL(encargos.reembolsoTotal)}
                   </TableCell>
                   <TableCell className="bg-primary/5 text-right font-medium whitespace-nowrap">
                     {formatCurrencyBRL(encargos.custoEmpresa)}
@@ -306,6 +310,9 @@ export function FuncionariosList({ contratoId }: { contratoId: string }) {
                 </TableCell>
                 <TableCell className="bg-primary/10 text-right font-semibold whitespace-nowrap">
                   {formatCurrencyBRL(totais.totalEncargos)}
+                </TableCell>
+                <TableCell className="text-right font-semibold whitespace-nowrap">
+                  {formatCurrencyBRL(totais.reembolso + totais.reembolso_creche)}
                 </TableCell>
                 <TableCell className="bg-primary/10 text-right font-semibold whitespace-nowrap">
                   {formatCurrencyBRL(totais.custoEmpresa)}
