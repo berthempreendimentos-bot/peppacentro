@@ -36,6 +36,23 @@ export function useCreateFuncionario(contratoId: string) {
       const {
         data: { user },
       } = await supabase.auth.getUser()
+
+      const { data: existentes } = await supabase
+        .from("funcionarios")
+        .select("id, nome, cpf")
+        .eq("contrato_id", contratoId)
+
+      if (existentes) {
+        const duplicado = existentes.find(
+          (e) =>
+            e.nome.toLowerCase().trim() === input.nome.toLowerCase().trim() ||
+            (input.cpf && e.cpf === input.cpf)
+        )
+        if (duplicado) {
+          throw new Error(`Funcionário já cadastrado com este nome ou CPF (${duplicado.nome}).`)
+        }
+      }
+
       const { error } = await supabase.from("funcionarios").insert({
         contrato_id: contratoId,
         nome: input.nome,
@@ -98,8 +115,35 @@ export function useImportFuncionarios(contratoId: string) {
       const {
         data: { user },
       } = await supabase.auth.getUser()
-      const { error } = await supabase.from("funcionarios").upsert(
-        selecionados.map((f) => ({
+
+      const { data: existentes } = await supabase
+        .from("funcionarios")
+        .select("id, nome, cpf")
+        .eq("contrato_id", contratoId)
+
+      const existentesMap = new Map()
+      if (existentes) {
+        existentes.forEach((e) => {
+          existentesMap.set(e.nome.toLowerCase().trim(), true)
+          if (e.cpf) existentesMap.set(e.cpf, true)
+        })
+      }
+
+      const selecionadosUnicos = []
+      for (const f of selecionados) {
+        const nomeKey = f.nome.toLowerCase().trim()
+        if (existentesMap.has(nomeKey) || (f.cpf && existentesMap.has(f.cpf))) {
+          continue
+        }
+        existentesMap.set(nomeKey, true)
+        if (f.cpf) existentesMap.set(f.cpf, true)
+        selecionadosUnicos.push(f)
+      }
+
+      if (selecionadosUnicos.length === 0) return
+
+      const { error } = await supabase.from("funcionarios").insert(
+        selecionadosUnicos.map((f) => ({
           contrato_id: contratoId,
           nome: f.nome,
           matricula: f.matricula || null,
@@ -113,8 +157,7 @@ export function useImportFuncionarios(contratoId: string) {
           recebe_periculosidade: false,
           grau_insalubridade: "nenhum" as const,
           created_by: user?.id,
-        })),
-        { onConflict: "contrato_id,cpf" }
+        }))
       )
       if (error) throw error
     },

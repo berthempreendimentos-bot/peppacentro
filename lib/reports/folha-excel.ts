@@ -138,8 +138,7 @@ export function buildFolhaResumoSheet(
 
   const proventos: [string, number][] = [
     ["Salário Base", totais.salarioBase],
-    ["Reembolsos", totais.reembolso ?? 0],
-    ["Reembolso - Creche", totais.reembolso_creche ?? 0],
+    ["Reembolsos", (totais.reembolso ?? 0) + (totais.reembolso_creche ?? 0)],
     ["VT Informado", totais.vtInformado],
     ["VR Informado", totais.vrInformado],
   ]
@@ -150,10 +149,10 @@ export function buildFolhaResumoSheet(
     ["Desconto INSS Empregado", totais.inssEmpregadoValor],
   ]
 
-  // Linhas 5, 6 e 7 — valores de origem (não são fórmulas: vêm da soma dos
-  // funcionários, calculada em lib/calculo-folha.ts).
+  // Linhas de origem (não são fórmulas: vêm da soma dos funcionários,
+  // calculada em lib/calculo-folha.ts).
   const linhaProventosInicio = linhaCab.number + 1
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 4; i++) {
     const row = sheet.addRow([proventos[i][0], proventos[i][1], "", descontos[i] ? descontos[i][0] : "", descontos[i] ? descontos[i][1] : ""])
     row.getCell(2).numFmt = FORMATO_MOEDA
     row.getCell(5).numFmt = FORMATO_MOEDA
@@ -163,7 +162,7 @@ export function buildFolhaResumoSheet(
       row.getCell(4).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COR_LINHA_PAR } }
     }
   }
-  const linhaProventosFim = linhaProventosInicio + 4
+  const linhaProventosFim = linhaProventosInicio + 3
 
   const totalProventos = totais.salarioBase + (totais.reembolso ?? 0) + (totais.reembolso_creche ?? 0) + totais.vtInformado + totais.vrInformado
   const totalDescontos = (totais.faltas ?? 0) + totais.descVt + totais.descVa + totais.inssEmpregadoValor
@@ -440,7 +439,6 @@ export function buildFuncionariosSheet(
     { header: "Salário Base", width: 14 },
     { header: "Faltas (R$)", width: 14 },
     { header: "Reembolso (R$)", width: 14 },
-    { header: "Reembolso - Creche (R$)", width: 18 },
     { header: "VT Informado", width: 13 },
     { header: "VR Informado", width: 13 },
     { header: "Desc. VT (6%)", width: 13 },
@@ -466,16 +464,18 @@ export function buildFuncionariosSheet(
   })
   sheet.views = [{ state: "frozen", ySplit: headerRow.number }]
 
-  const colunasMoeda = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
+  const colunasMoeda = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 
   // Colunas cuja fórmula referencia apenas células da própria linha (E =
-  // Salário Base, I = Periculosidade, F = VT, G = VR, H = Desc. VT,
-  // J = INSS Empregado, K = Desc. VA, M-P = FGTS/INSS Patronal/RAT/Terceiros).
+  // Salário Base, F = Faltas, G = Reembolso [já soma reembolso + creche],
+  // H = VT, I = VR, J = Desc. VT, K = Periculosidade, L = INSS Empregado,
+  // M-R = Desc. VA/Líquido/FGTS/INSS Patronal/RAT/Terceiros).
   // INSS Empregado (progressivo por faixas) e Periculosidade (depende de um
   // campo booleano que não aparece nesta planilha) continuam como valor
   // calculado, não fórmula.
   funcionarios.forEach((f, i) => {
     const e = calcularEncargos(f, taxas)
+    const reembolsoTotal = (f.reembolso ?? 0) + (f.reembolso_creche ?? 0)
     const row = sheet.addRow([
       f.nome,
       formatCpfCnpj(f.cpf) || "",
@@ -483,8 +483,7 @@ export function buildFuncionariosSheet(
       formatDate(f.data_admissao),
       f.salario_base,
       f.faltas ?? 0,
-      f.reembolso ?? 0,
-      f.reembolso_creche ?? 0,
+      reembolsoTotal,
       f.vt_informado,
       f.vr_informado,
       e.descVt,
@@ -502,15 +501,15 @@ export function buildFuncionariosSheet(
 
     const r = row.number
     const baseStr = `MAX(0,E${r}-F${r})`
-    formula(row.getCell(11), `IF(I${r}>0,${baseStr}*${TAXA_DESC_VT},0)`, e.descVt)
-    formula(row.getCell(14), `J${r}*${TAXA_DESC_VA}`, e.descVa)
-    formula(row.getCell(15), `${baseStr}-K${r}-M${r}-N${r}+G${r}+H${r}`, e.liquido)
-    formula(row.getCell(16), `(${baseStr}+L${r})*${taxasEfetivas.fgts}`, e.fgts)
-    formula(row.getCell(17), `(${baseStr}+L${r})*${taxasEfetivas.inssPatronal}`, e.inssPatronal)
-    formula(row.getCell(18), `(${baseStr}+L${r})*${taxasEfetivas.rat}`, e.rat)
-    formula(row.getCell(19), `(${baseStr}+L${r})*${taxasEfetivas.terceiros}`, e.terceiros)
-    formula(row.getCell(20), `P${r}+Q${r}+R${r}+S${r}`, e.totalEncargos)
-    formula(row.getCell(21), `${baseStr}+I${r}+J${r}+T${r}+G${r}+H${r}`, e.custoEmpresa)
+    formula(row.getCell(10), `IF(H${r}>0,${baseStr}*${TAXA_DESC_VT},0)`, e.descVt)
+    formula(row.getCell(13), `I${r}*${TAXA_DESC_VA}`, e.descVa)
+    formula(row.getCell(14), `${baseStr}-J${r}-L${r}-M${r}+G${r}`, e.liquido)
+    formula(row.getCell(15), `(${baseStr}+K${r})*${taxasEfetivas.fgts}`, e.fgts)
+    formula(row.getCell(16), `(${baseStr}+K${r})*${taxasEfetivas.inssPatronal}`, e.inssPatronal)
+    formula(row.getCell(17), `(${baseStr}+K${r})*${taxasEfetivas.rat}`, e.rat)
+    formula(row.getCell(18), `(${baseStr}+K${r})*${taxasEfetivas.terceiros}`, e.terceiros)
+    formula(row.getCell(19), `O${r}+P${r}+Q${r}+R${r}`, e.totalEncargos)
+    formula(row.getCell(20), `${baseStr}+H${r}+I${r}+S${r}+G${r}`, e.custoEmpresa)
 
     colunasMoeda.forEach((col) => {
       row.getCell(col).numFmt = FORMATO_MOEDA
