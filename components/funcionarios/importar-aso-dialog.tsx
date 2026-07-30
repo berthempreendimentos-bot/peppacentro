@@ -82,7 +82,8 @@ export function ImportarAsoDialog({
   }
 
   const semFuncionario = itens.filter((i) => i.incluir && !i.funcionarioId).length
-  const podeConfirmar = itens.some((i) => i.incluir && i.funcionarioId && i.valor > 0)
+  const totalImportar = itens.filter((i) => i.incluir && i.funcionarioId && i.valor > 0).length
+  const podeConfirmar = totalImportar > 0
 
   async function handleConfirmar() {
     try {
@@ -90,7 +91,7 @@ export function ImportarAsoDialog({
         .filter((i) => i.incluir && i.funcionarioId && i.valor > 0)
         .map((i) => ({ funcionarioId: i.funcionarioId as string, valor: i.valor }))
       await importarAso.mutateAsync(selecionados)
-      toast.success("ASO importado para os funcionários")
+      toast.success(`${selecionados.length} ASO(s) importado(s) para os funcionários`)
       setOpen(false)
       resetTudo()
     } catch (error) {
@@ -140,6 +141,9 @@ export function ImportarAsoDialog({
 
         {etapa === "revisar" && (
           <div className="flex flex-col gap-4">
+            <p className="text-sm font-medium">
+              {totalImportar} de {itens.length} lançamento(s) encontrado(s) serão importados.
+            </p>
             <p className="text-sm text-muted-foreground">
               Desmarque o que não deve entrar e ajuste os dados se precisar.
               {semFuncionario > 0 && (
@@ -210,7 +214,7 @@ export function ImportarAsoDialog({
             <DialogFooter>
               <Button onClick={handleConfirmar} disabled={importarAso.isPending || !podeConfirmar}>
                 <Upload className="size-4" />
-                {importarAso.isPending ? "Importando..." : "Confirmar importação"}
+                {importarAso.isPending ? "Importando..." : `Confirmar importação (${totalImportar})`}
               </Button>
             </DialogFooter>
           </div>

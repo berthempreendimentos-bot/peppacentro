@@ -110,7 +110,7 @@ export function useImportFuncionarios(contratoId: string) {
   return useMutation({
     mutationFn: async (funcionarios: FuncionarioImportado[]) => {
       const selecionados = funcionarios.filter((f) => f.incluir)
-      if (selecionados.length === 0) return
+      if (selecionados.length === 0) return { importados: 0, duplicados: 0, total: 0 }
       const supabase = createClient()
       const {
         data: { user },
@@ -140,7 +140,10 @@ export function useImportFuncionarios(contratoId: string) {
         selecionadosUnicos.push(f)
       }
 
-      if (selecionadosUnicos.length === 0) return
+      const duplicados = selecionados.length - selecionadosUnicos.length
+      if (selecionadosUnicos.length === 0) {
+        return { importados: 0, duplicados, total: selecionados.length }
+      }
 
       const { error } = await supabase.from("funcionarios").insert(
         selecionadosUnicos.map((f) => ({
@@ -160,6 +163,7 @@ export function useImportFuncionarios(contratoId: string) {
         }))
       )
       if (error) throw error
+      return { importados: selecionadosUnicos.length, duplicados, total: selecionados.length }
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY(contratoId) }),
   })

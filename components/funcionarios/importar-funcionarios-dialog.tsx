@@ -82,14 +82,22 @@ export function ImportarFuncionariosDialog({
 
   async function handleConfirmar() {
     try {
-      await importarFuncionarios.mutateAsync(funcionarios)
-      toast.success("Funcionários importados")
+      const resultado = await importarFuncionarios.mutateAsync(funcionarios)
+      if (resultado && resultado.duplicados > 0) {
+        toast.success(
+          `${resultado.importados} funcionário(s) importado(s) — ${resultado.duplicados} já cadastrado(s) foram ignorados`
+        )
+      } else {
+        toast.success(`${resultado?.importados ?? 0} funcionário(s) importado(s) com sucesso`)
+      }
       setOpen(false)
       resetTudo()
     } catch (error) {
       toast.error(getErrorMessage(error, "Não foi possível importar os funcionários"))
     }
   }
+
+  const totalIncluidos = funcionarios.filter((f) => f.incluir).length
 
   return (
     <Dialog
@@ -134,6 +142,10 @@ export function ImportarFuncionariosDialog({
           <div className="flex flex-col gap-4">
             <p className="text-sm text-muted-foreground">
               Desmarque o que não deve entrar e ajuste os dados se precisar.
+            </p>
+            <p className="text-sm font-medium">
+              {totalIncluidos} de {funcionarios.length} funcionário(s) encontrado(s) serão
+              importados.
             </p>
             <div className="overflow-x-auto rounded-lg border">
               <Table>
@@ -243,9 +255,14 @@ export function ImportarFuncionariosDialog({
               </Table>
             </div>
             <DialogFooter>
-              <Button onClick={handleConfirmar} disabled={importarFuncionarios.isPending}>
+              <Button
+                onClick={handleConfirmar}
+                disabled={importarFuncionarios.isPending || totalIncluidos === 0}
+              >
                 <Upload className="size-4" />
-                {importarFuncionarios.isPending ? "Importando..." : "Confirmar importação"}
+                {importarFuncionarios.isPending
+                  ? "Importando..."
+                  : `Confirmar importação (${totalIncluidos})`}
               </Button>
             </DialogFooter>
           </div>
