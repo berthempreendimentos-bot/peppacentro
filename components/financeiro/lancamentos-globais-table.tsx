@@ -9,6 +9,7 @@ import { useLancamentosGlobal } from "@/lib/queries/lancamentos"
 import { lancamentoStatusOptions, lancamentoTipoOptions } from "@/lib/validations/lancamentos"
 import { formatCurrencyBRL, formatDate } from "@/lib/format"
 import { LancamentoFormDialog } from "@/components/financeiro/lancamento-form-dialog"
+import { ResumoFinanceiroDialog } from "@/components/financeiro/resumo-financeiro-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -165,13 +166,16 @@ export function LancamentosGlobaisTable() {
             ))}
           </SelectContent>
         </Select>
-        <LancamentoFormDialog
-          trigger={
-            <Button className="ml-auto shrink-0">
-              <Plus /> Novo Lançamento
-            </Button>
-          }
-        />
+        <div className="ml-auto flex items-center gap-2">
+          <ResumoFinanceiroDialog />
+          <LancamentoFormDialog
+            trigger={
+              <Button className="shrink-0">
+                <Plus /> Novo Lançamento
+              </Button>
+            }
+          />
+        </div>
       </div>
 
       <div className="rounded-lg border">
