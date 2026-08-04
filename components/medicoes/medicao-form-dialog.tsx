@@ -145,13 +145,16 @@ export function MedicaoFormDialog({
     defaultValues: emptyValues,
   })
 
-  const maoDeObra = form.watch("mao_de_obra")
+  const valorFaturar = form.watch("valor") || 0
   const material = form.watch("material")
+  const formValeTransporte = form.watch("vale_transporte") || 0
+  const formValeRefeicao = form.watch("vale_refeicao") || 0
+  const maoDeObraCalculada = Math.max(0, valorFaturar - formValeTransporte - formValeRefeicao - (material || 0))
 
   const resumo = calcularResumoMedicao({
-    maoDeObra: maoDeObra || 0,
-    valeTransporte,
-    valeRefeicao,
+    maoDeObra: maoDeObraCalculada,
+    valeTransporte: formValeTransporte,
+    valeRefeicao: formValeRefeicao,
     material: material || 0,
     issAliquota: contrato?.iss_aliquota ?? 5,
   })
@@ -194,24 +197,18 @@ export function MedicaoFormDialog({
   }, [open, medicao, proximoNumero])
 
   useEffect(() => {
-    form.setValue("vale_transporte", valeTransporte)
-    form.setValue("vale_refeicao", valeRefeicao)
-    form.setValue("valor", resumo.valorAFaturar)
+    form.setValue("mao_de_obra", maoDeObraCalculada)
     form.setValue("liquido_empregados", liquidoEmpregados)
     form.setValue("fgts", fgts)
     form.setValue("valor_vinculado", valorVinculado)
     form.setValue("valor_liquido", resumo.valorLiquido)
-    form.setValue("valor_contrato", valorContrato)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    valeTransporte,
-    valeRefeicao,
-    resumo.valorAFaturar,
+    maoDeObraCalculada,
     resumo.valorLiquido,
     liquidoEmpregados,
     fgts,
     valorVinculado,
-    valorContrato,
   ])
 
   async function fecharFolhaSeNecessario(medicaoId: string) {
@@ -267,18 +264,53 @@ export function MedicaoFormDialog({
             <div className="rounded-lg border bg-muted/30 p-4">
               <p className="mb-3 text-sm font-semibold">Resumo da medição</p>
               <div className="flex flex-col gap-1.5">
-                <LinhaResumo
-                  label={`Valor do Contrato (mensal${duracaoContrato.estimado ? ", estimado" : ""})`}
-                  valor={valorContrato}
-                  destaque
+                <FormField
+                  control={form.control}
+                  name="valor_contrato"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between gap-4 space-y-0">
+                      <FormLabel className="text-sm font-semibold">
+                        {`Valor do Contrato (mensal${duracaoContrato.estimado ? ", estimado" : ""})`}
+                      </FormLabel>
+                      <FormControl>
+                        <CurrencyInput
+                          className="h-7 w-36 text-right font-semibold"
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
                 />
                 <Separator className="my-1" />
                 <FormField
                   control={form.control}
-                  name="mao_de_obra"
+                  name="valor"
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between gap-4 space-y-0">
-                      <FormLabel className="text-sm text-muted-foreground">Mão de obra</FormLabel>
+                      <FormLabel className="text-sm font-semibold">Valor a Faturar</FormLabel>
+                      <FormControl>
+                        <CurrencyInput
+                          className="h-7 w-36 text-right font-semibold"
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <LinhaResumo
+                  label="Mão de obra (calculado)"
+                  valor={maoDeObraCalculada}
+                />
+                <FormField
+                  control={form.control}
+                  name="vale_transporte"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between gap-4 space-y-0">
+                      <FormLabel className="text-sm text-muted-foreground">
+                        {isEditing ? "Vale Transporte (gravado)" : "Vale Transporte (Folha de Pagamento)"}
+                      </FormLabel>
                       <FormControl>
                         <CurrencyInput
                           className="h-7 w-36 text-right"
@@ -289,13 +321,23 @@ export function MedicaoFormDialog({
                     </FormItem>
                   )}
                 />
-                <LinhaResumo
-                  label={isEditing ? "Vale Transporte (gravado)" : "Vale Transporte (Folha de Pagamento)"}
-                  valor={valeTransporte}
-                />
-                <LinhaResumo
-                  label={isEditing ? "Vale Refeição (gravado)" : "Vale Refeição (Folha de Pagamento)"}
-                  valor={valeRefeicao}
+                <FormField
+                  control={form.control}
+                  name="vale_refeicao"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between gap-4 space-y-0">
+                      <FormLabel className="text-sm text-muted-foreground">
+                        {isEditing ? "Vale Refeição (gravado)" : "Vale Refeição (Folha de Pagamento)"}
+                      </FormLabel>
+                      <FormControl>
+                        <CurrencyInput
+                          className="h-7 w-36 text-right"
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
                 />
                 <FormField
                   control={form.control}
@@ -313,8 +355,6 @@ export function MedicaoFormDialog({
                     </FormItem>
                   )}
                 />
-                <Separator className="my-1" />
-                <LinhaResumo label="Valor a Faturar" valor={resumo.valorAFaturar} destaque />
                 <Separator className="my-1" />
                 <LinhaResumo label="Retenção INSS (11%)" valor={resumo.retencaoInss} />
                 <LinhaResumo label={`IRRF (${(resumo.taxaIrrfAplicada * 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}%)`} valor={resumo.irrf} />
@@ -364,19 +404,6 @@ export function MedicaoFormDialog({
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="valor"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Valor a Faturar</FormLabel>
-                    <FormControl>
-                      <Input type="text" readOnly disabled value={formatCurrencyBRL(field.value)} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <FormField
                 control={form.control}
                 name="percentual_executado"

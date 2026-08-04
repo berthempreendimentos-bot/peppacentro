@@ -108,7 +108,7 @@ export function ResumoFinanceiroDialog() {
     )
 
     const valorMedicao = medicoesMes.reduce((acc, m) => acc + (m.valor || 0), 0)
-    const valorRetencao = medicoesMes.reduce((acc, m) => acc + (m.valor_vinculado || 0), 0)
+    const valorRetencao = medicoesMes.reduce((acc, m) => acc + ((m.valor || 0) - (m.valor_liquido || 0)), 0)
     const valorLiquido = medicoesMes.reduce((acc, m) => acc + (m.valor_liquido || 0), 0)
 
     const ENTRADAS = new Set(["receita", "recebimento"])

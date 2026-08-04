@@ -105,6 +105,7 @@ export function ResumoFinanceiroPdfDocument({
   totalGastos: number
   pagamentoContrato: number
   nomesContratos: string[]
+  gastos: { data: string; descricao: string; valor: number }[]
 }) {
   return (
     <Document>
@@ -142,7 +143,7 @@ export function ResumoFinanceiroPdfDocument({
           </View>
 
           <View style={[styles.linha, styles.linhaPar]}>
-            <Text style={styles.celulaLabel}>Valor da Retenção (Conta Vinculada)</Text>
+            <Text style={styles.celulaLabel}>Valor da Retenção</Text>
             <Text style={styles.celulaValor}>{formatCurrencyBRL(valorRetencao)}</Text>
           </View>
 
@@ -172,6 +173,52 @@ export function ResumoFinanceiroPdfDocument({
             <Text style={styles.celulaLabelDestaque}>Resultado (Recebimentos - Gastos)</Text>
             <Text style={styles.celulaValorDestaque}>{formatCurrencyBRL(pagamentoContrato - totalGastos)}</Text>
           </View>
+        </View>
+
+        <Text style={styles.rodape}>Gerado em {formatDate(new Date().toISOString())}</Text>
+      </Page>
+
+      <Page size="A4" style={styles.page}>
+        <View style={styles.tituloBox}>
+          <Text style={styles.tituloTexto}>RELATÓRIO DE GASTOS</Text>
+          <Text style={styles.subtituloTexto}>Detalhamento das Despesas e Custos</Text>
+        </View>
+
+        <View style={styles.infoBox}>
+          <Text style={styles.infoHeader}>INFORMAÇÕES DO RELATÓRIO</Text>
+          <View style={styles.infoLinha}>
+            <Text style={styles.infoLabel}>Mês de Referência:</Text>
+            <Text style={styles.infoValor}>{mesReferencia}</Text>
+          </View>
+        </View>
+
+        <View style={styles.tabelaBox}>
+          <View style={styles.tabelaHeaderRow}>
+            <Text style={[styles.tabelaHeaderCell, { flex: 0.5 }]}>DATA</Text>
+            <Text style={[styles.tabelaHeaderCell, { flex: 2 }]}>DESCRIÇÃO</Text>
+            <Text style={styles.tabelaHeaderCellRight}>VALOR</Text>
+          </View>
+
+          {gastos.length === 0 && (
+            <View style={styles.linha}>
+              <Text style={[styles.celulaLabel, { flex: 1, textAlign: "center", borderRightWidth: 0, paddingVertical: 12, color: "#777777" }]}>Nenhum gasto registrado neste mês.</Text>
+            </View>
+          )}
+
+          {gastos.sort((a, b) => a.data.localeCompare(b.data)).map((g, i) => (
+            <View key={i} style={[styles.linha, i % 2 !== 0 ? styles.linhaPar : {}]}>
+              <Text style={[styles.celulaLabel, { flex: 0.5 }]}>{formatDate(g.data)}</Text>
+              <Text style={[styles.celulaLabel, { flex: 2 }]}>{g.descricao}</Text>
+              <Text style={styles.celulaValor}>{formatCurrencyBRL(g.valor)}</Text>
+            </View>
+          ))}
+          
+          {gastos.length > 0 && (
+            <View style={styles.linhaDestaque}>
+              <Text style={styles.celulaLabelDestaque}>TOTAL DE GASTOS</Text>
+              <Text style={styles.celulaValorDestaque}>{formatCurrencyBRL(totalGastos)}</Text>
+            </View>
+          )}
         </View>
 
         <Text style={styles.rodape}>Gerado em {formatDate(new Date().toISOString())}</Text>

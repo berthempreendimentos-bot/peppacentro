@@ -32,7 +32,6 @@ export async function GET(request: NextRequest) {
   const { data: medicoes, error: medicoesError } = await supabase
     .from("medicoes")
     .select("*")
-    .in("status", ["aprovada", "paga"])
 
   // Buscar Lançamentos globais
   const { data: lancamentos, error: lancamentosError } = await supabase
@@ -63,14 +62,13 @@ export async function GET(request: NextRequest) {
   )
 
   const valorMedicao = medicoesMes.reduce((acc, m) => acc + (m.valor || 0), 0)
-  const valorRetencao = medicoesMes.reduce((acc, m) => acc + (m.valor_vinculado || 0), 0)
+  const valorRetencao = medicoesMes.reduce((acc, m) => acc + ((m.valor || 0) - (m.valor_liquido || 0)), 0)
   const valorLiquido = medicoesMes.reduce((acc, m) => acc + (m.valor_liquido || 0), 0)
 
   const ENTRADAS = new Set(["receita", "recebimento"])
   
-  const totalGastos = lancamentosMes
-    .filter((l) => !ENTRADAS.has(l.tipo) && l.tipo !== "medicao")
-    .reduce((acc, l) => acc + l.valor, 0)
+  const lancamentosGastos = lancamentosMes.filter((l) => !ENTRADAS.has(l.tipo) && l.tipo !== "medicao")
+  const totalGastos = lancamentosGastos.reduce((acc, l) => acc + l.valor, 0)
     
   const pagamentoContrato = lancamentosMes
     .filter((l) => ENTRADAS.has(l.tipo))
@@ -87,6 +85,11 @@ export async function GET(request: NextRequest) {
       totalGastos={totalGastos}
       pagamentoContrato={pagamentoContrato}
       nomesContratos={nomesContratos}
+      gastos={lancamentosGastos.map((g) => ({
+        data: g.data,
+        descricao: g.descricao,
+        valor: g.valor
+      }))}
     />
   )
 

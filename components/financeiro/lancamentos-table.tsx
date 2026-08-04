@@ -12,6 +12,7 @@ import {
 import { lancamentoStatusOptions, lancamentoTipoOptions } from "@/lib/validations/lancamentos"
 import { formatCurrencyBRL, formatDate } from "@/lib/format"
 import { LancamentoFormDialog } from "@/components/financeiro/lancamento-form-dialog"
+import { ResumoFinanceiroDialog } from "@/components/financeiro/resumo-financeiro-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
