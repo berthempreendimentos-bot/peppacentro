@@ -202,14 +202,17 @@ export function LancamentosTable({ contratoId }: { contratoId: string }) {
             </SelectContent>
           </Select>
         </div>
-        <LancamentoFormDialog
-          contratoId={contratoId}
-          trigger={
-            <Button>
-              <Plus /> Novo Lançamento
-            </Button>
-          }
-        />
+        <div className="flex items-center gap-2">
+          <ResumoFinanceiroDialog />
+          <LancamentoFormDialog
+            contratoId={contratoId}
+            trigger={
+              <Button>
+                <Plus /> Novo Lançamento
+              </Button>
+            }
+          />
+        </div>
       </div>
 
       <div className="rounded-lg border">

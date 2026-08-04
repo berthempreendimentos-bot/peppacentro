@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Calculator } from "lucide-react"
+import { Calculator, Download, TrendingUp, TrendingDown, Wallet, FileText, Briefcase } from "lucide-react"
 
 import { useContratos } from "@/lib/queries/contratos"
 import { useMedicoesGlobal } from "@/lib/queries/medicoes"
@@ -53,14 +53,23 @@ export function ResumoFinanceiroDialog() {
     if (!medicoes && !lancamentos) return []
     const mSet = new Set<string>()
     lancamentos?.forEach((l) => {
-      if (l.mes_referencia) mSet.add(l.mes_referencia)
+      if (l.mes_referencia) mSet.add(l.mes_referencia.substring(0, 7))
       else if (l.data) mSet.add(l.data.substring(0, 7))
     })
     medicoes?.forEach((m) => {
-      if (m.competencia) mSet.add(m.competencia)
+      if (m.competencia) mSet.add(m.competencia.substring(0, 7))
     })
     return Array.from(mSet).sort((a, b) => b.localeCompare(a))
   }, [lancamentos, medicoes])
+
+  const contratosDisponiveis = useMemo(() => {
+    if (!selectedMes) return []
+    return contratosEmAndamento.filter((c) => {
+      return (medicoes || []).some(
+        (m) => m.contrato_id === c.id && m.competencia?.substring(0, 7) === selectedMes
+      )
+    })
+  }, [contratosEmAndamento, medicoes, selectedMes])
 
   const handleToggleContrato = (id: string, checked: boolean) => {
     setGerouResumo(false)
@@ -74,7 +83,7 @@ export function ResumoFinanceiroDialog() {
   const handleToggleAll = (checked: boolean) => {
     setGerouResumo(false)
     if (checked) {
-      setSelectedContratos(contratosEmAndamento.map(c => c.id))
+      setSelectedContratos(contratosDisponiveis.map(c => c.id))
     } else {
       setSelectedContratos([])
     }
@@ -87,13 +96,13 @@ export function ResumoFinanceiroDialog() {
 
     // Filtrar Medições
     const medicoesMes = (medicoes || []).filter(
-      (m) => m.competencia === selectedMes && m.contrato_id && selectedContratos.includes(m.contrato_id)
+      (m) => m.competencia?.substring(0, 7) === selectedMes && m.contrato_id && selectedContratos.includes(m.contrato_id)
     )
 
     // Filtrar Lançamentos
     const lancamentosMes = (lancamentos || []).filter(
       (l) => {
-        const mes = l.mes_referencia || l.data.substring(0, 7)
+        const mes = (l.mes_referencia || l.data).substring(0, 7)
         return mes === selectedMes && l.contrato_id && selectedContratos.includes(l.contrato_id)
       }
     )
@@ -137,7 +146,7 @@ export function ResumoFinanceiroDialog() {
           <Calculator className="mr-2 size-4" /> Resumo Financeiro
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-5xl max-w-[95vw] overflow-y-auto max-h-[95vh]">
         <DialogHeader>
           <DialogTitle>Resumo Financeiro</DialogTitle>
           <DialogDescription>
@@ -151,7 +160,9 @@ export function ResumoFinanceiroDialog() {
             <Skeleton className="h-10 w-full" />
           </div>
         ) : (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col xl:flex-row gap-8">
+            {/* Coluna Esquerda: Formulário */}
+            <div className="flex flex-col gap-6 w-full xl:w-1/3">
             <div className="flex flex-col gap-2">
               <Label className="text-base">Mês de Referência</Label>
               <Select
@@ -175,35 +186,39 @@ export function ResumoFinanceiroDialog() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-base">Contratos em Andamento</Label>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <Label className="text-base font-semibold leading-tight">Contratos Disponíveis</Label>
                 <div className="flex items-center space-x-2">
                   <Checkbox 
                     id="select-all" 
-                    checked={selectedContratos.length === contratosEmAndamento.length && contratosEmAndamento.length > 0}
+                    checked={selectedContratos.length === contratosDisponiveis.length && contratosDisponiveis.length > 0}
                     onCheckedChange={(checked) => handleToggleAll(checked as boolean)}
+                    disabled={contratosDisponiveis.length === 0}
                   />
-                  <Label htmlFor="select-all" className="cursor-pointer text-sm">
+                  <Label htmlFor="select-all" className={`cursor-pointer text-sm ${contratosDisponiveis.length === 0 ? "opacity-50" : ""}`}>
                     Selecionar Todos
                   </Label>
                 </div>
               </div>
               <div className="max-h-48 overflow-y-auto rounded-md border p-4 space-y-3">
-                {contratosEmAndamento.length === 0 && (
-                  <p className="text-sm text-muted-foreground">Nenhum contrato em andamento encontrado.</p>
+                {!selectedMes ? (
+                  <p className="text-sm text-muted-foreground">Selecione um mês acima para ver os contratos disponíveis.</p>
+                ) : contratosDisponiveis.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Nenhuma medição encontrada para o mês selecionado.</p>
+                ) : (
+                  contratosDisponiveis.map((c) => (
+                    <div key={c.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`c-${c.id}`}
+                        checked={selectedContratos.includes(c.id)}
+                        onCheckedChange={(checked) => handleToggleContrato(c.id, checked as boolean)}
+                      />
+                      <Label htmlFor={`c-${c.id}`} className="cursor-pointer text-sm font-medium leading-none">
+                        {c.numero} - {c.clientes?.nome}
+                      </Label>
+                    </div>
+                  ))
                 )}
-                {contratosEmAndamento.map((c) => (
-                  <div key={c.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`c-${c.id}`}
-                      checked={selectedContratos.includes(c.id)}
-                      onCheckedChange={(checked) => handleToggleContrato(c.id, checked as boolean)}
-                    />
-                    <Label htmlFor={`c-${c.id}`} className="cursor-pointer text-sm font-medium leading-none">
-                      {c.numero} - {c.clientes?.nome}
-                    </Label>
-                  </div>
-                ))}
               </div>
             </div>
 
@@ -214,39 +229,107 @@ export function ResumoFinanceiroDialog() {
             >
               Gerar Resumo
             </Button>
+            </div>
+
+            {/* Coluna Direita: Resultados */}
 
             {resumo && (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mt-2">
-                <Card>
-                  <CardContent className="pt-6">
-                    <p className="text-sm text-muted-foreground">Valor da Medição</p>
-                    <p className="text-xl font-semibold">{formatCurrencyBRL(resumo.valorMedicao)}</p>
+              <div className="flex flex-col gap-3 w-full xl:w-2/3">
+                {/* Header com botão PDF */}
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-3 bg-emerald-50 dark:bg-emerald-950/30 p-3 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Resumo Gerado com Sucesso</span>
+                  </div>
+                  <Button asChild size="sm" className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm">
+                    <a href={`/api/financeiro/resumo-pdf?mes=${selectedMes}&contratos=${selectedContratos.join(",")}`} target="_blank" rel="noreferrer">
+                      <Download className="size-4" /> Baixar PDF
+                    </a>
+                  </Button>
+                </div>
+
+                {/* Valor Líquido em destaque */}
+                <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg border-0">
+                  <CardContent className="py-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-1">
+                        <p className="text-sm font-medium text-emerald-100 uppercase tracking-wider">Valor Líquido</p>
+                        <p className="text-3xl font-bold tracking-tight">{formatCurrencyBRL(resumo.valorLiquido)}</p>
+                      </div>
+                      <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                        <Wallet className="size-5" />
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <p className="text-sm text-muted-foreground">Valor da Retenção</p>
-                    <p className="text-xl font-semibold">{formatCurrencyBRL(resumo.valorRetencao)}</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <p className="text-sm text-muted-foreground">Valor Líquido</p>
-                    <p className="text-xl font-semibold text-primary">{formatCurrencyBRL(resumo.valorLiquido)}</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <p className="text-sm text-muted-foreground">Total de Gastos (Despesas)</p>
-                    <p className="text-xl font-semibold text-destructive">{formatCurrencyBRL(resumo.totalGastos)}</p>
-                  </CardContent>
-                </Card>
-                <Card className="sm:col-span-2">
-                  <CardContent className="pt-6">
-                    <p className="text-sm text-muted-foreground">Pagamento do Contrato (Recebimentos)</p>
-                    <p className="text-xl font-semibold text-green-600">{formatCurrencyBRL(resumo.pagamentoContrato)}</p>
-                  </CardContent>
-                </Card>
+
+                {/* Seção: Entradas */}
+                <div className="space-y-2">
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                    <div className="h-px flex-1 bg-border" />
+                    <span>Entradas</span>
+                    <div className="h-px flex-1 bg-border" />
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
+                      <CardContent className="py-2 flex items-center justify-between">
+                        <div className="flex flex-col gap-1">
+                          <p className="text-xs font-medium text-muted-foreground">Valor da Medição</p>
+                          <p className="text-lg font-bold">{formatCurrencyBRL(resumo.valorMedicao)}</p>
+                        </div>
+                        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Briefcase className="size-4 text-primary" />
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-shadow">
+                      <CardContent className="py-2 flex items-center justify-between">
+                        <div className="flex flex-col gap-1">
+                          <p className="text-xs font-medium text-muted-foreground">Pagamento do Contrato</p>
+                          <p className="text-lg font-bold text-blue-600">{formatCurrencyBRL(resumo.pagamentoContrato)}</p>
+                        </div>
+                        <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                          <TrendingUp className="size-4 text-blue-600" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+
+                {/* Seção: Saídas */}
+                <div className="space-y-2">
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                    <div className="h-px flex-1 bg-border" />
+                    <span>Saídas</span>
+                    <div className="h-px flex-1 bg-border" />
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <Card className="border-l-4 border-l-rose-500 shadow-sm hover:shadow-md transition-shadow">
+                      <CardContent className="py-2 flex items-center justify-between">
+                        <div className="flex flex-col gap-1">
+                          <p className="text-xs font-medium text-muted-foreground">Total de Gastos</p>
+                          <p className="text-lg font-bold text-rose-600">{formatCurrencyBRL(resumo.totalGastos)}</p>
+                        </div>
+                        <div className="h-8 w-8 rounded-lg bg-rose-500/10 flex items-center justify-center">
+                          <TrendingDown className="size-4 text-rose-600" />
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-l-4 border-l-amber-500 shadow-sm hover:shadow-md transition-shadow">
+                      <CardContent className="py-2 flex items-center justify-between">
+                        <div className="flex flex-col gap-1">
+                          <p className="text-xs font-medium text-muted-foreground">Valor da Retenção</p>
+                          <p className="text-lg font-bold text-amber-600">{formatCurrencyBRL(resumo.valorRetencao)}</p>
+                        </div>
+                        <div className="h-8 w-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                          <FileText className="size-4 text-amber-600" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
               </div>
             )}
           </div>
