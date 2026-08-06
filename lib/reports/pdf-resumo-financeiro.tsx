@@ -186,7 +186,7 @@ export function ResumoFinanceiroPdfDocument({
             <Text style={styles.celulaValorDestaque}>{formatCurrencyBRL(pagamentoContrato - totalGastos)}</Text>
           </View>
 
-          <View style={[styles.linhaDestaque, { borderBottomWidth: 0, backgroundColor: "#fef08a" }]}>
+          <View style={[styles.linhaDestaque, { borderBottomWidth: 0, backgroundColor: "#ffd700" }]}>
             <Text style={styles.celulaLabelDestaque}>Saldo Final (Resultado + Vinculado)</Text>
             <Text style={styles.celulaValorDestaque}>{formatCurrencyBRL((pagamentoContrato - totalGastos) + gastosVinculada)}</Text>
           </View>
