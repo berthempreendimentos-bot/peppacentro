@@ -49,6 +49,7 @@ function normalize(input: LancamentoInput) {
     categoria_id: input.categoria_id || null,
     fornecedor_id: input.fornecedor_id || null,
     centro_custo_id: input.centro_custo_id || null,
+    mes_referencia: input.mes_referencia || null,
   }
 }
 

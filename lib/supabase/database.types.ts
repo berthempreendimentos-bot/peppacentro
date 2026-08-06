@@ -369,7 +369,7 @@ export interface Database {
           documento_url: string | null
           status: LancamentoStatus
           mes_referencia: string | null
-          is_recorrente: boolean
+          classificacao: "normal" | "mensal" | "recorrente" | "integracao" | "vinculada"
           created_by: string | null
           created_at: string
           updated_at: string
@@ -381,7 +381,7 @@ export interface Database {
           valor: number
           data: string
           mes_referencia?: string | null
-          is_recorrente?: boolean
+          classificacao?: "normal" | "mensal" | "recorrente" | "integracao" | "vinculada"
         }
         Update: Partial<Database["public"]["Tables"]["lancamentos"]["Row"]>
         Relationships: [

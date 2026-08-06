@@ -105,9 +105,15 @@ export function ResumoFinanceiroPdfDocument({
   valorLiquido: number
   totalGastos: number
   pagamentoContrato: number
-  nomesContratos: string[]
-  gastos: { data: string; descricao: string; valor: number }[]
+  nomesContratos: { texto: string; negativo: boolean }[]
+  gastos: { data: string; descricao: string; valor: number; classificacao?: string; nomeContrato?: string }[]
 }) {
+  const gastosMensal = gastos.filter(g => g.classificacao === 'mensal').reduce((acc, g) => acc + g.valor, 0)
+  const gastosRecorrente = gastos.filter(g => g.classificacao === 'recorrente').reduce((acc, g) => acc + g.valor, 0)
+  const gastosIntegracao = gastos.filter(g => g.classificacao === 'integracao').reduce((acc, g) => acc + g.valor, 0)
+  const gastosVinculada = gastos.filter(g => g.classificacao === 'vinculada').reduce((acc, g) => acc + g.valor, 0)
+  const gastosNormal = gastos.filter(g => !g.classificacao || g.classificacao === 'normal').reduce((acc, g) => acc + g.valor, 0)
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -125,8 +131,8 @@ export function ResumoFinanceiroPdfDocument({
           <View style={styles.infoLinha}>
             <Text style={styles.infoLabel}>Contratos Selecionados:</Text>
             <View style={styles.infoValor}>
-              {nomesContratos.map((nome, i) => (
-                <Text key={i} style={{ marginBottom: 2 }}>{nome}</Text>
+              {nomesContratos.map((c, i) => (
+                <Text key={i} style={{ marginBottom: 2, color: c.negativo ? "#ef4444" : undefined }}>{c.texto}</Text>
               ))}
             </View>
           </View>
@@ -206,10 +212,23 @@ export function ResumoFinanceiroPdfDocument({
             </View>
           ) : null}
 
-          {gastos.slice().sort((a, b) => (a.data || "").localeCompare(b.data || "")).map((g, i) => (
+          {gastos.slice().sort((a, b) => {
+            const classA = a.classificacao || "normal";
+            const classB = b.classificacao || "normal";
+            if (classA !== classB) return classA.localeCompare(classB);
+            return (a.data || "").localeCompare(b.data || "");
+          }).map((g, i) => (
             <View key={i} style={[styles.linha, i % 2 !== 0 ? styles.linhaPar : {}]}>
               <Text style={[styles.celulaLabel, { flex: 0.5 }]}>{g.data ? formatDate(g.data) : ""}</Text>
-              <Text style={[styles.celulaLabel, { flex: 2 }]}>{g.descricao || ""}</Text>
+              <Text style={[styles.celulaLabel, { flex: 2 }]}>
+                <Text>{g.descricao || ""}</Text>
+                {g.classificacao && g.classificacao !== "normal" ? (
+                  <Text style={{ fontFamily: "Helvetica-Bold" }}> {`[${g.classificacao.toUpperCase()}]`}</Text>
+                ) : null}
+                {g.nomeContrato ? (
+                  <Text style={{ fontSize: 6, color: "#666666" }}>  ({g.nomeContrato})</Text>
+                ) : null}
+              </Text>
               <Text style={styles.celulaValor}>{formatCurrencyBRL(g.valor || 0)}</Text>
             </View>
           ))}
@@ -221,6 +240,46 @@ export function ResumoFinanceiroPdfDocument({
             </View>
           ) : null}
         </View>
+
+        {gastos.length > 0 && (
+          <View style={[styles.tabelaBox, { marginTop: 20 }]}>
+            <View style={styles.tabelaHeaderRow}>
+              <Text style={styles.tabelaHeaderCell}>RESUMO POR TIPO DE GASTO</Text>
+              <Text style={styles.tabelaHeaderCellRight}>SUBTOTAL</Text>
+            </View>
+            {gastosNormal > 0 && (
+              <View style={styles.linha}>
+                <Text style={styles.celulaLabel}>Normal</Text>
+                <Text style={styles.celulaValor}>{formatCurrencyBRL(gastosNormal)}</Text>
+              </View>
+            )}
+            {gastosMensal > 0 && (
+              <View style={styles.linha}>
+                <Text style={styles.celulaLabel}>Mensal</Text>
+                <Text style={styles.celulaValor}>{formatCurrencyBRL(gastosMensal)}</Text>
+              </View>
+            )}
+            {gastosRecorrente > 0 && (
+              <View style={styles.linha}>
+                <Text style={styles.celulaLabel}>Recorrente</Text>
+                <Text style={styles.celulaValor}>{formatCurrencyBRL(gastosRecorrente)}</Text>
+              </View>
+            )}
+            {gastosIntegracao > 0 && (
+              <View style={styles.linha}>
+                <Text style={styles.celulaLabel}>Integração</Text>
+                <Text style={styles.celulaValor}>{formatCurrencyBRL(gastosIntegracao)}</Text>
+              </View>
+            )}
+            {gastosVinculada > 0 && (
+              <View style={styles.linha}>
+                <Text style={styles.celulaLabel}>Vinculada</Text>
+                <Text style={styles.celulaValor}>{formatCurrencyBRL(gastosVinculada)}</Text>
+              </View>
+            )}
+          </View>
+        )}
+
 
         <Text style={styles.rodape}>Gerado em {formatDate(new Date().toISOString())}</Text>
       </Page>

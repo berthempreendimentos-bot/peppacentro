@@ -74,7 +74,19 @@ export async function GET(request: NextRequest) {
     .filter((l) => ENTRADAS.has(l.tipo))
     .reduce((acc, l) => acc + l.valor, 0)
 
-  const nomesContratos = (contratos || []).map((c: any) => `${c.numero} - ${c.clientes?.nome || "Sem nome"}`)
+  const nomesContratos = (contratos || []).map((c: { id: string; numero: number; clientes: { nome: string } | { nome: string }[] | null }) => {
+    const nomeCliente = Array.isArray(c.clientes) ? c.clientes[0]?.nome : c.clientes?.nome || "Sem nome"
+    const receitasContrato = lancamentosMes.filter((l) => l.contrato_id === c.id && (l.tipo === "receita" || l.tipo === "recebimento")).reduce((acc, l) => acc + l.valor, 0)
+    const despesasContrato = lancamentosMes.filter((l) => l.contrato_id === c.id && (l.tipo !== "receita" && l.tipo !== "recebimento")).reduce((acc, l) => acc + l.valor, 0)
+    const saldo = receitasContrato - despesasContrato;
+    const porcentagem = receitasContrato > 0 ? (saldo / receitasContrato) * 100 : 0;
+    const sinal = porcentagem > 0 ? "+" : "";
+    const saldoFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(saldo);
+    return {
+      texto: `${c.numero} - ${nomeCliente} (Saldo: ${saldoFormatado} | ${sinal}${porcentagem.toFixed(1).replace('.', ',')}%)`,
+      negativo: saldo < 0
+    }
+  })
 
   const buffer = await renderToBuffer(
     <ResumoFinanceiroPdfDocument
@@ -85,11 +97,21 @@ export async function GET(request: NextRequest) {
       totalGastos={totalGastos}
       pagamentoContrato={pagamentoContrato}
       nomesContratos={nomesContratos}
-      gastos={lancamentosGastos.map((g) => ({
-        data: g.data,
-        descricao: g.descricao,
-        valor: g.valor
-      }))}
+      gastos={lancamentosGastos.map((g) => {
+        const contratoDaDespesa = contratos?.find(c => c.id === g.contrato_id);
+        const nomeClienteDespesa = contratoDaDespesa 
+          ? (Array.isArray(contratoDaDespesa.clientes) ? contratoDaDespesa.clientes[0]?.nome : contratoDaDespesa.clientes?.nome || "Sem nome")
+          : "";
+        const nomeContratoStr = contratoDaDespesa ? `${contratoDaDespesa.numero} - ${nomeClienteDespesa}` : "";
+        
+        return {
+          data: g.data,
+          descricao: g.descricao,
+          valor: g.valor,
+          classificacao: g.classificacao,
+          nomeContrato: contratosSelecionados.length > 1 ? nomeContratoStr : undefined
+        }
+      })}
     />
   )
 

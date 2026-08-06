@@ -252,10 +252,28 @@ export function LancamentosTable({ contratoId }: { contratoId: string }) {
                 <TableCell>
                   <div className="flex items-center gap-2 max-w-xs">
                     <span className="truncate">{lancamento.descricao}</span>
-                    {lancamento.is_recorrente && (
-                      <Badge variant="secondary" className="flex gap-1 h-5 text-[10px] px-1.5 shrink-0">
+                    {lancamento.classificacao === "mensal" && (
+                      <Badge variant="secondary" className="flex gap-1 h-5 text-[10px] px-1.5 shrink-0 bg-orange-100 text-orange-700 hover:bg-orange-100/80">
                         <Repeat className="size-3" />
                         Mensal
+                      </Badge>
+                    )}
+                    {lancamento.classificacao === "recorrente" && (
+                      <Badge variant="secondary" className="flex gap-1 h-5 text-[10px] px-1.5 shrink-0">
+                        <Repeat className="size-3" />
+                        Recorrente
+                      </Badge>
+                    )}
+                    {lancamento.classificacao === "integracao" && (
+                      <Badge variant="outline" className="flex gap-1 h-5 text-[10px] px-1.5 shrink-0 border-blue-200 text-blue-700 bg-blue-50">
+                        <Repeat className="size-3" />
+                        Integração
+                      </Badge>
+                    )}
+                    {lancamento.classificacao === "vinculada" && (
+                      <Badge variant="outline" className="flex gap-1 h-5 text-[10px] px-1.5 shrink-0 border-purple-200 text-purple-700 bg-purple-50">
+                        <Repeat className="size-3" />
+                        Vinculada
                       </Badge>
                     )}
                   </div>

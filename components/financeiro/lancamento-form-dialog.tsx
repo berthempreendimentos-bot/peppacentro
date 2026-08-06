@@ -26,7 +26,7 @@ import { useCreateCategoria, useCreateCentroCusto } from "@/lib/queries/centro-c
 import { useCreateFornecedor } from "@/lib/queries/fornecedores"
 import { useDocumentosLancamento, useDeleteDocumentoLancamento } from "@/lib/queries/lancamentos"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+
 import { CurrencyInput } from "@/components/ui/currency-input"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -148,7 +148,7 @@ const emptyValues: LancamentoInput = {
   fornecedor_id: "",
   centro_custo_id: "",
   status: "pendente",
-  is_recorrente: false,
+  classificacao: "normal",
 }
 
 export function LancamentoFormDialog({
@@ -206,7 +206,7 @@ export function LancamentoFormDialog({
               fornecedor_id: lancamento.fornecedor_id ?? "",
               centro_custo_id: lancamento.centro_custo_id ?? "",
               status: lancamento.status,
-              is_recorrente: lancamento.is_recorrente ?? false,
+              classificacao: lancamento.classificacao ?? "normal",
             }
           : emptyValues
       )
@@ -353,18 +353,25 @@ export function LancamentoFormDialog({
               />
               <FormField
                 control={form.control}
-                name="is_recorrente"
+                name="classificacao"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center gap-2 space-y-0 mt-6">
-                    <FormControl>
-                      <Checkbox
-                        checked={!!field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormLabel className="font-normal cursor-pointer">
-                      Conta Mensal / Recorrente
-                    </FormLabel>
+                  <FormItem className="flex-1">
+                    <FormLabel>Classificação</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="normal">Normal</SelectItem>
+                        <SelectItem value="mensal">Mensal</SelectItem>
+                        <SelectItem value="recorrente">Recorrente</SelectItem>
+                        <SelectItem value="integracao">Integração</SelectItem>
+                        <SelectItem value="vinculada">Vinculada</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
