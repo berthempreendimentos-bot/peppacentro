@@ -190,27 +190,29 @@ export async function buildEspelhoMedicaoWorkbook({
   sheet.addRow([])
   linhaSecao(sheet, "RETENÇÕES", 5)
 
-  const baseRetencaoRef = `B${rowMaoDeObra.number}`
+  const baseInssRef = `B${rowMaoDeObra.number}`
+  const baseFaturadoRef = `D${rowValorAFaturar.number}`
+
   const retencaoInss = maoDeObra * TAXA_RETENCAO_INSS
   const taxaIrrfAplicada = material > 0 ? TAXA_IRRF : TAXA_IRRF_SEM_MATERIAL
-  const irrf = maoDeObra * taxaIrrfAplicada
-  const pis = maoDeObra * TAXA_PIS
-  const cofins = maoDeObra * TAXA_COFINS
-  const csll = maoDeObra * TAXA_CSLL
-  const iss = maoDeObra * (issAliquota / 100)
+  const irrf = valorAFaturar * taxaIrrfAplicada
+  const pis = valorAFaturar * TAXA_PIS
+  const cofins = valorAFaturar * TAXA_COFINS
+  const csll = valorAFaturar * TAXA_CSLL
+  const iss = valorAFaturar * (issAliquota / 100)
 
   const rowInss = sheet.addRow(["RETENÇÃO INSS (11%)", retencaoInss])
-  formula(rowInss.getCell(2), `${baseRetencaoRef}*${TAXA_RETENCAO_INSS}`, retencaoInss)
+  formula(rowInss.getCell(2), `${baseInssRef}*${TAXA_RETENCAO_INSS}`, retencaoInss)
   const rowIrrf = sheet.addRow([`IRRF (${(taxaIrrfAplicada * 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}%)`, irrf])
-  formula(rowIrrf.getCell(2), `${baseRetencaoRef}*${taxaIrrfAplicada}`, irrf)
+  formula(rowIrrf.getCell(2), `${baseFaturadoRef}*${taxaIrrfAplicada}`, irrf)
   const rowPis = sheet.addRow(["PIS (0,65%)", pis])
-  formula(rowPis.getCell(2), `${baseRetencaoRef}*${TAXA_PIS}`, pis)
+  formula(rowPis.getCell(2), `${baseFaturadoRef}*${TAXA_PIS}`, pis)
   const rowCofins = sheet.addRow(["COFINS (3%)", cofins])
-  formula(rowCofins.getCell(2), `${baseRetencaoRef}*${TAXA_COFINS}`, cofins)
+  formula(rowCofins.getCell(2), `${baseFaturadoRef}*${TAXA_COFINS}`, cofins)
   const rowCsll = sheet.addRow(["CSLL (1,00%)", csll])
-  formula(rowCsll.getCell(2), `${baseRetencaoRef}*${TAXA_CSLL}`, csll)
+  formula(rowCsll.getCell(2), `${baseFaturadoRef}*${TAXA_CSLL}`, csll)
   const rowIss = sheet.addRow([`VALOR DO ISS (${issAliquota}%)`, iss])
-  formula(rowIss.getCell(2), `${baseRetencaoRef}*${issAliquota / 100}`, iss)
+  formula(rowIss.getCell(2), `${baseFaturadoRef}*${issAliquota / 100}`, iss)
 
   const linhasRetencao = [rowInss, rowIrrf, rowPis, rowCofins, rowCsll, rowIss]
   linhasRetencao.forEach((row, i) => {

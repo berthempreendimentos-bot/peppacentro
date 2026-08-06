@@ -35,6 +35,7 @@ export const lancamentoSchema = z.object({
   fornecedor_id: z.string().optional(),
   centro_custo_id: z.string().optional(),
   status: z.enum(["pendente", "pago", "atrasado", "cancelado"]),
+  is_recorrente: z.boolean().default(false).optional(),
 })
 
 export type LancamentoInput = z.infer<typeof lancamentoSchema>

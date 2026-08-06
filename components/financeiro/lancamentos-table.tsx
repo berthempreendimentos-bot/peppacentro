@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react"
+import { MoreHorizontal, Pencil, Plus, Trash2, Repeat } from "lucide-react"
 import { toast } from "sonner"
 
 import {
@@ -249,7 +249,17 @@ export function LancamentosTable({ contratoId }: { contratoId: string }) {
               <TableRow key={lancamento.id}>
                 <TableCell>{formatDate(lancamento.data)}</TableCell>
                 <TableCell>{tipoLabel[lancamento.tipo]}</TableCell>
-                <TableCell className="max-w-xs truncate">{lancamento.descricao}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2 max-w-xs">
+                    <span className="truncate">{lancamento.descricao}</span>
+                    {lancamento.is_recorrente && (
+                      <Badge variant="secondary" className="flex gap-1 h-5 text-[10px] px-1.5 shrink-0">
+                        <Repeat className="size-3" />
+                        Mensal
+                      </Badge>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell className="text-muted-foreground">
                   {lancamento.categorias?.nome ?? "—"}
                 </TableCell>

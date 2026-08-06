@@ -26,6 +26,7 @@ import { useCreateCategoria, useCreateCentroCusto } from "@/lib/queries/centro-c
 import { useCreateFornecedor } from "@/lib/queries/fornecedores"
 import { useDocumentosLancamento, useDeleteDocumentoLancamento } from "@/lib/queries/lancamentos"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { CurrencyInput } from "@/components/ui/currency-input"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -147,6 +148,7 @@ const emptyValues: LancamentoInput = {
   fornecedor_id: "",
   centro_custo_id: "",
   status: "pendente",
+  is_recorrente: false,
 }
 
 export function LancamentoFormDialog({
@@ -204,6 +206,7 @@ export function LancamentoFormDialog({
               fornecedor_id: lancamento.fornecedor_id ?? "",
               centro_custo_id: lancamento.centro_custo_id ?? "",
               status: lancamento.status,
+              is_recorrente: lancamento.is_recorrente ?? false,
             }
           : emptyValues
       )
@@ -334,19 +337,38 @@ export function LancamentoFormDialog({
                 )}
               />
             </div>
-            <FormField
-              control={form.control}
-              name="descricao"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descrição</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="flex gap-4 items-center">
+              <FormField
+                control={form.control}
+                name="descricao"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel>Descrição</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="is_recorrente"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center gap-2 space-y-0 mt-6">
+                    <FormControl>
+                      <Checkbox
+                        checked={!!field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel className="font-normal cursor-pointer">
+                      Conta Mensal / Recorrente
+                    </FormLabel>
+                  </FormItem>
+                )}
+              />
+            </div>
             <div className="grid grid-cols-3 gap-4">
               <FormField
                 control={form.control}

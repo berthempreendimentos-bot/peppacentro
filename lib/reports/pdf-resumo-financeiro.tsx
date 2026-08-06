@@ -97,6 +97,7 @@ export function ResumoFinanceiroPdfDocument({
   totalGastos,
   pagamentoContrato,
   nomesContratos,
+  gastos,
 }: {
   mesReferencia: string
   valorMedicao: number
@@ -199,26 +200,26 @@ export function ResumoFinanceiroPdfDocument({
             <Text style={styles.tabelaHeaderCellRight}>VALOR</Text>
           </View>
 
-          {gastos.length === 0 && (
+          {gastos.length === 0 ? (
             <View style={styles.linha}>
               <Text style={[styles.celulaLabel, { flex: 1, textAlign: "center", borderRightWidth: 0, paddingVertical: 12, color: "#777777" }]}>Nenhum gasto registrado neste mês.</Text>
             </View>
-          )}
+          ) : null}
 
-          {gastos.sort((a, b) => a.data.localeCompare(b.data)).map((g, i) => (
+          {gastos.slice().sort((a, b) => (a.data || "").localeCompare(b.data || "")).map((g, i) => (
             <View key={i} style={[styles.linha, i % 2 !== 0 ? styles.linhaPar : {}]}>
-              <Text style={[styles.celulaLabel, { flex: 0.5 }]}>{formatDate(g.data)}</Text>
-              <Text style={[styles.celulaLabel, { flex: 2 }]}>{g.descricao}</Text>
-              <Text style={styles.celulaValor}>{formatCurrencyBRL(g.valor)}</Text>
+              <Text style={[styles.celulaLabel, { flex: 0.5 }]}>{g.data ? formatDate(g.data) : ""}</Text>
+              <Text style={[styles.celulaLabel, { flex: 2 }]}>{g.descricao || ""}</Text>
+              <Text style={styles.celulaValor}>{formatCurrencyBRL(g.valor || 0)}</Text>
             </View>
           ))}
           
-          {gastos.length > 0 && (
+          {gastos.length > 0 ? (
             <View style={styles.linhaDestaque}>
               <Text style={styles.celulaLabelDestaque}>TOTAL DE GASTOS</Text>
               <Text style={styles.celulaValorDestaque}>{formatCurrencyBRL(totalGastos)}</Text>
             </View>
-          )}
+          ) : null}
         </View>
 
         <Text style={styles.rodape}>Gerado em {formatDate(new Date().toISOString())}</Text>
