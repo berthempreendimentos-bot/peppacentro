@@ -175,6 +175,11 @@ export function ResumoFinanceiroPdfDocument({
             <Text style={styles.celulaLabel}>Total Recebido (Pagamentos do Contrato)</Text>
             <Text style={styles.celulaValor}>{formatCurrencyBRL(pagamentoContrato)}</Text>
           </View>
+
+          <View style={[styles.linha, { backgroundColor: "#ffedd5" }]}>
+            <Text style={styles.celulaLabel}>Total Vinculado</Text>
+            <Text style={styles.celulaValor}>{formatCurrencyBRL(gastosVinculada)}</Text>
+          </View>
           
           <View style={[styles.linhaDestaque, { borderBottomWidth: 0, backgroundColor: pagamentoContrato - totalGastos >= 0 ? "#dcfce7" : "#ffe4e6" }]}>
             <Text style={styles.celulaLabelDestaque}>Resultado (Recebimentos - Gastos)</Text>
