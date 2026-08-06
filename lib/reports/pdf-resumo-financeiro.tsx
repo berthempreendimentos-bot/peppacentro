@@ -181,9 +181,14 @@ export function ResumoFinanceiroPdfDocument({
             <Text style={styles.celulaValor}>{formatCurrencyBRL(gastosVinculada)}</Text>
           </View>
           
-          <View style={[styles.linhaDestaque, { borderBottomWidth: 0, backgroundColor: pagamentoContrato - totalGastos >= 0 ? "#dcfce7" : "#ffe4e6" }]}>
+          <View style={[styles.linhaDestaque, { backgroundColor: pagamentoContrato - totalGastos >= 0 ? "#dcfce7" : "#ffe4e6" }]}>
             <Text style={styles.celulaLabelDestaque}>Resultado (Recebimentos - Gastos)</Text>
             <Text style={styles.celulaValorDestaque}>{formatCurrencyBRL(pagamentoContrato - totalGastos)}</Text>
+          </View>
+
+          <View style={[styles.linhaDestaque, { borderBottomWidth: 0, backgroundColor: (pagamentoContrato - totalGastos) + gastosVinculada >= 0 ? "#bbf7d0" : "#fecdd3" }]}>
+            <Text style={styles.celulaLabelDestaque}>Saldo Final (Resultado + Vinculado)</Text>
+            <Text style={styles.celulaValorDestaque}>{formatCurrencyBRL((pagamentoContrato - totalGastos) + gastosVinculada)}</Text>
           </View>
         </View>
 
