@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
     .filter((l) => ENTRADAS.has(l.tipo))
     .reduce((acc, l) => acc + l.valor, 0)
 
-  const nomesContratos = (contratos || []).map((c: { id: string; numero: number; clientes: { nome: string } | { nome: string }[] | null }) => {
+  const nomesContratos = (contratos || []).map((c: { id: string; numero: string; clientes: { nome: string } | { nome: string }[] | null }) => {
     const nomeCliente = Array.isArray(c.clientes) ? c.clientes[0]?.nome : c.clientes?.nome || "Sem nome"
     const receitasContrato = lancamentosMes.filter((l) => l.contrato_id === c.id && (l.tipo === "receita" || l.tipo === "recebimento")).reduce((acc, l) => acc + l.valor, 0)
     const despesasContrato = lancamentosMes.filter((l) => l.contrato_id === c.id && (l.tipo !== "receita" && l.tipo !== "recebimento")).reduce((acc, l) => acc + l.valor, 0)
