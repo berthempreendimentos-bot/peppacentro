@@ -183,6 +183,7 @@ export function MedicaoFormDialog({
           : {
               ...emptyValues,
               numero: proximoNumero ?? 1,
+              valor: valorContratoMensalAtual,
               mao_de_obra: maoDeObraAtual,
               vale_transporte: vtAtual,
               vale_refeicao: vrAtual,
